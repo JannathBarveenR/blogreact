@@ -117,17 +117,12 @@ async def upload_medical_record(
 async def get_medical_records(pet_profile_id: str, user_id: str = Depends(get_current_user_id)):
     """Fetch all medical records for a specific pet (ownership enforced)."""
     try:
-        # SECURITY: Verify the pet belongs to the authenticated user
-        pet_res = supabase.table("pet_profiles").select("user_id").eq("id", pet_profile_id).execute()
-        if not pet_res.data:
-            raise HTTPException(status_code=404, detail="Pet profile not found")
-        if pet_res.data[0].get("user_id") != user_id:
-            raise HTTPException(status_code=403, detail="You do not have permission to view records for this pet")
-
+        # One query — only return records owned by this user AND matching this pet
         res = (
             supabase.table("medical_records")
-            .select("*")
+            .select("id, title, file_name, file_url, file_type, file_size, category, is_favorite, created_at, pet_profile_id")
             .eq("pet_profile_id", pet_profile_id)
+            .eq("user_id", user_id)
             .order("created_at", desc=True)
             .execute()
         )
@@ -143,8 +138,8 @@ async def delete_medical_record(record_id: str, user_id: str = Depends(get_curre
     """Delete a medical record from both DB and Storage (ownership enforced)."""
     try:
         # 1) Get the record and verify ownership
-        # Using select("*") prevents "column does not exist" errors if user_id hasn't been added to the DB yet
-        res = supabase.table("medical_records").select("*").eq("id", record_id).execute()
+        # Using select with required columns
+        res = supabase.table("medical_records").select("id, user_id, pet_profile_id, storage_path").eq("id", record_id).execute()
         if not res.data:
             raise HTTPException(status_code=404, detail="Record not found")
         
@@ -186,7 +181,7 @@ async def toggle_favorite(record_id: str, user_id: str = Depends(get_current_use
     """Toggle the is_favorite status of a medical record (ownership enforced)."""
     try:
         # 1) Get the record and verify ownership
-        res = supabase.table("medical_records").select("*").eq("id", record_id).execute()
+        res = supabase.table("medical_records").select("id, user_id, pet_profile_id, is_favorite").eq("id", record_id).execute()
         if not res.data:
             raise HTTPException(status_code=404, detail="Record not found")
         

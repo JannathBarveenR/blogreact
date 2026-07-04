@@ -35,16 +35,7 @@ from app.utils.auth import get_current_user_id
 router = APIRouter()
 
 
-def _verify_pet_ownership(profile_id: str, user_id: str):
-    """
-    Verify that a pet profile belongs to the authenticated user.
-    Raises 404 if not found, 403 if it belongs to someone else.
-    """
-    result = supabase.table("pet_profiles").select("user_id").eq("id", profile_id).execute()
-    if not result.data:
-        raise HTTPException(status_code=404, detail="Pet profile not found")
-    if result.data[0].get("user_id") != user_id:
-        raise HTTPException(status_code=403, detail="You do not have permission to access this pet profile")
+# _verify_pet_ownership removed to reduce DB roundtrips. Ownership checks are now inline.
 
 
 @router.post("/")
@@ -178,7 +169,7 @@ async def get_my_profiles(user_id: str = Depends(get_current_user_id)):
     try:
         result = (
             supabase.table("pet_profiles")
-            .select("*")
+            .select("id, petolife_id, pet_name, pet_type, breed, gender, birth_date, weight, pet_photo_url, created_at")
             .eq("user_id", user_id)
             .order("created_at", desc=True)
             .execute()
@@ -197,7 +188,7 @@ async def get_pets_by_user(user_id: str, auth_user_id: str = Depends(get_current
     try:
         result = (
             supabase.table("pet_profiles")
-            .select("*")
+            .select("id, petolife_id, pet_name, pet_type, breed, gender, birth_date, weight, pet_photo_url, created_at")
             .eq("user_id", user_id)
             .order("created_at", desc=True)
             .execute()
@@ -219,9 +210,11 @@ async def get_by_petolife_id_redirect(petolife_id: str):
 @router.get("/public/{petolife_id:path}")
 async def get_public_pet_data(petolife_id: str):
     """JSON data endpoint — called by the frontend pet profile UI page. (Public)"""
+    from fastapi.responses import JSONResponse
+
     result = (
         supabase.table("pet_profiles")
-        .select("*")
+        .select("id, user_id, petolife_id, pet_type, pet_name, breed, gender, birth_date, weight, color, blood_group, identification_marks, pet_photo_url, created_at")
         .eq("petolife_id", petolife_id)
         .execute()
     )
@@ -252,17 +245,22 @@ async def get_public_pet_data(petolife_id: str):
         if owner_result.data:
             owner_info = owner_result.data[0]
 
-    return {
-        **profile,
-        "pet_ids": ids_result.data or [],
-        "owner_info": owner_info,
-    }
+    return JSONResponse(
+        content={
+            **profile,
+            "pet_ids": ids_result.data or [],
+            "owner_info": owner_info,
+        },
+        headers={
+            "Cache-Control": "public, max-age=300, stale-while-revalidate=60",
+        }
+    )
 
 
 @router.get("/{profile_id}")
 async def get_pet_profile(profile_id: str, user_id: str = Depends(get_current_user_id)):
     """Fetch pet profile by UUID (ownership enforced)."""
-    result = supabase.table("pet_profiles").select("*").eq("id", profile_id).execute()
+    result = supabase.table("pet_profiles").select("id, user_id, petolife_id, pet_type, pet_name, breed, gender, birth_date, weight, color, blood_group, identification_marks, pet_photo_url, created_at").eq("id", profile_id).execute()
 
     if not result.data:
         raise HTTPException(status_code=404, detail="Pet profile not found")
@@ -283,17 +281,15 @@ async def get_pet_profile(profile_id: str, user_id: str = Depends(get_current_us
 async def update_pet_profile(profile_id: str, updates: PetProfileUpdate, user_id: str = Depends(get_current_user_id)):
     """Update pet profile details in-place (ownership enforced)."""
     try:
-        # SECURITY: Verify ownership before allowing update
-        _verify_pet_ownership(profile_id, user_id)
-
         # Filter out None values so we only update provided fields
         update_data = {k: v for k, v in updates.model_dump().items() if v is not None}
         if not update_data:
             return {"message": "No updates provided"}
 
-        result = supabase.table("pet_profiles").update(update_data).eq("id", profile_id).execute()
+        # Combine update and ownership check into a single query
+        result = supabase.table("pet_profiles").update(update_data).eq("id", profile_id).eq("user_id", user_id).execute()
         if not result.data:
-            raise HTTPException(status_code=404, detail="Pet profile not found or update failed")
+            raise HTTPException(status_code=404, detail="Pet profile not found or update failed (unauthorized)")
 
         return {"message": "Pet profile updated successfully", "data": result.data[0]}
     except HTTPException:
@@ -308,7 +304,11 @@ async def update_pet_photo(profile_id: str, file: UploadFile = File(...), user_i
     """Upload and update pet photo (ownership enforced)."""
     try:
         # SECURITY: Verify ownership before allowing photo change
-        _verify_pet_ownership(profile_id, user_id)
+        res = supabase.table("pet_profiles").select("user_id").eq("id", profile_id).execute()
+        if not res.data:
+            raise HTTPException(status_code=404, detail="Pet profile not found")
+        if res.data[0]["user_id"] != user_id:
+            raise HTTPException(status_code=403, detail="Not authorized")
 
         # Upload photo
         file_name = f"{profile_id}-{int(time.time() * 1000)}-{file.filename.replace(' ', '-')}"
@@ -336,11 +336,12 @@ async def update_pet_photo(profile_id: str, file: UploadFile = File(...), user_i
 async def delete_pet_profile(profile_id: str, user_id: str = Depends(get_current_user_id)):
     """Delete pet profile (ownership enforced)."""
     try:
-        # SECURITY: Verify ownership before allowing delete
-        _verify_pet_ownership(profile_id, user_id)
-
-        # 1. Fetch profile to get photo_url
-        result = supabase.table("pet_profiles").select("pet_photo_url").eq("id", profile_id).execute()
+        # 1. Fetch profile to get photo_url and verify ownership (single query)
+        result = supabase.table("pet_profiles").select("user_id, pet_photo_url").eq("id", profile_id).execute()
+        if not result.data:
+            raise HTTPException(status_code=404, detail="Pet profile not found")
+        if result.data[0]["user_id"] != user_id:
+            raise HTTPException(status_code=403, detail="Not authorized")
         if result.data:
             photo_url = result.data[0].get("pet_photo_url")
             if photo_url:
