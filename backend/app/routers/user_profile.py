@@ -40,7 +40,7 @@ async def get_user_profile(user_id: str, auth_user_id: str = Depends(get_current
     if user_id != auth_user_id:
         raise HTTPException(status_code=403, detail="You can only view your own profile")
     try:
-        response = supabase.table("user_profiles").select("*").eq("id", user_id).execute()
+        response = supabase.table("user_profiles").select("id, full_name, phone, email, city, state, pincode, avatar_url").eq("id", user_id).execute()
         if not response.data:
             raise HTTPException(status_code=404, detail="User profile not found")
         return response.data[0]
