@@ -6,6 +6,7 @@
  */
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { appCache } from "../utils/appCache";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 
@@ -47,6 +48,7 @@ export default function useAuth() {
       localStorage.removeItem(`pets_${userId}`);
       localStorage.removeItem(`active_pet_id_${userId}`);
     }
+    appCache.invalidateAll();
     setToken(null);
     setUser(null);
     setIsAuthenticated(false);

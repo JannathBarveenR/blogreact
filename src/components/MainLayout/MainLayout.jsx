@@ -10,6 +10,7 @@ import TimelinePage from "../Timeline/TimelinePage";
 import UserProfile from "../UserProfile/UserProfile";
 import fetchWithAuth from "../../utils/fetchWithAuth";
 import useAuth from "../../hooks/useAuth";
+import { appCache, CACHE_KEYS, TTL } from "../../utils/appCache";
 
 const MainLayout = () => {
   const navigate = useNavigate();
@@ -29,13 +30,52 @@ const MainLayout = () => {
     }
   }, [location.state]);
 
-  const fetchPets = async () => {
+  const prefetchSecondaryData = (userId, currentPets) => {
+    // 1. Prefetch user profile
+    const profileKey = CACHE_KEYS.userProfile(userId);
+    if (!appCache.get(profileKey, TTL.userProfile)) {
+      fetchWithAuth(`/api/user-profile/${userId}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data) appCache.set(profileKey, data);
+        })
+        .catch(() => {});
+    }
+
+    // 2. Prefetch medical records for active pet
+    const activePet = activePetId || (currentPets && currentPets[0]?.id);
+    if (activePet) {
+      const recordsKey = CACHE_KEYS.medicalRecords(activePet);
+      if (!appCache.get(recordsKey, TTL.medicalRecords)) {
+        fetchWithAuth(`/api/medical-records/${activePet}`)
+          .then(r => r.ok ? r.json() : null)
+          .then(data => {
+            if (data) appCache.set(recordsKey, data);
+          })
+          .catch(() => {});
+      }
+    }
+  };
+
+  const fetchPets = async (forceRefresh = false) => {
     if (!user) return;
+    const cacheKey = CACHE_KEYS.pets(user.id);
+
+    if (!forceRefresh) {
+      const cached = appCache.get(cacheKey, TTL.pets);
+      if (cached) {
+        setPets(cached);
+        setLoadingPets(false);
+        prefetchSecondaryData(user.id, cached);
+        return;
+      }
+    }
+
     setLoadingPets(true);
     try {
-      // Try local storage first
+      // Try local storage first as cold fallback
       const localPets = localStorage.getItem(`pets_${user.id}`);
-      if (localPets) {
+      if (localPets && !forceRefresh) {
         const parsed = JSON.parse(localPets);
         setPets(parsed);
         const savedActive = localStorage.getItem(`active_pet_id_${user.id}`);
@@ -46,20 +86,26 @@ const MainLayout = () => {
         }
       }
 
-      // ✅ Fetch only THIS user's pets using their user.id
+      // Fetch pets
       const res = await fetchWithAuth(`/api/pet-profile/by-user/${user.id}`);
       if (res.ok) {
         const data = await res.json();
         setPets(data);
+        appCache.set(cacheKey, data);
         localStorage.setItem(`pets_${user.id}`, JSON.stringify(data));
         
         const savedActive = localStorage.getItem(`active_pet_id_${user.id}`);
+        let finalActivePetId = activePetId;
         if (savedActive && data.some(p => p.id === savedActive)) {
           setActivePetId(savedActive);
+          finalActivePetId = savedActive;
         } else if (data.length > 0) {
           setActivePetId(data[0].id);
+          finalActivePetId = data[0].id;
           localStorage.setItem(`active_pet_id_${user.id}`, data[0].id);
         }
+        
+        prefetchSecondaryData(user.id, data);
       }
     } catch (err) {
       console.error("Failed to fetch pets", err);
@@ -88,15 +134,20 @@ const MainLayout = () => {
     }
   };
 
-  const renderContent = () => {
-    if (activeTab === "timeline" || activeTab === "checklist") {
-      return <TimelinePage />;
-    }
-    
-    if (activeTab === "medicalrecords" || activeTab === "docs") {
-      return (
-        <div style={{ paddingBottom: '70px', height: '100vh', overflowY: 'auto' }}>
-          <TopNav />
+  return (
+    <>
+      <div style={{ paddingBottom: '70px', height: '100vh', overflowY: 'auto' }}>
+        <TopNav />
+        {/* Keep-alive structure using display: none for inactive tabs */}
+        <div style={{ display: activeTab === "home" ? "block" : "none" }}>
+          <Home
+            pets={pets}
+            activePetId={activePetId}
+            onPetSelect={handlePetSelect}
+            onAddPet={handleAddPet}
+          />
+        </div>
+        <div style={{ display: (activeTab === "medicalrecords" || activeTab === "docs") ? "block" : "none" }}>
           <MedicalRecords
             pets={pets}
             activePetId={activePetId}
@@ -104,41 +155,19 @@ const MainLayout = () => {
             onAddPet={handleAddPet}
           />
         </div>
-      );
-    }
-
-    if (activeTab === "profile") {
-      return (
-        <div style={{ paddingBottom: '70px', height: '100vh', overflowY: 'auto' }}>
-          <TopNav />
+        <div style={{ display: activeTab === "profile" ? "block" : "none" }}>
           <UserProfile
             pets={pets}
             activePetId={activePetId}
             onPetSelect={handlePetSelect}
             onAddPet={handleAddPet}
-            refreshPets={fetchPets}
+            refreshPets={() => fetchPets(true)}
           />
         </div>
-      );
-    }
-
-    // HOME TAB
-    return (
-      <div style={{ paddingBottom: '70px', height: '100vh', overflowY: 'auto' }}>
-        <TopNav />
-        <Home
-          pets={pets}
-          activePetId={activePetId}
-          onPetSelect={handlePetSelect}
-          onAddPet={handleAddPet}
-        />
+        <div style={{ display: (activeTab === "timeline" || activeTab === "checklist") ? "block" : "none" }}>
+          <TimelinePage />
+        </div>
       </div>
-    );
-  };
-
-  return (
-    <>
-      {renderContent()}
       <BottomNav
         active={activeTab}
         onNavigate={setActiveTab}

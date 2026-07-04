@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { X } from "lucide-react";
 import "./NoRecordsCard.css";
 import noRecordsIcon from "./no-records-icon.png";
+import fetchWithAuth from "../../../utils/fetchWithAuth";
+import { appCache, CACHE_KEYS, TTL } from "../../../utils/appCache";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 
@@ -17,15 +19,21 @@ export default function NoRecordsCard({ selectedPet, onNavigateTab }) {
   useEffect(() => {
     if (!petId) return;
     let isMounted = true;
+
+    // Check cache first
+    const cached = appCache.get(CACHE_KEYS.medicalRecords(petId), TTL.medicalRecords);
+    if (cached) {
+      setRecords(cached);
+      return;
+    }
+
     const fetchPetRecords = async () => {
       setLoading(true);
       try {
-        const token = localStorage.getItem("access_token");
-        const res = await fetch(`${API_BASE}/api/medical-records/${petId}`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
+        const res = await fetchWithAuth(`/api/medical-records/${petId}`);
         if (res.ok) {
           const data = await res.json();
+          appCache.set(CACHE_KEYS.medicalRecords(petId), data || []);
           if (isMounted) setRecords(data || []);
         }
       } catch (err) {

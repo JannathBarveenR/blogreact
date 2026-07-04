@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FiEdit2, FiCheck, FiX, FiCamera } from "react-icons/fi";
 import fetchWithAuth from "../../utils/fetchWithAuth";
+import { appCache, CACHE_KEYS, TTL } from "../../utils/appCache";
 import DEFAULT_AVATAR from "../../assets/pet-owner-avatar.svg";
 import "./EditableUserCard.css";
 
@@ -27,11 +28,31 @@ const EditableUserCard = ({ user }) => {
     }
   }, [user]);
 
-  const fetchProfile = async () => {
+  const fetchProfile = async (forceRefresh = false) => {
+    if (!user?.id) return;
+    
+    if (!forceRefresh) {
+      const cached = appCache.get(CACHE_KEYS.userProfile(user.id), TTL.userProfile);
+      if (cached) {
+        setProfile({
+          full_name: cached.full_name || "",
+          phone: cached.phone || "",
+          email: cached.email || "",
+          city: cached.city || "",
+          state: cached.state || "",
+          pincode: cached.pincode || "",
+          avatar_url: cached.avatar_url || ""
+        });
+        setLoading(false);
+        return;
+      }
+    }
+
     try {
       const res = await fetchWithAuth(`/api/user-profile/${user.id}`);
       if (res.ok) {
         const data = await res.json();
+        appCache.set(CACHE_KEYS.userProfile(user.id), data);
         setProfile({
           full_name: data.full_name || "",
           phone: data.phone || "",
@@ -74,6 +95,7 @@ const EditableUserCard = ({ user }) => {
       });
       if (res.ok) {
         const data = await res.json();
+        appCache.invalidate(CACHE_KEYS.userProfile(user.id));
         setProfile(prev => ({ ...prev, avatar_url: data.avatar_url }));
       } else {
         setProfile(prev => ({ ...prev, avatar_url: prevUrl }));
@@ -108,6 +130,7 @@ const EditableUserCard = ({ user }) => {
       });
 
       if (res.ok) {
+        appCache.invalidate(CACHE_KEYS.userProfile(user.id));
         setIsEditing(false);
       } else {
         setError("Failed to update profile.");
@@ -121,7 +144,7 @@ const EditableUserCard = ({ user }) => {
   };
 
   const cancelEdit = () => {
-    fetchProfile();
+    fetchProfile(true);
     setIsEditing(false);
     setError(null);
   };

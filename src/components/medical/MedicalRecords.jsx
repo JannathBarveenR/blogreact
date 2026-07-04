@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import "./MedicalRecords.css";
 import fetchWithAuth from "../../utils/fetchWithAuth";
+import { appCache, CACHE_KEYS, TTL } from "../../utils/appCache";
 
 import {
   FolderOpen,
@@ -71,17 +72,27 @@ export default function MedicalRecords({ pets = [], activePetId, onPetSelect, on
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Fetch medical records from the API for the active pet
-  const fetchRecords = useCallback(async () => {
+  const fetchRecords = useCallback(async (forceRefresh = false) => {
     if (!activePetId) {
       setAllRecords([]);
       return;
     }
+    
+    if (!forceRefresh) {
+      const cached = appCache.get(CACHE_KEYS.medicalRecords(activePetId), TTL.medicalRecords);
+      if (cached) {
+        setAllRecords(cached);
+        return;
+      }
+    }
+
     setLoadingRecords(true);
     try {
       const res = await fetchWithAuth(`/api/medical-records/${activePetId}`);
       if (res.ok) {
         const data = await res.json();
         setAllRecords(data || []);
+        appCache.set(CACHE_KEYS.medicalRecords(activePetId), data || []);
       }
     } catch (err) {
       console.error("Error fetching medical records:", err);
@@ -91,7 +102,7 @@ export default function MedicalRecords({ pets = [], activePetId, onPetSelect, on
   }, [activePetId]);
 
   useEffect(() => {
-    fetchRecords();
+    fetchRecords(false);
   }, [fetchRecords]);
 
   // Handle direct Quick Access upload
@@ -132,8 +143,8 @@ export default function MedicalRecords({ pets = [], activePetId, onPetSelect, on
       clearInterval(progressTimer);
 
       if (res.ok) {
-        setProgress(100);
-        await fetchRecords();
+        appCache.invalidate(CACHE_KEYS.medicalRecords(activePetId));
+        await fetchRecords(true);
       } else {
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData.detail || "Upload failed");
@@ -185,8 +196,8 @@ export default function MedicalRecords({ pets = [], activePetId, onPetSelect, on
           date: "",
           notes: "",
         });
-        setSelectedFile(null);
-        await fetchRecords();
+        appCache.invalidate(CACHE_KEYS.medicalRecords(activePetId));
+        await fetchRecords(true);
       } else {
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData.detail || "Upload failed");
@@ -211,7 +222,8 @@ export default function MedicalRecords({ pets = [], activePetId, onPetSelect, on
         method: "DELETE",
       });
       if (res.ok) {
-        await fetchRecords();
+        appCache.invalidate(CACHE_KEYS.medicalRecords(activePetId));
+        await fetchRecords(true);
       } else {
         const errData = await res.json().catch(() => ({}));
         alert(`Failed to delete record: ${errData.detail || "Database error"}`);
@@ -230,7 +242,8 @@ export default function MedicalRecords({ pets = [], activePetId, onPetSelect, on
         method: "PATCH",
       });
       if (res.ok) {
-        await fetchRecords();
+        appCache.invalidate(CACHE_KEYS.medicalRecords(activePetId));
+        await fetchRecords(true);
       } else {
         console.error("Failed to toggle favorite");
       }
