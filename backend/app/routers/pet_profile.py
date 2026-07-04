@@ -18,6 +18,7 @@ from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 from app.config import FRONTEND_URL
+from fastapi_cache.decorator import cache
 
 class PetProfileUpdate(BaseModel):
     pet_name: Optional[str] = None
@@ -208,13 +209,14 @@ async def get_by_petolife_id_redirect(petolife_id: str):
 
 
 @router.get("/public/{petolife_id:path}")
+@cache(expire=300)
 async def get_public_pet_data(petolife_id: str):
     """JSON data endpoint — called by the frontend pet profile UI page. (Public)"""
     from fastapi.responses import JSONResponse
 
     result = (
         supabase.table("pet_profiles")
-        .select("id, user_id, petolife_id, pet_type, pet_name, breed, gender, birth_date, weight, color, blood_group, identification_marks, pet_photo_url, created_at")
+        .select("id, user_id, petolife_id, pet_type, pet_name, breed, gender, birth_date, weight, color, blood_group, identification_marks, pet_photo_url, created_at, pet_ids(*)")
         .eq("petolife_id", petolife_id)
         .execute()
     )
@@ -223,14 +225,8 @@ async def get_public_pet_data(petolife_id: str):
         raise HTTPException(status_code=404, detail="Pet not found")
 
     profile = result.data[0]
-
-    # Fetch pet IDs
-    ids_result = (
-        supabase.table("pet_ids")
-        .select("*")
-        .eq("pet_profile_id", profile["id"])
-        .execute()
-    )
+    # pet_ids are now eager-loaded via the join
+    pet_ids_data = profile.pop("pet_ids", [])
 
     # Fetch owner info
     owner_info = None
@@ -248,7 +244,7 @@ async def get_public_pet_data(petolife_id: str):
     return JSONResponse(
         content={
             **profile,
-            "pet_ids": ids_result.data or [],
+            "pet_ids": pet_ids_data,
             "owner_info": owner_info,
         },
         headers={
@@ -260,7 +256,7 @@ async def get_public_pet_data(petolife_id: str):
 @router.get("/{profile_id}")
 async def get_pet_profile(profile_id: str, user_id: str = Depends(get_current_user_id)):
     """Fetch pet profile by UUID (ownership enforced)."""
-    result = supabase.table("pet_profiles").select("id, user_id, petolife_id, pet_type, pet_name, breed, gender, birth_date, weight, color, blood_group, identification_marks, pet_photo_url, created_at").eq("id", profile_id).execute()
+    result = supabase.table("pet_profiles").select("id, user_id, petolife_id, pet_type, pet_name, breed, gender, birth_date, weight, color, blood_group, identification_marks, pet_photo_url, created_at, pet_ids(*)").eq("id", profile_id).execute()
 
     if not result.data:
         raise HTTPException(status_code=404, detail="Pet profile not found")
@@ -271,10 +267,9 @@ async def get_pet_profile(profile_id: str, user_id: str = Depends(get_current_us
     if profile.get("user_id") != user_id:
         raise HTTPException(status_code=403, detail="You do not have permission to access this pet profile")
 
-    # Fetch pet IDs
-    ids_result = supabase.table("pet_ids").select("*").eq("pet_profile_id", profile_id).execute()
+    pet_ids_data = profile.pop("pet_ids", [])
 
-    return {**profile, "pet_ids": ids_result.data or []}
+    return {**profile, "pet_ids": pet_ids_data}
 
 
 @router.patch("/{profile_id}")
