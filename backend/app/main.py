@@ -13,7 +13,10 @@ app = FastAPI(
 )
 
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
+
 app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["127.0.0.1", "localhost"])
+app.add_middleware(GZipMiddleware, minimum_size=500)
 
 # ---------------------------------------------------------------------------
 # CORS — tightly scoped: only allow known frontend origins.
