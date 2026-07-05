@@ -12,8 +12,8 @@
 }
 
 .no-records-icon img {
-  width: 90px;
-  height: 90px;
+  width: 120px;
+  height: 120px;
   object-fit: contain;
 }
 
@@ -35,7 +35,7 @@
 .upload-btn {
   margin-top: 6px;
   padding: 12px 28px;
-  background: var(--green-primary);
+  background:#14480f;
   color: var(--white);
   border: none;
   border-radius: var(--radius-btn);

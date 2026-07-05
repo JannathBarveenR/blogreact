@@ -8,7 +8,7 @@
 .step-back-btn {
   border: none;
   background: transparent;
-  color: #0f7a23;
+  color: var(--brand-teal, #004b49);
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -16,8 +16,20 @@
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;
+  border-radius: 10px;
+  transition: color 0.2s ease, transform 0.15s ease, background 0.2s ease;
+}
+
+.step-back-btn:hover {
+  color: var(--brand-green-dark, #6a9a4c);
+  background: rgba(132, 182, 98, 0.1);
+}
+
+.step-back-btn:active {
+  transform: scale(0.96);
 }
 
 .step-back-btn svg {
   font-size: 18px;
+  color: var(--brand-green, #84b662);
 }

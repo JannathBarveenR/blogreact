@@ -83,7 +83,7 @@ export function SuccessScreen({ type, userName, onContinue }) {
       <div className="success-badge">
         <span>PetOLife Member</span>
       </div>
-      <p style={{marginTop: 16, color: '#666', fontSize: '14px'}}>
+      <p className="success-redirect-note">
         Redirecting in {countdown}s…
       </p>
     </div>

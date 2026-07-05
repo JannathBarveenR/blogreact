@@ -1,29 +1,28 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiPlus, FiEdit2 } from "react-icons/fi";
+import { FiPlus, FiEdit2, FiX } from "react-icons/fi";
+import { QRCodeSVG } from "qrcode.react";
 import useAuth from "../../hooks/useAuth";
 import EditableUserCard from "./EditableUserCard";
-import EditablePetCard from "./EditablePetCard";
-import { PetAvatar } from "../common/PetAvatar";
+import EditPetList from "./EditPetsList";
 import NO_PETS_IMG from "../../assets/no-pets.png";
 import PETS_BANNER_IMG from "../../assets/dog-cat-banner.png";
 import "./UserProfile.css";
 
-const UserProfile = ({ pets = [], activePetId, onPetSelect, onAddPet, refreshPets }) => {
+const UserProfile = ({ pets = [], activePetId, onPetSelect, onAddPet, onUpdatePet }) => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
+  const [viewingPetId, setViewingPetId] = useState(null);
+  const [showEditPets, setShowEditPets] = useState(false);
 
   // Fallback to first pet if no activePetId is provided but pets exist
-  const selectedPet = pets.find(p => p.id === activePetId) || (pets.length > 0 ? pets[0] : null);
+  const selectedPet =
+    pets.find((p) => p.id === activePetId) || (pets.length > 0 ? pets[0] : null);
 
-  const confirmLogout = async () => {
+  const confirmLogout = () => {
     if (logout) {
       logout();
-    }
-
-    if (signOut) {
-      await signOut();
     }
 
     localStorage.removeItem("petolife_user_session");
@@ -32,9 +31,28 @@ const UserProfile = ({ pets = [], activePetId, onPetSelect, onAddPet, refreshPet
     navigate("/login");
   };
 
-  const handlePetUpdate = () => {
-    if (refreshPets) refreshPets();
+  const handlePetSelect = (petId) => {
+    setViewingPetId(petId);
+    onPetSelect?.(petId);
   };
+
+  const handleCancelView = () => {
+    setViewingPetId(null);
+  };
+
+  const viewedPet = pets.find((p) => p.id === viewingPetId);
+
+  // ====== Edit Pets list view (shown in place of the dashboard) ======
+  if (showEditPets) {
+    return (
+      <EditPetList
+        pets={pets}
+        onAddPet={onAddPet}
+        onBack={() => setShowEditPets(false)}
+        onUpdatePet={onUpdatePet}
+      />
+    );
+  }
 
   return (
     <div className="user-profile-page">
@@ -45,16 +63,12 @@ const UserProfile = ({ pets = [], activePetId, onPetSelect, onAddPet, refreshPet
       {/* My Pets Section */}
       <div className="section-header">
         <h3>My Pets</h3>
-        {pets.length > 0 && selectedPet && (
-          <button 
-            type="button" 
-            className="view-all-link edit-pet-link" 
-            onClick={() => setShowEditModal(true)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: '6px', color: '#178a32', fontWeight: 600 }}
-          >
-            <FiEdit2 size={16} /> Edit Pet
-          </button>
-        )}
+        <button
+          className="edit-pet-btn"
+          onClick={() => setShowEditPets(true)}
+        >
+          <FiEdit2 size={14} /> Edit Pet
+        </button>
       </div>
 
       {pets.length === 0 ? (
@@ -70,37 +84,63 @@ const UserProfile = ({ pets = [], activePetId, onPetSelect, onAddPet, refreshPet
           </button>
         </div>
       ) : (
-        <div className="pets-grid">
-          {pets.map((pet) => (
-            <div
-              className={`pet-chip${pet.id === selectedPet?.id ? " active" : ""}`}
-              key={pet.id}
-              onClick={() => onPetSelect?.(pet)}
-              role="button"
-              tabIndex={0}
-            >
-              <PetAvatar
-                src={pet.pet_photo_url || pet.image}
-                petType={pet.pet_type || pet.type}
-                className="pet-chip-img"
-                size={64}
-              />
-              <span className="pet-chip-name">
-                {pet.pet_name || pet.name || "Unnamed"}
-              </span>
-            </div>
-          ))}
+        <>
+          <div className="pets-grid">
+            {pets.map((pet) => (
+              <div
+                className={`pet-chip${pet.id === viewingPetId ? " active" : ""}`}
+                key={pet.id}
+                onClick={() => handlePetSelect(pet.id)}
+                role="button"
+                tabIndex={0}
+              >
+                <img
+                  src={pet.pet_photo_url || pet.image || NO_PETS_IMG}
+                  alt={pet.pet_name || pet.name || "Pet"}
+                  className="pet-chip-img"
+                />
+                <span className="pet-chip-name">
+                  {pet.pet_name || pet.name || "Unnamed"}
+                </span>
+              </div>
+            ))}
 
-          {/* Add New Pet */}
-          <div className="add-pet-card" onClick={onAddPet}>
-            <div className="add-pet-circle">
-              <FiPlus size={26} />
+            {/* Add New Pet */}
+            <div className="add-pet-card" onClick={onAddPet}>
+              <div className="add-pet-circle">
+                <FiPlus size={26} />
+              </div>
+              <p>Add New Pet</p>
             </div>
-            <p>Add New Pet</p>
           </div>
-</div>
-      )}
 
+          {/* QR / Pet ID detail view */}
+          {viewedPet && (
+            <div className="pet-detail-card">
+              <button
+                className="pet-detail-cancel"
+                onClick={handleCancelView}
+                title="Close"
+              >
+                <FiX size={16} />
+              </button>
+
+              <div className="pet-qr-wrapper">
+                <QRCodeSVG
+                  value={String(viewedPet.pet_id || viewedPet.id || "")}
+                  size={120}
+                  bgColor="#ffffff"
+                  fgColor="#1a1a1a"
+                  level="M"
+                />
+              </div>
+              <p className="pet-id-label">
+                Pet ID: <span>{viewedPet.pet_id || viewedPet.id}</span>
+              </p>
+            </div>
+          )}
+        </>
+      )}
 
       {/* Bottom Banner */}
       <div className="pets-banner">
@@ -135,16 +175,6 @@ const UserProfile = ({ pets = [], activePetId, onPetSelect, onAddPet, refreshPet
               </button>
             </div>
           </div>
-        </div>
-      )}
-
-      {showEditModal && selectedPet && (
-        <div className="logout-modal-overlay" style={{ zIndex: 1000, overflowY: 'auto', padding: '20px 0' }}>
-          <EditablePetCard 
-            pet={selectedPet} 
-            onUpdate={() => { setShowEditModal(false); handlePetUpdate(); }} 
-            onClose={() => setShowEditModal(false)} 
-          />
         </div>
       )}
     </div>

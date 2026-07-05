@@ -1,3 +1,11 @@
+:root {
+  --brand-teal: #004b49;
+  --brand-green: #84b662;
+  --bg-soft: #f4f8f1;
+  --ink: #1a1f1c;
+  --muted: #6d756d;
+}
+
 .petphoto-container {
   width: 100%;
   max-width: 430px;
@@ -28,7 +36,6 @@
   align-items: center;
   text-align: center;
   padding-top: 18px;
-  margin-bottom: 24px;
 }
 
 .paw-img {
@@ -50,17 +57,24 @@
   50%       { transform: translateY(-5px); }
 }
 
-/* pet photo ring */
-.pet-photo-ring {
+/* outer wrapper — holds the ring AND the badge, clips nothing */
+.pet-photo-wrap {
   position: relative;
-  width: 180px;      /* adjust size as needed */
+  width: 180px;
   height: 180px;
-  border-radius: 50%;
-  overflow: hidden;  /* important */
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #fff;
+}
+
+/* ring — provides the border/background, but does not clip */
+.pet-photo-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .pet-photo-ring::before {
@@ -77,20 +91,46 @@
   z-index: 0;
 }
 
-.pet-photo-ring img {
+.pet-photo-ring--pulse::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid var(--brand-green);
+  opacity: 0.5;
+  animation: ringPulse 2.2s ease-out infinite;
+  z-index: 0;
+}
+
+@keyframes ringPulse {
+  0%   { transform: scale(0.94); opacity: 0.55; }
+  70%  { transform: scale(1.08); opacity: 0; }
+  100% { transform: scale(1.08); opacity: 0; }
+}
+
+/* inner wrapper — this is the ONLY thing that clips, so the badge is safe */
+.pet-photo-ring-inner {
+  position: relative;
   width: 100%;
   height: 100%;
-  object-fit: cover;      /* fills entire circle */
-  object-position: center;
   border-radius: 50%;
-  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   z-index: 1;
 }
 
-.pet-photo-ring span {
+.pet-photo-ring-inner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 50%;
+}
+
+.pet-photo-ring-inner span {
   font-size: 70px;
-  position: relative;
-  z-index: 1;
 }
 
 .step1-avatar-fallback {
@@ -106,26 +146,28 @@
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: linear-gradient(180deg, #1fa33b 0%, #118232 100%);
+  background: linear-gradient(150deg, var(--brand-green) 0%, var(--brand-teal) 100%);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 12px 24px rgba(17, 130, 50, 0.24);
+  box-shadow: 0 12px 24px rgba(0, 75, 73, 0.24);
   border: 4px solid #ffffff;
   cursor: pointer;
   font-size: 22px;
   overflow: visible;
+  transition: transform 0.15s ease;
 }
 
+.pet-camera-badge:hover {
+  transform: scale(1.06);
+}
 
 .pet-camera-badge svg {
   width: 22px;
   height: 22px;
   flex-shrink: 0;
 }
-
-
 
 .pet-avatar {
   position: relative;
@@ -147,80 +189,57 @@
   object-fit: cover;
 }
 
-
-
 .hero-section h1 {
-  margin: 0;
+  margin: 20px 0 0;
   font-size: 23px;
   line-height: 1.2;
   font-weight: 800;
-  color: #1a1f1c;
+  color: var(--ink);
 }
 
 .hero-section .subtitle {
   margin: 10px auto 0;
   max-width: 280px;
-  color: #6d756d;
+  color: var(--muted);
   font-size: 15px;
   line-height: 1.7;
   font-weight: 500;
 }
 
-/* upload card */
-.upload-card {
-  width: 100%;
-  min-height: 150px;
-  border: 2px dashed #a8d48d;
-  border-radius: 22px;
-  background: linear-gradient(180deg, #fbfdf9 0%, #f6faf3 100%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  text-align: center;
-  cursor: pointer;
-  margin-bottom: 18px;
-  padding: 24px 18px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+/* photo tips card — fills the middle space with something useful */
+.photo-tips-card {
+  background: var(--bg-soft);
+  border: 1px solid #e4efdd;
+  border-radius: 20px;
+  padding: 18px 20px;
 }
 
-.upload-card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 30px rgba(130, 171, 104, 0.12);
+.photo-tips-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--brand-teal);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 2px;
 }
 
-.upload-card img {
-  width: 100%;
-  max-height: 180px;
-  object-fit: cover;
-  border-radius: 16px;
-}
-
-.upload-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: #eff8e8;
-  color: #69b84a;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-}
-
-.upload-card h3 {
-  margin: 0;
-  font-size: 22px;
-  font-weight: 800;
-  color: #178a32;
-}
-
-.upload-card p {
-  margin: 0;
-  font-size: 14px;
-  color: #717a71;
+.photo-tip-item {
+  font-size: 14.5px;
+  color: #3a423a;
   font-weight: 500;
+}
+
+.photo-tip-icon {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #ffffff;
+  color: var(--brand-green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 75, 73, 0.08);
 }
 
 /* skip button */
@@ -230,15 +249,19 @@
   border: none;
   border-radius: 18px;
   background: #f3f7ef;
-  color: #177f31;
+  color: var(--brand-teal);
   font-size: 17px;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  margin-bottom: 22px;
   cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.skip-btn:hover {
+  background: #e9f1e3;
 }
 
 /* next button */
@@ -247,7 +270,7 @@
   height: 58px;
   border: none;
   border-radius: 18px;
-  background: linear-gradient(90deg, #189633 0%, #12852f 100%);
+  background: linear-gradient(90deg, var(--brand-green) 0%, var(--brand-teal) 100%);
   color: #fff;
   font-size: 18px;
   font-weight: 800;
@@ -256,10 +279,9 @@
   justify-content: center;
   gap: 12px;
   cursor: pointer;
-  box-shadow: 0 12px 28px rgba(24, 150, 51, 0.24);
+  box-shadow: 0 12px 28px rgba(0, 75, 73, 0.22);
 }
 
-/* replaces framer-motion whileHover / whileTap */
 .next-btn--animated {
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
@@ -267,7 +289,7 @@
 .next-btn--animated:active { transform: scale(0.97); }
 
 @media (max-width: 480px) {
-  .pet-photo-ring { width: 172px; height: 172px; }
+  .pet-photo-wrap { width: 172px; height: 172px; }
   .pet-avatar     { width: 144px; height: 144px; }
   .hero-section h1 { font-size: 22px; }
   .petphoto-container .subtitle { font-size: 14px; }

@@ -1,0 +1,598 @@
+/* ====== Page Wrapper ====== */
+.edit-pets-page,
+.edit-pets-page * {
+  box-sizing: border-box;
+}
+
+.edit-pets-page {
+  background: #f6f7f6;
+  padding: 20px 20px 100px;
+  font-family: "Poppins", "Segoe UI", sans-serif;
+  max-width: 480px;
+  margin: 0 auto;
+  overflow-x: hidden;
+}
+
+/* ====== Header ====== */
+.edit-pet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+
+
+.remove-pet-btn {
+  padding: 8px 16px;
+  border: 1px solid #ffd5d5;
+  border-radius: 12px;
+  background: #fff7f7;
+  color: #e5484d;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.remove-pet-btn:hover {
+  background: #ffeaea;
+  border-color: #ffb6b6;
+}
+
+.edit-pets-back {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: none;
+  background: #fff;
+  color: #1f7a3d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: background 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease;
+}
+
+.edit-pets-back:hover {
+  background: #eef5eb;
+  transform: translateX(-1px);
+  box-shadow: 0 3px 10px rgba(31, 122, 61, 0.12);
+}
+
+.edit-pets-back:active {
+  transform: translateX(-1px) scale(0.94);
+}
+
+.edit-pets-back:focus-visible {
+  outline: 2px solid #1f7a3d;
+  outline-offset: 2px;
+}
+
+.edit-pets-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #16321f;
+  margin: 0;
+}
+
+.edit-pets-subtitle {
+  font-size: 13.5px;
+  color: #6b7280;
+  line-height: 1.55;
+  margin: 0 0 24px 46px;
+}
+
+/* ====== List of pet cards ====== */
+.edit-pets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.edit-pet-card {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 16px 18px;
+  box-shadow: 0 1px 3px rgba(16, 24, 16, 0.04), 0 4px 14px rgba(16, 24, 16, 0.03);
+  border: 1px solid #eef2ec;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+
+.edit-pet-card.is-editing {
+  border-color: #bfe0c1;
+  box-shadow: 0 10px 28px rgba(31, 122, 61, 0.12);
+}
+
+
+
+/* ====== Avatar + pencil badge ====== */
+.edit-pet-avatar-wrapper {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+}
+
+.edit-pet-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #eef2ec;
+  border: 2px solid #d8e8d4;
+  display: block;
+  transition: border-color 0.2s ease;
+}
+
+.edit-pet-card:hover .edit-pet-avatar {
+  border-color: #a9d2a7;
+}
+
+.edit-pet-pencil {
+  position: absolute;
+  bottom: -3px;
+  right: -3px;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background: #1f7a3d;
+  color: #fff;
+  border: 3px solid #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(15, 60, 30, 0.25);
+  transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.edit-pet-pencil:hover {
+  background: #256b25;
+  transform: scale(1.1);
+  box-shadow: 0 3px 9px rgba(15, 60, 30, 0.32);
+}
+
+.edit-pet-pencil:active {
+  transform: scale(0.96);
+}
+
+.edit-pet-pencil:focus-visible {
+  outline: 2px solid #1f7a3d;
+  outline-offset: 3px;
+}
+
+.edit-pet-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.edit-pet-name {
+  font-size: 15.5px;
+  font-weight: 700;
+  color: #1a1a1a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.edit-pet-species {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6f9a6a;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ====== Inline edit form ====== */
+.edit-pet-form {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px dashed #dfe9dd;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  animation: edit-form-in 0.18s ease;
+}
+
+@keyframes edit-form-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.edit-pet-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.edit-pet-field span {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #4b5563;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.edit-pet-field input {
+  box-sizing: border-box;
+  width: 100%;
+  border: 1.5px solid #e3ebe1;
+  border-radius: 11px;
+  padding: 11px 13px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #1a1a1a;
+  background: #fbfcfb;
+  outline: none;
+  min-width: 0;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.edit-pet-field input::placeholder {
+  color: #a7b3a5;
+}
+
+.edit-pet-field input:hover {
+  border-color: #cfe3ce;
+}
+
+.edit-pet-field input:focus {
+  border-color: #1f7a3d;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(31, 122, 61, 0.1);
+}
+
+.edit-pet-field-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  min-width: 0;
+}
+
+.edit-pet-form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.edit-pet-cancel-btn,
+.edit-pet-save-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: none;
+  border-radius: 11px;
+  padding: 12px;
+  font-weight: 700;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.12s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+}
+
+.edit-pet-cancel-btn {
+  background: #f1f1f1;
+  color: #4b5563;
+}
+
+.edit-pet-cancel-btn:hover:not(:disabled) {
+  background: #e5e7eb;
+}
+
+.edit-pet-save-btn {
+  background: #1f7a3d;
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(31, 122, 61, 0.22);
+}
+
+.edit-pet-save-btn:hover:not(:disabled) {
+  background: #256b25;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(31, 122, 61, 0.28);
+}
+
+.edit-pet-cancel-btn:active:not(:disabled),
+.edit-pet-save-btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+.edit-pet-cancel-btn:focus-visible,
+.edit-pet-save-btn:focus-visible {
+  outline: 2px solid #1f7a3d;
+  outline-offset: 2px;
+}
+
+.edit-pet-cancel-btn:disabled,
+.edit-pet-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ====== Add new pet card ====== */
+.edit-pet-add-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #f5fbf1;
+  border: 2px dashed #9ecb87;
+  border-radius: 18px;
+  padding: 14px 18px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+
+.edit-pet-add-card:hover {
+  border-color: #1f7a3d;
+  background: #eef8e7;
+  transform: translateY(-1px);
+}
+
+.edit-pet-add-card:active {
+  transform: translateY(0) scale(0.99);
+}
+
+.edit-pet-add-circle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px dashed #71ac40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #71ac40;
+  flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.edit-pet-add-card:hover .edit-pet-add-circle {
+  background: #71ac40;
+  color: #fff;
+}
+
+.edit-pet-add-card .edit-pet-name {
+  color: #1f7a3d;
+}
+
+/* ====== Empty state ====== */
+.edit-pets-empty {
+  border: 2px dashed #cfe3ce;
+  border-radius: 20px;
+  background: #fbfcfb;
+  padding: 44px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.edit-pets-empty:hover {
+  border-color: #a9d2a7;
+  background: #f7fbf6;
+}
+
+.edit-pets-empty-img {
+  width: 150px;
+  height: auto;
+  margin-bottom: 18px;
+}
+
+.edit-pets-empty h4 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 8px;
+}
+
+.edit-pets-empty p {
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.55;
+  max-width: 280px;
+  margin: 0 0 22px;
+}
+
+.edit-pets-add-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  border: 2px dashed #1f7a3d;
+  color: #1f7a3d;
+  font-weight: 700;
+  font-size: 15px;
+  border-radius: 50px;
+  padding: 12px 22px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.12s ease, color 0.15s ease;
+}
+
+.edit-pets-add-btn:hover {
+  background: #1f7a3d;
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.edit-pets-add-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+.edit-pet-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.edit-pet-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.edit-pet-delete-btn {
+  border: 1px solid #ffd7d7;
+  background: #fff5f5;
+  color: #e54b4b;
+  padding: 8px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s ease;
+}
+
+.edit-pet-delete-btn:hover {
+  background: #ffe9e9;
+  transform: translateY(-1px);
+}
+/* Header */
+.edit-pets-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.edit-pets-back-btn {
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #004b49;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 75, 73, 0.08);
+  transition: all 0.2s ease;
+}
+
+.edit-pets-back-btn:hover {
+  background: #f3f7f6;
+  transform: translateX(-2px);
+}
+
+.edit-pets-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #004b49;
+}
+
+.edit-pets-subtitle {
+  margin: 2px 0 0;
+  font-size: 14px;
+  color: #7a8784;
+}
+/* Overlay */
+.delete-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 25, 20, 0.45);
+  backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  animation: fadeIn .2s ease;
+}
+
+/* Modal */
+.delete-modal {
+  width: 90%;
+  max-width: 340px;
+  background: white;
+  border-radius: 24px;
+  padding: 28px 24px;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0,0,0,.15);
+  animation: scaleIn .2s ease;
+}
+
+.delete-modal-icon {
+  font-size: 42px;
+  margin-bottom: 16px;
+}
+
+.delete-modal h3 {
+  margin: 0;
+  color: #004b49;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.delete-modal p {
+  margin-top: 12px;
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.delete-modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.delete-cancel-btn,
+.delete-confirm-btn {
+  flex: 1;
+  border: none;
+  border-radius: 14px;
+  padding: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .2s;
+}
+
+.delete-cancel-btn {
+  background: #f2f4f3;
+  color: #555;
+}
+
+.delete-cancel-btn:hover {
+  background: #e8ebea;
+}
+
+.delete-confirm-btn {
+  background: #ef4444;
+  color: white;
+}
+
+.delete-confirm-btn:hover {
+  background: #dc2626;
+}
+
+@keyframes fadeIn {
+  from { opacity:0; }
+  to { opacity:1; }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity:0;
+    transform:scale(.9);
+  }
+  to {
+    opacity:1;
+    transform:scale(1);
+  }
+}

@@ -57,7 +57,7 @@ const [dob, setDob] = useState(petData.birthDate || "");
             </div>
           </label>
           <div className="age-card-illustration age-card-illustration--calendar">
-            <span className="age-emoji">📅</span>
+            <FiCalendar />
           </div>
         </div>
 
@@ -72,8 +72,8 @@ const [dob, setDob] = useState(petData.birthDate || "");
                   value={dob}
                   onChange={(e) => setDob(e.target.value)}
                   className="dob-input"
-                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #ccc", outline: "none" }}
                 />
+                <FiCalendar className="calendar-icon" />
               </div>
             </div>
           </div>

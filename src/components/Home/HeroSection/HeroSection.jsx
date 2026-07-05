@@ -1,32 +1,46 @@
 import React from "react";
-import "./HeroSection.css";
-import heroimg from "./hero-pets copy 2.png";
+import defaultHeroImage from "../../../assets/hero.png";
 
-/**
- * USAGE:
- * Pass your dog+cat image via the heroSrc prop.
- * Example: <HeroSection heroSrc={require("../../assets/hero-pets.png")} />
- */
-const HeroSection = () => {
+export default function HeroSection({ heroImage = defaultHeroImage }) {
   return (
-    <section className="hero">
-      {/* Scattered decorative elements */}
-      <span className="hero__deco hero__deco--paw1" aria-hidden="true">🐾</span>
-      <span className="hero__deco hero__deco--paw2" aria-hidden="true">🐾</span>
+    <section
+      className="relative w-full aspect-[4/3] sm:aspect-[16/9] overflow-hidden rounded-[28px] shadow-[0_2px_10px_rgba(0,75,73,0.06)] bg-white bg-cover bg-center bg-no-repeat"
+      style={{ backgroundImage: `url(${heroImage})` }}
+    >
+      <div className="absolute left-7 top-15 h-full flex items-start pt-6 sm:pt-8">
+        <div className="w-[52%] pl-6 sm:pl-8 md:pl-10">
+          <p className="text-[#84B662] text-base sm:text-lg font-semibold">
+            Welcome to
+          </p>
 
-      {/* Green oval backdrop behind pets */}
-      <div className="hero__oval" aria-hidden="true" />
+          <h1 className="mt-1 font-black leading-none">
+            <span className="text-[#004B49] text-[34px] sm:text-[44px] md:text-[50px]">
+              Peto
+            </span>
+            <span className="text-[#84B662] text-[34px] sm:text-[44px] md:text-[50px]">
+              life
+            </span>
+          </h1>
 
-      <img src={heroimg} alt="Happy dog and cat" className="hero__pets-img" />
+          <p className="mt-3 text-[#294744] text-base sm:text-lg leading-7 max-w-[200px] sm:max-w-[260px]">
+            Your pet's health journey starts here.
+            <span className="ml-1">💚</span>
+          </p>
 
-      <h1 className="hero__title">
-        Welcome to <span className="hero__brand">PetOlife</span>
-      </h1>
-      <p className="hero__subtitle">
-        Your pet&apos;s health journey<br />starts here! 💚
-      </p>
+        </div>
+      </div>
+
+      <svg
+        viewBox="0 0 64 64"
+        fill="none"
+        className="absolute bottom-3 left-4 sm:bottom-5 sm:left-6 w-5 h-5 sm:w-7 sm:h-7 fill-[#d7e4cc] opacity-80"
+      >
+        <ellipse cx="32" cy="42" rx="16" ry="13" />
+        <ellipse cx="12" cy="24" rx="7" ry="9" />
+        <ellipse cx="52" cy="24" rx="7" ry="9" />
+        <ellipse cx="22" cy="12" rx="6" ry="8" />
+        <ellipse cx="42" cy="12" rx="6" ry="8" />
+      </svg>
     </section>
   );
-};
-
-export default HeroSection;
+}

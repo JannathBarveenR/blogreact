@@ -1,4 +1,4 @@
-/* ── BottomNav.css ── */
+/* ── BottomNav.css (Petolife theme) ── */
 
 .bottomnav {
   position: fixed;
@@ -7,14 +7,14 @@
   right: 0;
   height: 64px;
   background: #ffffff;
-  border-top: 1px solid #eee;
+  border-top: 1px solid #e5ede1;
   display: flex;
   align-items: center;
   justify-content: space-around;
   padding: 0 4px;
   padding-bottom: env(safe-area-inset-bottom, 0px);
   z-index: 300;
-  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 -2px 12px rgba(0, 75, 73, 0.08);
 }
 
 /* ── Regular tab button ── */
@@ -35,7 +35,7 @@
 }
 
 .bottomnav__item:hover {
-  background: #f4fbf6;
+  background: #eef6e7;
 }
 
 .bottomnav__icon {
@@ -47,14 +47,14 @@
 
 .bottomnav__label {
   font-size: 10.5px;
-  color: #888;
+  color: #8a948a;
   font-weight: 500;
   white-space: nowrap;
   transition: color 0.15s;
 }
 
 .bottomnav__item--active .bottomnav__label {
-  color: #138a36;
+  color: #004b49;
   font-weight: 700;
 }
 
@@ -63,22 +63,22 @@
   flex-shrink: 0;
   width: 54px;
   height: 54px;
-  background: #138a36;
+  background: #84b662;
   border: none;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(19, 138, 54, 0.45);
+  box-shadow: 0 4px 14px rgba(132, 182, 98, 0.45);
   margin-bottom: 10px;
   transition: background 0.18s, transform 0.12s, box-shadow 0.18s;
   flex: none;
 }
 
 .bottomnav__fab:hover {
-  background: #0f7a2e;
-  box-shadow: 0 6px 18px rgba(19, 138, 54, 0.5);
+  background: #6a9a4c;
+  box-shadow: 0 6px 18px rgba(106, 154, 76, 0.5);
 }
 
 .bottomnav__fab:active {

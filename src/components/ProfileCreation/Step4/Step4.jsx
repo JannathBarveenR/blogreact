@@ -107,19 +107,21 @@ function Step4({ goBack, petData, setStep, isSubmitting, setIsSubmitting, submit
       const existingPets    = existingPetsStr ? JSON.parse(existingPetsStr) : [];
       localStorage.setItem(storageKey, JSON.stringify([newPet, ...existingPets]));
 
-      const petForHome = {
-        id: petProfileId,
-        petolife_id: petolifeId,
-        name:   (localPetData.petName || "").trim(),
-        breed:  localPetData.breed  || "Not added",
-        gender: localPetData.gender || "Male",
-        age:    localPetData.birthDate ? localPetData.birthDate : localPetData.approxAge || "Not added",
-        image:  profileData.data?.pet_photo_url ||
-                (localPetData.petPhotoFile ? URL.createObjectURL(localPetData.petPhotoFile) : ""),
-      };
+const petForHome = {
+  id: petProfileId,
+  petolife_id: petolifeId,
+  name: (localPetData.petName || "").trim(),
+  pet_type: localPetData.petType || "",
+  breed: localPetData.breed || "Not added",
+  gender: localPetData.gender || "Male",
+  birth_date: localPetData.birthDate || "",
+  age: localPetData.birthDate ? "" : (localPetData.approxAge || "Not added"),
+  image: profileData.data?.pet_photo_url ||
+         (localPetData.petPhotoFile ? URL.createObjectURL(localPetData.petPhotoFile) : ""),
+  pet_ids: validIds,
+};
 
-      onNavigateToPetHome({ newPet: petForHome });
-
+onNavigateToPetHome({ newPet: petForHome });
     } catch (err) {
       console.error("Submit error:", err);
       setSubmitError(err.message || "Something went wrong. Please try again.");
@@ -128,12 +130,13 @@ function Step4({ goBack, petData, setStep, isSubmitting, setIsSubmitting, submit
     }
   };
 
-  const inputStyle = { padding: '6px', borderRadius: '6px', border: '1px solid #ccc', outline: 'none', width: '100%', maxWidth: '150px', textAlign: 'left', fontFamily: 'inherit' };
+  const inputStyle = { padding: '9px 10px', borderRadius: '10px', border: '1.5px solid #dce8d8', outline: 'none', width: '100%', maxWidth: '150px', textAlign: 'left', fontFamily: 'inherit', fontSize: '13.5px', color: '#16211f', background: '#fbfdf9' };
 
   return (
     <div className="confirm-container">
-      <StepProgress progress={progress} stepNumber={4} />
       <StepHeaderBar onBack={goBack} />
+      <StepProgress progress={progress} stepNumber={4} />
+
 
       <div className="confirm-header">
         <h2 className="confirm-title">Review Pet Profile</h2>
@@ -223,8 +226,8 @@ function Step4({ goBack, petData, setStep, isSubmitting, setIsSubmitting, submit
                   style={inputStyle}
                   title="Date of Birth"
                 />
-                <span style={{ fontSize: '11px', color: '#888', marginLeft: '4px' }}>Approx Age (if no DOB)</span>
-                <div style={{ display: 'flex', gap: '4px', width: '100%' }}>
+                <span style={{ fontSize: '11px', color: '#8a938a', marginLeft: '4px' }}>Approx Age (if no DOB)</span>
+                <div style={{ display: 'flex', gap: '6px', width: '100%' }}>
                   <input 
                     type="number" 
                     value={localPetData.approxAge.match(/(\d+)y/)?.[1] || ""} 
@@ -234,7 +237,7 @@ function Step4({ goBack, petData, setStep, isSubmitting, setIsSubmitting, submit
                       const m = localPetData.approxAge.match(/(\d+)m/)?.[1] || "0";
                       setLocalPetData({...localPetData, approxAge: `${y}y ${m}m`, birthDate: ""});
                     }} 
-                    style={{...inputStyle, width: '60px'}}
+                    style={{...inputStyle, width: '65px', maxWidth: '65px'}}
                     placeholder="Yrs"
                   />
                   <input 
@@ -246,7 +249,7 @@ function Step4({ goBack, petData, setStep, isSubmitting, setIsSubmitting, submit
                       const y = localPetData.approxAge.match(/(\d+)y/)?.[1] || "0";
                       setLocalPetData({...localPetData, approxAge: `${y}y ${m}m`, birthDate: ""});
                     }} 
-                    style={{...inputStyle, width: '60px'}}
+                    style={{...inputStyle, width: '65px', maxWidth: '65px'}}
                     placeholder="Mos"
                   />
                 </div>
@@ -259,7 +262,7 @@ function Step4({ goBack, petData, setStep, isSubmitting, setIsSubmitting, submit
       </div>
 
       {isEditing ? (
-        <button type="button" className="edit-profile-btn" onClick={() => setIsEditing(false)} style={{ background: '#eff8e8', color: '#178a32', borderColor: '#a8d48d' }}>
+        <button type="button" className="edit-profile-btn edit-profile-btn--save" onClick={() => setIsEditing(false)}>
           <FiCheck />
           <span>Save Details</span>
         </button>
@@ -276,7 +279,6 @@ function Step4({ goBack, petData, setStep, isSubmitting, setIsSubmitting, submit
         className={`generate-btn ${isSubmitting ? "loading" : ""}`}
         onClick={handleGenerate}
         disabled={isSubmitting || isEditing}
-        style={isEditing ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
       >
         {isSubmitting ? (
           <>
