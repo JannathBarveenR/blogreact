@@ -167,32 +167,53 @@ const EditableUserCard = ({ user }) => {
       </div>
     );
   }
+return (
+  <div className="user-card">
+    {isEditing && (
+      <div className="edit-actions">
+        <button
+          className="cancel-btn"
+          onClick={cancelEdit}
+          disabled={saving}
+          title="Discard changes"
+        >
+          <FiX size={16} />
+        </button>
 
-  return (
-    <div className="user-card">
-      {isEditing && (
-        <div className="edit-actions">
-          <button className="cancel-btn" onClick={cancelEdit} disabled={saving} title="Discard changes">
-            <FiX size={16} />
-          </button>
-          <button className="save-btn" onClick={handleSave} disabled={saving}>
-            {saving ? "Saving…" : <><FiCheck size={15} /> Save</>}
-          </button>
-        </div>
-      )}
+        <button
+          className="save-btn"
+          onClick={handleSave}
+          disabled={saving}
+        >
+          {saving ? "Saving..." : (
+            <>
+              <FiCheck size={15} /> Save
+            </>
+          )}
+        </button>
+      </div>
+    )}
 
-      {error && <div className="error-banner">⚠️ {error}</div>}
+    {error && (
+      <div className="error-banner">
+        ⚠️ {error}
+      </div>
+    )}
 
+    <div className="user-view">
+
+      {/* Avatar */}
       <div className="avatar-wrapper">
         <img
           src={profile.avatar_url || DEFAULT_AVATAR}
           alt="Profile"
           className="avatar-img"
         />
+
         <button
           className="edit-avatar-btn"
           type="button"
-          title={isEditing ? "Upload photo" : "Edit profile"}
+          title={isEditing ? "Change photo" : "Edit profile"}
           onClick={() => {
             if (isEditing) {
               fileInputRef.current?.click();
@@ -201,33 +222,24 @@ const EditableUserCard = ({ user }) => {
             }
           }}
         >
-          {isEditing ? <FiCamera size={13} /> : <FiEdit2 size={13} />}
+          {isEditing ? (
+            <FiCamera size={14} />
+          ) : (
+            <FiEdit2 size={14} />
+          )}
         </button>
-        {isEditing && (
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden-input"
-            onChange={handleAvatarChange}
-          />
-        )}
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden-input"
+          onChange={handleAvatarChange}
+        />
       </div>
 
-      {!isEditing ? (
-        <div className="user-info">
-          <h2 className="user-name">
-            {profile.full_name ? profile.full_name.toUpperCase() : "Pet Parent"}
-          </h2>
-          <p className="user-email">
-            {profile.email || <span className="detail-empty">No email provided</span>}
-          </p>
-          <p className="user-location">
-            <span className="location-pin">📍</span>
-            {locationLabel || <span className="detail-empty">Location not set</span>}
-          </p>
-        </div>
-      ) : (
+      {/* Right Side */}
+      {isEditing ? (
         <div className="user-info editing">
           {[
             { label: "Name", name: "full_name", type: "text" },
@@ -239,6 +251,7 @@ const EditableUserCard = ({ user }) => {
           ].map(({ label, name, type }) => (
             <div className="detail-row" key={name}>
               <span className="detail-label">{label}</span>
+
               <input
                 type={type}
                 name={name}
@@ -250,9 +263,36 @@ const EditableUserCard = ({ user }) => {
             </div>
           ))}
         </div>
+      ) : (
+        <div className="user-info">
+          <h2 className="user-name">
+            {profile.full_name || "Pet Parent"}
+          </h2>
+
+          <p className="user-email">
+            {profile.email || (
+              <span className="detail-empty">
+                No email provided
+              </span>
+            )}
+          </p>
+
+          <p className="user-location">
+            <span className="location-pin">📍</span>
+
+            {locationLabel || (
+              <span className="detail-empty">
+                Location not set
+              </span>
+            )}
+          </p>
+        </div>
       )}
+
     </div>
-  );
+  </div>
+);
+
 };
 
 export default EditableUserCard;

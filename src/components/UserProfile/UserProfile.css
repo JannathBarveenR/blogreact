@@ -118,6 +118,22 @@
   overflow-x: auto;
   padding-bottom: 10px;
 }
+.edit-pet-btn {
+  background: transparent;
+  border: none;
+  color: #3d8b37;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: .2s;
+}
+
+.edit-pet-btn:hover {
+  color: #256b25;
+}
 
 .pets-grid::-webkit-scrollbar {
   height: 4px;
@@ -178,6 +194,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 6px 4px;
   cursor: pointer;
 }
 
@@ -354,4 +371,56 @@
 .btn-confirm:hover {
   background: #d32f2f;
   transform: translateY(-1px);
+}
+.pet-detail-card {
+  position: relative;
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 22px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+  margin-bottom: 24px;
+}
+
+.pet-detail-cancel {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #f1f1f1;
+  color: #555;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.pet-detail-cancel:hover {
+  background: #e5e7eb;
+}
+
+.pet-qr-wrapper {
+  background: #fff;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid #eef2ec;
+  margin-bottom: 12px;
+}
+
+.pet-id-label {
+  font-size: 14px;
+  color: #4b5563;
+  margin: 0;
+}
+
+.pet-id-label span {
+  font-weight: 700;
+  color: #1f7a3d;
 }

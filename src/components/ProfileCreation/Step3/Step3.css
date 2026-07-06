@@ -1,50 +1,68 @@
+:root {
+  --brand-teal: #004b49;
+  --brand-green: #84b662;
+  --bg-page: #f4f8f1;
+  --ink: #16211f;
+  --muted: #6d756d;
+  --card-border: #e5ede1;
+}
+.submit-error {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #fff3f3;
+  border: 1px solid #ffd2d2;
+  color: #cc3d3d;
+  font-size: 14px;
+  font-weight: 500;
+}
 .pet-age-container {
   max-width: 430px;
   margin: 0 auto;
-  padding: 18px 16px 28px;
+  padding: 14px 16px 24px;
   min-height: 100vh;
-  background: #f6f7f5;
+  background: var(--bg-page);
 }
 
 .pet-age-header {
-  margin: 10px 0 22px;
+  margin: 10px 0 18px;
   text-align: center;
 }
 
 .pet-age-header h2 {
   margin: 0;
-  font-size: 24px;
+  font-size: 22px;
   line-height: 1.2;
   font-weight: 800;
-  color: #1b2430;
+  color: var(--brand-teal);
   letter-spacing: -0.02em;
 }
 
 .pet-age-header .subtitle {
-  margin: 12px auto 0;
+  margin: 10px auto 0;
   max-width: 340px;
-  color: #5f6773;
-  font-size: 14px;
-  line-height: 1.75;
+  color: var(--muted);
+  font-size: 13.5px;
+  line-height: 1.65;
   font-weight: 500;
 }
 
 /* CARDS */
 .age-card {
-  border-radius: 22px;
-  border: 1.5px solid #e4ece0;
+  border-radius: 20px;
+  border: 1.5px solid var(--card-border);
   background: #fff;
-  padding: 16px 16px 18px;
-  margin-bottom: 18px;
-  transition: all 0.22s ease;
-  box-shadow: 0 8px 24px rgba(19,32,18,0.04);
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  box-shadow: 0 6px 18px rgba(0, 75, 73, 0.05);
   cursor: pointer;
 }
 
 .age-card.selected {
-  background: linear-gradient(180deg, #fbfef9 0%, #f7fcf4 100%);
-  border-color: #c7ddb8;
-  box-shadow: 0 0 0 3px rgba(120,181,83,0.08), 0 10px 26px rgba(90,140,66,0.08);
+  background: linear-gradient(180deg, #fbfff7 0%, #f1f9ea 100%);
+  border-color: var(--brand-green);
+  box-shadow: 0 0 0 3px rgba(132, 182, 98, 0.16), 0 10px 22px rgba(0, 75, 73, 0.08);
 }
 
 .age-card-top {
@@ -57,16 +75,16 @@
 .radio-label {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: 10px;
   cursor: pointer;
   flex: 1;
 }
 
 .radio-label input[type="radio"] {
   margin: 2px 0 0;
-  width: 22px;
-  height: 22px;
-  accent-color: #1f9a34;
+  width: 20px;
+  height: 20px;
+  accent-color: var(--brand-green);
   flex-shrink: 0;
 }
 
@@ -74,323 +92,110 @@
 
 .card-title {
   display: block;
-  color: #1f2430;
-  font-size: 15.5px;
+  color: var(--ink);
+  font-size: 14.5px;
   font-weight: 800;
-  line-height: 1.45;
+  line-height: 1.4;
+}
+
+.age-card.selected .card-title {
+  color: var(--brand-teal);
 }
 
 .card-subtext {
   display: block;
-  margin-top: 5px;
-  color: #6a727d;
-  font-size: 13.5px;
-  line-height: 1.65;
-  max-width: 250px;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+  max-width: 230px;
 }
 
 .age-card-illustration {
   flex-shrink: 0;
-  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 
 .age-card-illustration--calendar {
-  width: 72px;
-  height: 72px;
-  margin-top: 2px;
-  border-radius: 18px;
-  background: radial-gradient(circle at 30% 30%, #f4faef 0%, #e9f5df 100%);
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(150deg, var(--brand-green) 0%, var(--brand-teal) 100%);
+  color: #fff;
+  font-size: 20px;
 }
 
 .age-card-illustration--clock {
-  width: 82px;
-  height: 82px;
-  margin-top: 4px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   background: radial-gradient(circle at 30% 30%, #f7fbf3 0%, #eef7e6 100%);
 }
 
-.age-emoji { font-size: 44px; line-height: 1; filter: saturate(1.05); }
-.age-card-illustration--clock .age-emoji { font-size: 42px; }
+.age-emoji { font-size: 30px; line-height: 1; }
 
 .age-paw {
   position: absolute;
-  right: 4px;
-  bottom: 8px;
-  font-size: 18px;
+  right: 2px;
+  bottom: 4px;
+  font-size: 14px;
   line-height: 1;
 }
 
-.card-body { margin-top: 16px; }
+.card-body { margin-top: 14px; }
 
 .input-group label,
 .age-field label {
   display: block;
-  margin-bottom: 8px;
-  color: #1f2430;
-  font-size: 14px;
+  margin-bottom: 6px;
+  color: var(--ink);
+  font-size: 13.5px;
   font-weight: 700;
 }
 
-
-.date-input .react-datepicker-wrapper {
-  width: 100%;
-}
-
-.date-input .react-datepicker__input-container {
-  width: 100%;
-}
-
-.date-input input {
-  width: 100%;
-  height: 58px;
-  padding: 0 56px 0 18px;
-  border: 2px solid #e4eadf;
-  border-radius: 18px;
-  background: #ffffff;
-  font-size: 16px;
-  font-weight: 500;
-  color: #2d3748;
-  outline: none;
-  transition: all 0.25s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-}
-
-.date-input input:focus {
-  border-color: #1fa33b;
-  box-shadow: 0 0 0 4px rgba(31, 163, 59, 0.12);
-}
-
-.date-input input::placeholder {
-  color: #94a3b8;
-}
-
-.calendar-icon {
-  position: absolute;
-  right: 18px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 22px;
-  color: #1fa33b;
-  cursor: pointer;
-  z-index: 2;
-  transition: all 0.2s ease;
-}
-
-.calendar-icon:hover {
-  color: #118232;
-  transform: translateY(-50%) scale(1.1);
-}
-
-/* Calendar popup styling */
-.react-datepicker {
-  border: none !important;
-  border-radius: 18px !important;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15) !important;
-  overflow: hidden;
-  font-family: inherit;
-}
-
-.react-datepicker__header {
-  background: linear-gradient(180deg, #1fa33b 0%, #118232 100%) !important;
-  border-bottom: none !important;
-}
-
-.react-datepicker__current-month,
-.react-datepicker__day-name,
-.react-datepicker__navigation-icon::before {
-  color: white !important;
-}
-
-.react-datepicker__day--selected,
-.react-datepicker__day--keyboard-selected {
-  background: #1fa33b !important;
-  border-radius: 50%;
-}
-
-.react-datepicker__day:hover {
-  border-radius: 50%;
-  background: #e8f6eb !important;
-}
-
-.react-datepicker__year-dropdown {
-  border-radius: 12px;
-}
-
-/* Date Input Container */
 .date-input {
   position: relative;
   width: 100%;
 }
 
-/* Date Input */
-.date-input-wrapper{
-    position:relative;
-    width:100%;
+.dob-input {
+  width: 100%;
+  height: 48px;
+  padding: 0 46px 0 14px;
+  border-radius: 14px;
+  border: 1.5px solid var(--card-border);
+  background: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.dob-input{
-    width:100%;
-    height:58px;
-    padding:0 50px 0 18px;
-    border:2px solid #DCE8DD;
-    border-radius:16px;
-    font-size:15px;
-    font-weight:500;
-    color:#024442;
-    outline:none;
-    transition:.25s;
-    background:#fff;
+.dob-input:hover {
+  border-color: #cfe3c9;
 }
 
-.dob-input:hover{
-    border-color:#71AC40;
+.dob-input:focus {
+  border-color: var(--brand-green);
+  box-shadow: 0 0 0 4px rgba(132, 182, 98, 0.18);
 }
 
-.dob-input:focus{
-    border-color:#71AC40;
-    box-shadow:0 0 0 4px rgba(113,172,64,.15);
+.calendar-icon {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--brand-teal);
+  font-size: 18px;
+  pointer-events: none;
 }
 
-.calendar-icon{
-    position:absolute;
-    right:18px;
-    top:50%;
-    transform:translateY(-50%);
-    color:#024442;
-    pointer-events:none;
-}
-
-/* Calendar */
-
-.react-datepicker{
-    border:none;
-    border-radius:22px;
-    overflow:hidden;
-    box-shadow:0 18px 45px rgba(0,0,0,.15);
-    font-family:inherit;
-}
-
-.react-datepicker__header{
-    background:#024442;
-    border:none;
-    padding:18px;
-}
-
-.react-datepicker__current-month{
-    color:#fff;
-    font-size:17px;
-    font-weight:700;
-}
-
-.react-datepicker__day-name{
-    color:#fff;
-    font-weight:600;
-}
-
-.react-datepicker__navigation-icon::before{
-    border-color:#fff;
-}
-
-.react-datepicker__day{
-    width:38px;
-    height:38px;
-    line-height:38px;
-    border-radius:50%;
-    transition:.2s;
-}
-
-.react-datepicker__day:hover{
-    background:#DFF6E9;
-    color:#024442;
-}
-
-.react-datepicker__day--selected,
-.react-datepicker__day--keyboard-selected{
-    background:#71AC40 !important;
-    color:white !important;
-}
-
-.react-datepicker__month-dropdown,
-.react-datepicker__year-dropdown{
-    border-radius:12px;
-}
-
-.react-datepicker__triangle{
-    display:none;
-}
-/* Popper */
-.custom-datepicker-popper {
-  z-index: 9999;
-}
-
-/* Main Calendar */
-.react-datepicker {
-  width: 320px;
-  border: none;
-  border-radius: 24px;
-  overflow: hidden;
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
-}
-
-/* Header */
-.react-datepicker__header {
-  background: #16a034;
-  border-bottom: none;
-  padding: 12px;
-}
-
-.react-datepicker__current-month {
-  color: white;
-  font-size: 20px;
-  font-weight: 700;
-}
-
-/* Month & Year Dropdowns */
-.react-datepicker__month-select,
-.react-datepicker__year-select {
-  height: 36px;
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.4);
-  background: white;
-  padding: 0 10px;
-}
-
-/* Calendar Grid */
-.react-datepicker__month {
-  margin: 16px;
-}
-
-.react-datepicker__day-name,
-.react-datepicker__day {
-  width: 40px;
-  line-height: 40px;
-  margin: 2px;
-}
-
-.react-datepicker__day {
-  border-radius: 12px;
-}
-
-.react-datepicker__day--selected {
-  background: #71ac40 !important;
-  color: white !important;
-}
-
-.react-datepicker__day:hover {
-  background: #dff6e9;
-}
-
-/* Hover */
-
-
-/* Calendar Icon */
-
-
-/* Hide default calendar icon */
+/* Hide default calendar icon so ours shows instead */
 .dob-input::-webkit-calendar-picker-indicator {
   position: absolute;
   right: 0;
@@ -400,85 +205,74 @@
   cursor: pointer;
 }
 
-/* Remove spin buttons */
 .dob-input::-webkit-inner-spin-button,
 .dob-input::-webkit-clear-button {
   display: none;
 }
 
-/* Placeholder color */
-.dob-input:invalid {
-  color: #9ca3af;
-}
-
-.date-input input,
-.age-field input {
-  width: 100%;
-  height: 54px;
-  border-radius: 14px;
-  border: 1.5px solid #e7ebe5;
-  background: #fff;
-  padding: 0 16px;
-  font-size: 14px;
-  color: #1d2430;
-  outline: none;
-  transition: all 0.2s ease;
-  box-sizing: border-box;
-}
-
-.date-input input { padding-right: 46px; }
-
-.date-input input:focus,
-.age-field input:focus {
-  border-color: #9fce8f;
-  box-shadow: 0 0 0 4px rgba(159,206,143,0.18);
-}
-
-
 .age-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  gap: 12px;
+}
+
+.age-field input {
+  width: 100%;
+  height: 48px;
+  border-radius: 14px;
+  border: 1.5px solid var(--card-border);
+  background: #fff;
+  padding: 0 14px;
+  font-size: 14px;
+  color: var(--ink);
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.age-field input:focus {
+  border-color: var(--brand-green);
+  box-shadow: 0 0 0 4px rgba(132, 182, 98, 0.18);
 }
 
 /* NEXT BUTTON */
 .pet-age-container .next-btn {
   width: 100%;
-  margin-top: 8px;
-  height: 56px;
+  margin-top: 6px;
+  height: 52px;
   border: none;
-  border-radius: 18px;
-  background: linear-gradient(135deg, #159331 0%, #14952f 45%, #0f7f25 100%);
+  border-radius: 16px;
+  background: linear-gradient(90deg, var(--brand-green) 0%, var(--brand-teal) 100%);
   color: #fff;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 800;
   letter-spacing: -0.01em;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  box-shadow: 0 14px 30px rgba(20,149,47,0.22);
+  gap: 10px;
+  box-shadow: 0 10px 22px rgba(0, 75, 73, 0.2);
   cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .pet-age-container .next-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 18px 34px rgba(20,149,47,0.28);
+  transform: scale(1.02);
+}
+.pet-age-container .next-btn:active {
+  transform: scale(0.98);
 }
 
 @media (max-width: 480px) {
-  .pet-age-container { padding: 18px 4px 24px; }
-  .pet-age-header h2 { font-size: 22px; }
-  .pet-age-header .subtitle { font-size: 13.5px; }
-  .age-card { padding: 14px 14px 16px; border-radius: 20px; }
-  .card-title { font-size: 15px; }
-  .card-subtext { font-size: 13px; }
-  .age-card-illustration--calendar { width: 64px; height: 64px; }
-  .age-card-illustration--clock { width: 74px; height: 74px; }
-  .age-emoji { font-size: 38px; }
-  .age-card-illustration--clock .age-emoji { font-size: 36px; }
-  .age-paw { font-size: 16px; right: 2px; bottom: 6px; }
-  .date-input input, .age-field input { height: 52px; font-size: 14px; }
-  .pet-age-container .next-btn { height: 54px; font-size: 17px; border-radius: 16px; }
+  .pet-age-container { padding: 14px 12px 20px; }
+  .pet-age-header h2 { font-size: 20px; }
+  .pet-age-header .subtitle { font-size: 13px; }
+  .age-card { padding: 12px 14px; border-radius: 18px; }
+  .card-title { font-size: 14px; }
+  .card-subtext { font-size: 12.5px; }
+  .age-card-illustration--calendar { width: 44px; height: 44px; }
+  .age-card-illustration--clock { width: 50px; height: 50px; }
+  .age-emoji { font-size: 26px; }
+  .dob-input, .age-field input { height: 46px; font-size: 13.5px; }
+  .pet-age-container .next-btn { height: 50px; font-size: 15.5px; border-radius: 14px; }
 }

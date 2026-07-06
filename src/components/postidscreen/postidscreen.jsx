@@ -186,26 +186,16 @@ export default function PostIdScreen({ inlineData }) {
     <div className="page">
       <PawLayer />
       <PawWatermarks />
-      <header className="postid-hero">
-        <div className="check-badge">
-          <Check size={30} strokeWidth={3} color="var(--green-700)" />
-        </div>
-        <div className="avatars">
-          <div className="avatar avatar-dog" style={{ animationDelay: '0.15s' }}>
-            <div className="avatar-ring">
-              <PetAvatar
-                src={petPhotoUrl}
-                petType={petType}
-                className="avatar-photo"
-                size={48}
-              />
-            </div>
-            <span className="avatar-charm">
-              <PawPrint size={14} />
-            </span>
-          </div>
-        </div>
-      </header>
+<header className="postid-hero">
+  <div className="avatar-badge-wrap">
+    <div className="avatar-ring">
+      <PetAvatar src={petPhotoUrl} petType={petType} className="avatar-photo" size={48} />
+    </div>
+    <span className="check-badge">
+      <Check size={16} strokeWidth={3} color="var(--brand-teal)" />
+    </span>
+  </div>
+</header>
       <main className="id-card" role="status" aria-live="polite">
         <h1 className="title">Pet Health ID Created</h1>
         <p className="ribbon">
@@ -222,50 +212,49 @@ export default function PostIdScreen({ inlineData }) {
             </div>
             <span className="qr-tag">Scan to view ID</span>
           </div>
-          <div className="id-info">
-            <div className="id-label">
-              <PawPrint size={12} />
-              <span>PET ID</span>
-              <PawPrint size={12} />
-            </div>
-            <div className="id-number">{petolifeId}</div>
-          </div>
+<div className="id-info">
+  <div className="id-label">
+    <PawPrint size={12} />
+    <span>PET ID</span>
+    <PawPrint size={12} />
+  </div>
+  <div className="id-number-row">
+    <span className="id-number">{petolifeId}</span>
+    <button type="button" className="id-copy-btn" onClick={handleCopyId} aria-label="Copy pet ID">
+      {copiedId ? <CheckCircle2 size={16} strokeWidth={2.4} color="var(--brand-green-dark)" /> : <Copy size={16} strokeWidth={2.4} />}
+    </button>
+  </div>
+</div>
         </div>
       </main>
-      <nav className="actions" aria-label="Next steps">
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '4px' }}>
-          <ActionButton
-            tone="secondary"
-            icon={copiedId ? <CheckCircle2 size={18} strokeWidth={2.2} color="var(--green-600)" /> : <Copy size={18} strokeWidth={2.2} />}
-            label={copiedId ? "ID Copied!" : "Copy Pet ID"}
-            onClick={handleCopyId}
-          />
-          <ActionButton
-            tone="secondary"
-            icon={<Download size={18} strokeWidth={2.2} />}
-            label="Download QR"
-            onClick={handleDownloadQR}
-          />
-        </div>
-        <ActionButton
-          tone="primary"
-          icon={<UserPlus size={18} strokeWidth={2.2} />}
-          label="Invite Family Member"
-          onClick={() => setShowShareModal(true)}
-        />
-        <ActionButton
-          tone="secondary"
-          icon={<Home size={18} strokeWidth={2.2} />}
-          label="Go to Home"
-          onClick={() => navigate('/home')}
-        />
-        <ActionButton
-          tone="secondary"
-          icon={<FilePlus2 size={18} strokeWidth={2.2} />}
-          label="Upload Medical Records"
-          onClick={() => navigate('/home', { state: { tab: 'medicalrecords' } })}
-        />
-      </nav>
+<nav className="actions" aria-label="Next steps">
+  <ActionButton
+    tone="primary"
+    icon={<UserPlus size={18} strokeWidth={2.2} />}
+    label="Invite Family Member"
+    onClick={() => setShowShareModal(true)}
+  />
+  <ActionButton
+    tone="secondary"
+    icon={<Download size={18} strokeWidth={2.2} />}
+    label="Download QR"
+    onClick={handleDownloadQR}
+  />
+  <div className="action-row-2">
+    <ActionButton
+      tone="secondary"
+      icon={<Home size={18} strokeWidth={2.2} />}
+      label="Home"
+      onClick={() => navigate('/home')}
+    />
+    <ActionButton
+      tone="secondary"
+      icon={<FilePlus2 size={18} strokeWidth={2.2} />}
+      label="Records"
+      onClick={() => navigate('/home', { state: { tab: 'medicalrecords' } })}
+    />
+  </div>
+</nav>
 
       {/* SHARE / INVITE FAMILY MODAL */}
       {showShareModal && (

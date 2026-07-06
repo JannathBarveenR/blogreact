@@ -31,12 +31,15 @@ function normalizePet(pet) {
 
   return {
     id: pet.id || Math.random().toString(),
+    petolifeId: pet.petolife_id || pet.petolifeId || "",
     name: pet.pet_name || pet.name || "Pet",
     image: pet.pet_photo_url || pet.image || "",
     petType: pet.pet_type || pet.type || "",
     breed: pet.breed || "Breed not added",
     gender: pet.gender || "Male",
     age: ageStr || "Not added",
+    birthDate: pet.birth_date || "",
+    petIds: pet.pet_ids || pet.petIds || [],
   };
 }
 

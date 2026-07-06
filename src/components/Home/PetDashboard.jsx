@@ -77,7 +77,6 @@ export default function PetHome({
         onAddPet={onAddPet}
       />
 
-      <HealthBanner />
       <QuickActions />
       <ReminderCard />
       <NoRecordsCard selectedPet={selectedPet} />

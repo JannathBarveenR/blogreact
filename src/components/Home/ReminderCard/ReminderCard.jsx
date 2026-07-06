@@ -28,9 +28,7 @@ export default function ReminderCard({ onNavigateTab }) {
         </div>
       </div>
 
-      <button className="reminder-view-btn" onClick={handleTimeline}>
-        View All
-      </button>
+
     </div>
   );
 }
