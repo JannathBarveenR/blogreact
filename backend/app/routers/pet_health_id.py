@@ -343,6 +343,10 @@ def generate_and_store(city_name: str, pet_type: str, pet_profile_id: str) -> st
 
 # ============ API ROUTES ============
 
+from app.utils.auth import get_current_user_id, get_user_supabase
+from fastapi import Depends
+from supabase import Client
+
 class GenerateHealthIdRequest(BaseModel):
     city: str
     pet_type: str
@@ -350,7 +354,11 @@ class GenerateHealthIdRequest(BaseModel):
 
 
 @router.post("/generate")
-async def generate_health_id(body: GenerateHealthIdRequest):
+async def generate_health_id(
+    body: GenerateHealthIdRequest,
+    auth_user_id: str = Depends(get_current_user_id),
+    supabase: Client = Depends(get_user_supabase)
+):
     try:
         city = body.city.strip()
         pet_type = body.pet_type.strip()
@@ -361,6 +369,11 @@ async def generate_health_id(body: GenerateHealthIdRequest):
             raise HTTPException(status_code=400, detail="Pet type is required")
 
         if body.pet_profile_id:
+            # Check ownership before assigning
+            pet = supabase.table("pet_profiles").select("user_id").eq("id", body.pet_profile_id).execute()
+            if not pet.data or pet.data[0].get("user_id") != auth_user_id:
+                raise HTTPException(status_code=403, detail="Not authorized to modify this pet profile")
+
             health_id = generate_and_store(city, pet_type, body.pet_profile_id)
             return {
                 "message": "Health ID generated and saved",

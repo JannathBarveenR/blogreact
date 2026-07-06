@@ -28,9 +28,10 @@ class PetProfileUpdate(BaseModel):
     color: Optional[str] = None
     blood_group: Optional[str] = None
 
-from app.supabase_client import supabase
+from app.supabase_client import supabase as global_supabase
 from app.routers.pet_health_id import generate_pet_health_id, store_pet_health_id
-from app.utils.auth import get_current_user_id
+from app.utils.auth import get_current_user_id, get_user_supabase
+from supabase import Client
 
 router = APIRouter()
 
@@ -54,6 +55,7 @@ async def create_pet_profile(
     pet_ids: Optional[str] = Form(None),  # JSON string: [{"idName":"...", "idNumber":"..."}]
     pet_photo: Optional[UploadFile] = File(None),
     auth_user_id: str = Depends(get_current_user_id),
+    supabase: Client = Depends(get_user_supabase)
 ):
     """Create a new pet profile with photo upload + PetOLife ID generation."""
     print("--- POST /api/pet-profile ---")
@@ -164,7 +166,10 @@ async def create_pet_profile(
 
 
 @router.get("/")
-async def get_my_profiles(user_id: str = Depends(get_current_user_id)):
+async def get_my_profiles(
+    user_id: str = Depends(get_current_user_id),
+    supabase: Client = Depends(get_user_supabase)
+):
     """Fetch all pet profiles belonging to the authenticated user."""
     try:
         result = (
@@ -181,7 +186,11 @@ async def get_my_profiles(user_id: str = Depends(get_current_user_id)):
 
 
 @router.get("/by-user/{user_id}")
-async def get_pets_by_user(user_id: str, auth_user_id: str = Depends(get_current_user_id)):
+async def get_pets_by_user(
+    user_id: str, 
+    auth_user_id: str = Depends(get_current_user_id),
+    supabase: Client = Depends(get_user_supabase)
+):
     """Fetch all pet profiles for a specific user (only if it's the authenticated user)."""
     if user_id != auth_user_id:
         raise HTTPException(status_code=403, detail="You can only view your own pet profiles")
@@ -213,7 +222,7 @@ async def get_public_pet_data(petolife_id: str):
     from fastapi.responses import JSONResponse
 
     result = (
-        supabase.table("pet_profiles")
+        global_supabase.table("pet_profiles")
         .select("id, user_id, petolife_id, pet_type, pet_name, breed, gender, birth_date, weight, color, blood_group, identification_marks, pet_photo_url, created_at, pet_ids(*)")
         .eq("petolife_id", petolife_id)
         .execute()
@@ -231,7 +240,7 @@ async def get_public_pet_data(petolife_id: str):
     owner_user_id = profile.get("user_id")
     if owner_user_id:
         owner_result = (
-            supabase.table("user_profiles")
+            global_supabase.table("user_profiles")
             .select("full_name, phone, email")
             .eq("id", owner_user_id)
             .execute()
@@ -252,7 +261,11 @@ async def get_public_pet_data(petolife_id: str):
 
 
 @router.get("/{profile_id}")
-async def get_pet_profile(profile_id: str, user_id: str = Depends(get_current_user_id)):
+async def get_pet_profile(
+    profile_id: str, 
+    user_id: str = Depends(get_current_user_id),
+    supabase: Client = Depends(get_user_supabase)
+):
     """Fetch pet profile by UUID (ownership enforced)."""
     result = supabase.table("pet_profiles").select("id, user_id, petolife_id, pet_type, pet_name, breed, gender, birth_date, weight, color, blood_group, identification_marks, pet_photo_url, created_at, pet_ids(*)").eq("id", profile_id).execute()
 
@@ -271,7 +284,12 @@ async def get_pet_profile(profile_id: str, user_id: str = Depends(get_current_us
 
 
 @router.patch("/{profile_id}")
-async def update_pet_profile(profile_id: str, updates: PetProfileUpdate, user_id: str = Depends(get_current_user_id)):
+async def update_pet_profile(
+    profile_id: str, 
+    updates: PetProfileUpdate, 
+    user_id: str = Depends(get_current_user_id),
+    supabase: Client = Depends(get_user_supabase)
+):
     """Update pet profile details in-place (ownership enforced)."""
     try:
         # Filter out None values so we only update provided fields
@@ -293,7 +311,12 @@ async def update_pet_profile(profile_id: str, updates: PetProfileUpdate, user_id
 
 
 @router.post("/{profile_id}/photo")
-async def update_pet_photo(profile_id: str, file: UploadFile = File(...), user_id: str = Depends(get_current_user_id)):
+async def update_pet_photo(
+    profile_id: str, 
+    file: UploadFile = File(...), 
+    user_id: str = Depends(get_current_user_id),
+    supabase: Client = Depends(get_user_supabase)
+):
     """Upload and update pet photo (ownership enforced)."""
     try:
         # SECURITY: Verify ownership before allowing photo change
@@ -326,7 +349,11 @@ async def update_pet_photo(profile_id: str, file: UploadFile = File(...), user_i
         raise HTTPException(status_code=500, detail=f"Failed to upload photo: {str(e)}")
 
 @router.delete("/{profile_id}")
-async def delete_pet_profile(profile_id: str, user_id: str = Depends(get_current_user_id)):
+async def delete_pet_profile(
+    profile_id: str, 
+    user_id: str = Depends(get_current_user_id),
+    supabase: Client = Depends(get_user_supabase)
+):
     """Delete pet profile (ownership enforced)."""
     try:
         # 1. Fetch profile to get photo_url and verify ownership (single query)

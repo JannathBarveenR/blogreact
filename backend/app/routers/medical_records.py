@@ -11,17 +11,18 @@ PATCH  /api/medical-records/{record_id}/favorite — Toggle favorite status
 import time
 from typing import Optional
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
-from app.supabase_client import supabase
-from app.utils.auth import get_current_user_id
+from app.supabase_client import supabase as global_supabase, supabase_admin
+from app.utils.auth import get_current_user_id, get_user_supabase
+from supabase import Client
 
 router = APIRouter()
 
 def ensure_bucket_exists():
     try:
-        buckets = supabase.storage.list_buckets()
+        buckets = supabase_admin.storage.list_buckets()
         bucket_names = [b.name for b in buckets] if buckets else []
         if "medical-docs" not in bucket_names:
-            supabase.storage.create_bucket("medical-docs", options={"public": True})
+            supabase_admin.storage.create_bucket("medical-docs", options={"public": True})
             print("[Storage] Created public bucket 'medical-docs'")
     except Exception as e:
         print(f"[Storage] Note during bucket check: {e}")
@@ -33,6 +34,7 @@ async def upload_medical_record(
     category: str = Form(...),
     file: UploadFile = File(...),
     user_id: str = Depends(get_current_user_id),
+    supabase: Client = Depends(get_user_supabase)
 ):
     try:
         # Validate inputs
@@ -114,7 +116,11 @@ async def upload_medical_record(
         raise HTTPException(status_code=500, detail=f"Failed to upload document: {str(e)}")
 
 @router.get("/{pet_profile_id}")
-async def get_medical_records(pet_profile_id: str, user_id: str = Depends(get_current_user_id)):
+async def get_medical_records(
+    pet_profile_id: str, 
+    user_id: str = Depends(get_current_user_id),
+    supabase: Client = Depends(get_user_supabase)
+):
     """Fetch all medical records for a specific pet (ownership enforced)."""
     try:
         # One query — only return records owned by this user AND matching this pet
@@ -134,7 +140,11 @@ async def get_medical_records(pet_profile_id: str, user_id: str = Depends(get_cu
         raise HTTPException(status_code=500, detail=f"Failed to fetch records: {str(e)}")
 
 @router.delete("/{record_id}")
-async def delete_medical_record(record_id: str, user_id: str = Depends(get_current_user_id)):
+async def delete_medical_record(
+    record_id: str, 
+    user_id: str = Depends(get_current_user_id),
+    supabase: Client = Depends(get_user_supabase)
+):
     """Delete a medical record from both DB and Storage (ownership enforced)."""
     try:
         # 1) Get the record and verify ownership
@@ -177,7 +187,11 @@ async def delete_medical_record(record_id: str, user_id: str = Depends(get_curre
         raise HTTPException(status_code=500, detail=f"Failed to delete record: {str(e)}")
 
 @router.patch("/{record_id}/favorite")
-async def toggle_favorite(record_id: str, user_id: str = Depends(get_current_user_id)):
+async def toggle_favorite(
+    record_id: str, 
+    user_id: str = Depends(get_current_user_id),
+    supabase: Client = Depends(get_user_supabase)
+):
     """Toggle the is_favorite status of a medical record (ownership enforced)."""
     try:
         # 1) Get the record and verify ownership

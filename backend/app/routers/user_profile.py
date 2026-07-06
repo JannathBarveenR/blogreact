@@ -9,8 +9,9 @@ POST /api/user-profile/{user_id}/avatar — Upload avatar (ownership enforced)
 from fastapi import APIRouter, HTTPException, UploadFile, File, Depends
 from pydantic import BaseModel
 from typing import Optional
-from app.supabase_client import supabase
-from app.utils.auth import get_current_user_id
+from app.supabase_client import supabase as global_supabase, supabase_admin
+from app.utils.auth import get_current_user_id, get_user_supabase
+from supabase import Client
 import time
 
 router = APIRouter()
@@ -25,16 +26,20 @@ class UserProfileUpdate(BaseModel):
 
 def ensure_avatars_bucket_exists():
     try:
-        buckets = supabase.storage.list_buckets()
+        buckets = supabase_admin.storage.list_buckets()
         bucket_names = [b.name for b in buckets] if buckets else []
         if "avatars" not in bucket_names:
-            supabase.storage.create_bucket("avatars", options={"public": True})
+            supabase_admin.storage.create_bucket("avatars", options={"public": True})
             print("[Storage] Created public bucket 'avatars'")
     except Exception as e:
         print(f"[Storage] Note during bucket check: {e}")
 
 @router.get("/{user_id}")
-async def get_user_profile(user_id: str, auth_user_id: str = Depends(get_current_user_id)):
+async def get_user_profile(
+    user_id: str, 
+    auth_user_id: str = Depends(get_current_user_id),
+    supabase: Client = Depends(get_user_supabase)
+):
     """Get user profile (ownership enforced)."""
     # SECURITY: Users can only view their own profile
     if user_id != auth_user_id:
@@ -50,7 +55,12 @@ async def get_user_profile(user_id: str, auth_user_id: str = Depends(get_current
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.put("/{user_id}")
-async def update_user_profile(user_id: str, profile: UserProfileUpdate, auth_user_id: str = Depends(get_current_user_id)):
+async def update_user_profile(
+    user_id: str, 
+    profile: UserProfileUpdate, 
+    auth_user_id: str = Depends(get_current_user_id),
+    supabase: Client = Depends(get_user_supabase)
+):
     """Update user profile (ownership enforced)."""
     # SECURITY: Users can only update their own profile
     if user_id != auth_user_id:
@@ -85,7 +95,7 @@ async def update_user_profile(user_id: str, profile: UserProfileUpdate, auth_use
             
         if auth_updates:
             try:
-                supabase.auth.admin.update_user_by_id(user_id, auth_updates)
+                supabase_admin.auth.admin.update_user_by_id(user_id, auth_updates)
             except Exception as auth_err:
                 print(f"Failed to update auth.users credentials: {auth_err}")
                 raise HTTPException(
@@ -103,7 +113,12 @@ async def update_user_profile(user_id: str, profile: UserProfileUpdate, auth_use
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/{user_id}/avatar")
-async def upload_avatar(user_id: str, file: UploadFile = File(...), auth_user_id: str = Depends(get_current_user_id)):
+async def upload_avatar(
+    user_id: str, 
+    file: UploadFile = File(...), 
+    auth_user_id: str = Depends(get_current_user_id),
+    supabase: Client = Depends(get_user_supabase)
+):
     """Upload user avatar (ownership enforced)."""
     # SECURITY: Users can only change their own avatar
     if user_id != auth_user_id:
