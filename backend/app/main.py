@@ -78,22 +78,9 @@ async def startup_check():
             "and the SUPABASE_URL is correct (should look like: https://xxxxx.supabase.co)"
         )
     
-    # Initialize Redis Cache
-    try:
-        from fastapi_cache import FastAPICache
-        from fastapi_cache.backends.redis import RedisBackend
-        from redis import asyncio as aioredis
-        
-        # Redis running on default localhost:6379
-        redis = aioredis.from_url("redis://localhost", encoding="utf8", decode_responses=True)
-        FastAPICache.init(RedisBackend(redis), prefix="petolife-cache")
-        print("[Redis] Cache initialized successfully")
-    except ImportError:
-        print("[Redis] Cache not initialized (fastapi-cache2 or redis missing)")
-    except Exception as e:
-        print(f"[Redis] Cache initialization failed: {e}")
+
 
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=PORT, reload=True)
+    uvicorn.run("app.main:app", host="0.0.0.0", port=PORT, reload=True)

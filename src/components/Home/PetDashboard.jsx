@@ -4,7 +4,6 @@ import "./PetDashboard.css";
 import ProfileCard from "./ProfileCard/ProfileCard";
 import "./ProfileCard/ProfileCard.css";
 import HealthBanner from "./HealthBanner/HealthBanner";
-import "./HealthBanner/HealthBanner.css";
 import QuickActions from "./QuickActions/QuickActions";
 import "./QuickActions/QuickActions.css";
 import ReminderCard from "./ReminderCard/ReminderCard";

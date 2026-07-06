@@ -18,7 +18,6 @@ from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 from app.config import FRONTEND_URL
-from fastapi_cache.decorator import cache
 
 class PetProfileUpdate(BaseModel):
     pet_name: Optional[str] = None
@@ -209,7 +208,6 @@ async def get_by_petolife_id_redirect(petolife_id: str):
 
 
 @router.get("/public/{petolife_id:path}")
-@cache(expire=300)
 async def get_public_pet_data(petolife_id: str):
     """JSON data endpoint — called by the frontend pet profile UI page. (Public)"""
     from fastapi.responses import JSONResponse
@@ -248,7 +246,7 @@ async def get_public_pet_data(petolife_id: str):
             "owner_info": owner_info,
         },
         headers={
-            "Cache-Control": "public, max-age=300, stale-while-revalidate=60",
+            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
         }
     )
 
