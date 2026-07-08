@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import "./LandingPg.css"; // merged stylesheet
 
 // ---------- Navbar ----------
-import logo from "../../assets/logo.png";
+import logo from "../../assets/logo-with-tagline.png";
 const Navbar = ({ openModal }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -89,40 +89,21 @@ const Navbar = ({ openModal }) => {
 
 // ---------- Hero ----------
 import heroPets from "../../assets/hero-pets.png";
+
 const Hero = ({ openModal, onJoinPetParent }) => (
   <section id="home" className="hero">
-    <div className="container hero-grid">
-      {/* Left Side */}
-      <div className="hero-content">
-        <h1 className="hero-title">
-          Building a Health Identity
-          <br />
-          for <span className="highlight">Every Pet</span>
-        </h1>
+    <div className="hero-bg">
+      <img src={heroPets} alt="" className="hero-bg-image" />
+    </div>
 
-        <p className="hero-description">
-          Helping pet parents organize health records, track care routines, and
-          stay connected with trusted veterinary care.
-        </p>
+    <div className="hero-overlay-actions">
+      <button className="btn btn-primary" onClick={onJoinPetParent}>
+        Join as Pet Parent
+      </button>
 
-        <div className="hero-actions">
-          <button className="btn btn-primary" onClick={onJoinPetParent}>
-            Join as Pet Parent
-          </button>
-
-          <button
-            className="btn btn-secondary"
-            onClick={() => openModal("vet")}
-          >
-            Join as Veterinarian
-          </button>
-        </div>
-      </div>
-
-      {/* Right Side */}
-      <div className="hero-visual">
-        <img src={heroPets} alt="Pet parent with pets" className="hero-image" />
-      </div>
+      <button className="btn btn-secondary" onClick={() => openModal("vet")}>
+        Join as Veterinarian
+      </button>
     </div>
   </section>
 );
@@ -131,19 +112,20 @@ const Hero = ({ openModal, onJoinPetParent }) => (
 import petProfileImg from "../../assets/pet-profile.png";
 import healthRecordsImg from "../../assets/health-records.png";
 import healthTimelineImg from "../../assets/health-timeline.png";
+
 const steps = [
   {
     id: "01",
     image: petProfileImg,
-    alt: "Pet Profile card for Bruno the Golden Retriever showing name, breed, age, and gender",
+    alt: "Pet Profile",
     title: "Create Pet Profile",
     description:
-      "Add your pet's basic details and medical information to  get started.",
+      "Add your pet's basic details and medical information to get started.",
   },
   {
     id: "02",
     image: healthRecordsImg,
-    alt: "Petolife health record box with vaccination, prescription, lab report, and treatment documents",
+    alt: "Health Records",
     title: "Upload Records",
     description:
       "Store vaccination records, prescriptions, and other important health documents securely.",
@@ -151,69 +133,65 @@ const steps = [
   {
     id: "03",
     image: healthTimelineImg,
-    alt: "Health timeline showing vaccination, deworming, and health checkup dates with next reminder",
+    alt: "Health Timeline",
     title: "Track Health",
     description:
       "Receive smart reminders and track your pet's complete healthcare journey in one place.",
   },
 ];
-const Workingprocess = () => (
-  <section className="py-16 md:py-24 bg-[#f7fff8]">
-    <div className="max-w-[1300px] mx-auto px-8 md:px-10 pt-12 md:pt-14">
-      <div className="text-center pt-12 md:pt-20 mb-20 md:mb-28">
-        <span className="inline-block bg-[#dff7e4] text-[#2d8f55] px-[18px] py-2 rounded-full font-semibold mb-8 md:mb-10">
-          🐾 3 steps to pet parenthood 😊
-        </span>
-        <h2 className="text-3xl md:text-5xl font-bold mb-6 md:mb-8 leading-tight">
-          <span className="text-[#084108]">How</span>{" "}
-          <span className="text-green">PetOlife Works</span>
-        </h2>
-        <p className="text-[#666] text-base md:text-lg">
-          Keep your furry friends healthy with just three simple steps.
-        </p>
-      </div>
 
-      <div className="flex flex-col gap-6 md:gap-8">
-        {steps.map((step) => (
-          <div
-            key={step.id}
-            className="flex flex-row items-center rounded-[24px] overflow-hidden border-2 border-[#e5f5e9] bg-white shadow-sm p-10 md:p-20 gap-5 md:gap-10 transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl"
-          >
-            {/* Left half — image */}
-            <div className="w-1/2 flex items-center justify-center">
-              <img
-                src={step.image}
-                alt={step.alt}
-                className="w-full h-auto max-h-52 md:max-h-64 object-contain"
-              />
+const Workingprocess = () => {
+  return (
+    <section className="working-process">
+      <div className="working-process-container">
+        {/* Heading */}
+        <div className="working-header">
+          <span className="working-badge">🐾 3 steps to pet parenthood 😊</span>
+
+          <h2 className="working-title">
+            <span className="title-dark">How </span>
+            <span className="title-green">PetOlife Works</span>
+          </h2>
+
+          <p className="working-subtitle-how">
+            Keep your furry friends healthy with just three simple steps.
+          </p>
+        </div>
+
+        {/* Cards */}
+        <div className="working-cards">
+          {steps.map((step) => (
+            <div className="working-card" key={step.id}>
+              {/* Glowing floating orbs */}
+              <span className="glow-orb glow-orb-1"></span>
+              <span className="glow-orb glow-orb-2"></span>
+              <span className="glow-orb glow-orb-3"></span>
+              {/* Left */}
+              <div className="working-image">
+                <img src={step.image} alt={step.alt} />
+              </div>
+              {/* Right */}
+              <div className="working-content">
+                <div className="working-number">{step.id}</div>
+                <h3 className="working-card-title">{step.title}</h3>
+                <p className="working-card-description">{step.description}</p>
+              </div>
             </div>
+          ))}
+        </div>
 
-            {/* Right half — badge, title, description */}
-            <div className="w-1/2 flex flex-col justify-center pr-4 md:pr-10">
-              <span className="w-7 h-7 md:w-9 md:h-9 rounded-full bg-gradient-to-br from-[#082312] to-[#33e073] text-white text-xs md:text-sm font-bold flex items-center justify-center shadow-md mb-5 md:mb-7">
-                {step.id}
-              </span>
-              <h3 className="text-lg md:text-2xl font-bold text-[#155f37] mb-3 md:mb-5">
-                {step.title}
-              </h3>
-              <p className="text-sm md:text-base text-[#666] leading-loose my-3 md:my-4">
-                {step.description}
-              </p>
-            </div>
-          </div>
-        ))}
+        {/* Bottom Banner */}
+        <div className="working-banner">
+          <div className="banner-icon">💚</div>
+          <p className="banner-text">
+            Smart reminders, secure records, and a lifelong health timeline —
+            all in one place.
+          </p>
+        </div>
       </div>
-
-      <div className="mt-28 md:mt-36 mb-8 md:mb-12 bg-gradient-to-r from-[#eafced] to-[#dff9e7] rounded-2xl p-8 md:p-10 flex flex-col sm:flex-row items-center justify-center gap-4 text-center">
-        <span className="text-3xl">💚</span>
-        <p className="text-[#02150b] font-medium">
-          Smart reminders, secure records, and a lifelong health timeline — all
-          in one place.
-        </p>
-      </div>
-    </div>
-  </section>
-);
+    </section>
+  );
+};
 
 // ---------- VetTimeline ----------
 import prescription from "../../assets/vetconnect/prescription.svg";
@@ -226,14 +204,16 @@ const vetSteps = [
   { image: history, title: "Organized Patient History" },
   { image: continuity, title: "Treatment Continuity" },
 ];
+
 const VetTimeline = () => (
   <section className="vetTimeline">
     <div className="container">
       <div className="timelineHeader">
-        <h2>
-          <span className="dark">Built for</span>
-          <span className="green"> Better Veterinary Care</span>
+        <h2 className="working-title">
+          <span className="title-dark">Built for </span>
+          <span className="title-green">Better Veterinary Care</span>
         </h2>
+
         <p>One connected workflow for smarter and continuous pet healthcare.</p>
       </div>
       <div className="timelineWrapper">
@@ -258,7 +238,7 @@ const BeforeAfter = () => (
     <div className="container">
       <div className="ba-header">
         <h2 className="section-title">
-          Struggling with <span className="text-teal">Pet Care</span>?{" "}
+          Struggling with <span className="text-teal">Pet Care?</span>
           <span className="text-green">Solution!</span>
         </h2>
         <p className="section-subtitle">
@@ -279,292 +259,205 @@ const BeforeAfter = () => (
 // ---------- Categories ----------
 import firstImg from "../../assets/firstimg.png";
 import thirdImg from "../../assets/thirdimg.png";
-
-const petParentBenefits = [
-  "Store health records",
-  "Track vaccines",
-  "Track medications",
-  "Receive reminders",
-  "Stay organized",
-];
-const vetBenefits = [
-  "Access complete history",
-  "Improve treatment continuity",
-  "Support follow-up care",
-  "Shape future workflows",
-];
+import {
+  FaFileMedical,
+  FaSyringe,
+  FaPills,
+  FaChartLine,
+  FaShieldDog,
+  FaClipboardCheck,
+  FaUserDoctor,
+  FaBell,
+  FaNotesMedical,
+  FaHeartPulse,
+} from "react-icons/fa6";
 
 const Categories = ({ openModal }) => (
-  <section id="veterinarians" className="bg-white py-14 md:py-20">
+  <section id="veterinarians" className="bg-white py-10 md:py-20">
     <div className="max-w-[1300px] mx-auto px-4 md:px-6">
-      {/* Section header */}
-      <div className="text-center mb-10 md:mb-16 flex flex-col items-center">
-        <span className="inline-flex items-center gap-1.5 text-xs font-bold tracking-wide uppercase text-[#0D5C5C] mb-3">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="w-4 h-4 shrink-0"
-          >
-            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-            <circle cx="9" cy="7" r="4" />
-            <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-          </svg>
-          Who Is It For
-        </span>
-        <h2 className="text-2xl md:text-4xl font-extrabold text-gray-900 leading-tight tracking-tight mb-4">
-          Made for Every <span className="text-[#2ea862]">Pet Journey</span>
-        </h2>
-        <p className="text-[0.9rem] md:text-[1.0625rem] text-gray-600 leading-relaxed max-w-[560px]">
-          Whether you're a dedicated pet parent or a practising veterinarian —
-          PetOlife is built with you in mind.
-        </p>
-      </div>
+      <div className="flex flex-col gap-3 md:gap-8">
+        {/* ---------------- Header ---------------- */}
+        <div className="cat-header">
+          <span className="section-label">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            Who Is It For
+          </span>
+          <h2 className="section-title">
+            Made for Every <span className="text-green">Pet Journey</span>
+          </h2>
+          <p className="section-subtitle">
+            Whether you're a dedicated pet parent or a practising veterinarian —
+            PetOlife is built with you in mind.
+          </p>
+        </div>
 
-      <div className="flex flex-col gap-8 md:gap-10">
-        {/* ---------------- Parent card ---------------- */}
-        <div className="absolute -right-24 top-10 w-80 h-80 rounded-full bg-white/40 blur-3xl"></div>
-        <div className="absolute -left-16 bottom-0 w-72 h-72 rounded-full bg-white/30 blur-3xl"></div>
-        <div className="relative overflow-hidden grid grid-cols-1 lg:grid-cols-2 items-center rounded-[36px] border border-green-100 bg-gradient-to-r from-[#f9fef9] via-[#f3fbf5] to-[#e8f7ee] shadow-lg min-h-[560px]">
-          {/* Text content */}
-          <div className="flex flex-col justify-center px-8 py-10 lg:px-14 lg:py-16">
-            <span className="inline-flex w-fit items-center gap-2 rounded-full bg-white px-5 py-2 border border-green-100 shadow-sm text-[#1b5f3a] text-sm font-semibold mb-7">
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3z" />
-              </svg>
-              Happy Pets. Healthy Future.
-            </span>
+        {/* ---------------- Parent Card ---------------- */}
 
-            <h3 className="text-[2.4rem] lg:text-[3.6rem] font-extrabold leading-[1.05] tracking-tight mb-6">
-              <span className="text-[#0f3d24]">Built for Responsible</span>{" "}
-              <span className="text-[#2ea862]">Pet Parenting</span>
+        <div className="parent-card">
+          <div className="parent-content">
+            <span className="card-badgepet">Happy Pets. Healthy Future.</span>
+
+            <h3 className="card-titlepet">
+              Built for Responsible <br />
+              Pet Parenting
             </h3>
 
-            <p className="text-lg leading-8 text-gray-600 max-w-xl mb-8">
-              Everything you need to keep your furry family happy, healthy &
-              loved.
-            </p>
+            <ul className="card-list">
+              <li>
+                <span className="check-iconpet">
+                  <FaFileMedical />
+                </span>
+                Store health records
+              </li>
 
-            <ul className="space-y-4 mb-10">
-              {petParentBenefits.map((item, idx) => (
-                <li
-                  key={idx}
-                  className="flex items-center gap-4 text-lg font-medium text-gray-700"
-                >
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#1b5f3a] text-white shadow-md">
-                    <svg
-                      width="12"
-                      height="12"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M20 6 9 17l-5-5" />
-                    </svg>
-                  </span>
-                  {item}
-                </li>
-              ))}
+              <li>
+                <span className="check-iconpet">
+                  <FaSyringe />
+                </span>
+                Track vaccinations
+              </li>
+
+              <li>
+                <span className="check-iconpet">
+                  <FaPills />
+                </span>
+                Reminders for Medicine
+              </li>
+
+              <li>
+                <span className="check-iconpet">
+                  <FaChartLine />
+                </span>
+                Growth tracking
+              </li>
+
+              <li>
+                <span className="check-iconpet">
+                  <FaShieldDog />
+                </span>
+                Emergency access
+              </li>
             </ul>
 
-            <button
-              className="inline-flex w-fit items-center gap-3 rounded-full bg-[#166534] px-8 py-4 text-base font-semibold text-white shadow-lg transition duration-300 hover:scale-105 hover:shadow-xl"
-              onClick={() => openModal("parent")}
-            >
-              Join Early Access
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M5 12h14M13 6l6 6-6 6" />
-              </svg>
+            {/* BACKEND LOGIC */}
+
+            <button className="parent-btn" onClick={() => openModal("parent")}>
+              Join as Pet Parent
             </button>
           </div>
 
-          {/* Visual */}
-          <div className="relative flex items-center justify-center h-full p-8 lg:p-14">
-            <img
-              src={firstImg}
-              alt="Pet health tracking and medical records interface"
-              className="w-full max-w-[620px] object-contain drop-shadow-2xl transition duration-500 hover:scale-[1.02]"
-            />
+          <div className="parent-image">
+            <img src={firstImg} alt="Pet Parent" />
           </div>
         </div>
 
-        {/* ---------------- Vet card ---------------- */}
-        <div className="relative overflow-hidden grid grid-cols-1 lg:grid-cols-2 items-center rounded-[36px] border border-blue-100 bg-gradient-to-r from-[#f8fbff] via-[#f2f7ff] to-[#eaf3ff] shadow-lg min-h-[560px]">
-          <div className="absolute -left-20 top-12 w-80 h-80 rounded-full bg-white/40 blur-3xl"></div>
-          <div className="absolute -right-16 bottom-0 w-72 h-72 rounded-full bg-white/30 blur-3xl"></div>
-          {/* Visual (first on mobile + desktop-left for vet card) */}
-          <div className="relative flex items-center justify-center order-2 lg:order-1 h-full p-8 lg:p-14">
-            <img
-              src={thirdImg}
-              alt="Breed guides, knowledge base, and veterinary advice interface"
-              className="w-full max-w-[620px] object-contain drop-shadow-2xl transition duration-500 hover:scale-[1.02]"
-            />
+        {/* ---------------- Vet Card ---------------- */}
+
+        <div className="vet-card">
+          <div className="vet-image">
+            <img src={thirdImg} alt="Veterinarian" />
           </div>
 
-          {/* Text content */}
-          <div className="flex flex-col justify-center order-1 lg:order-2 px-8 py-10 lg:px-14 lg:py-16">
-            <span className="inline-flex self-start items-center gap-1.5 bg-white/80 border border-blue-200 text-[#1a3a5f] text-xs font-semibold px-3 py-1.5 rounded-full mb-5">
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M12 21c-4.4-2.6-8-6.4-8-11a5 5 0 0 1 8-4 5 5 0 0 1 8 4c0 4.6-3.6 8.4-8 11z" />
-              </svg>
-              Trusted Clinical Insight
-            </span>
+          <div className="vet-content">
+            <span className="card-badgepet">Professional Veterinary Care</span>
 
-            <h3 className="text-2xl md:text-[2rem] font-extrabold leading-tight tracking-tight mb-4">
-              <span className="text-[#0f2a3d]">Designed with</span>{" "}
-              <span className="text-[#2a7f9a]">Veterinary Feedback</span>
+            <h3 className="card-titlepet">
+              Designed with <br />
+              Veterinary Feedback
             </h3>
 
-            <p className="text-sm md:text-base text-gray-600 leading-relaxed mb-6 max-w-md">
-              Shaped alongside practising vets to fit real clinical workflows
-              and patient care.
-            </p>
+            <ul className="card-list">
+              <li>
+                <span className="check-iconpet">
+                  <FaClipboardCheck />
+                </span>
+                Complete medical history
+              </li>
 
-            <ul className="flex flex-col gap-3 mb-8">
-              {vetBenefits.map((item, idx) => (
-                <li
-                  key={idx}
-                  className="flex items-center gap-3 text-sm md:text-[0.9375rem] font-medium text-gray-700"
-                >
-                  <span className="w-6 h-6 rounded-full bg-[#1a3a5f] text-white flex items-center justify-center shrink-0">
-                    <svg
-                      width="12"
-                      height="12"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M20 6 9 17l-5-5" />
-                    </svg>
-                  </span>
-                  {item}
-                </li>
-              ))}
+              <li>
+                <span className="check-iconpet">
+                  <FaUserDoctor />
+                </span>
+                Faster consultations
+              </li>
+
+              <li>
+                <span className="check-iconpet">
+                  <FaBell />
+                </span>
+                Follow-up reminders
+              </li>
+
+              <li>
+                <span className="check-iconpet">
+                  <FaNotesMedical />
+                </span>
+                Treatment timeline
+              </li>
+
+              <li>
+                <span className="check-iconpet">
+                  <FaHeartPulse />
+                </span>
+                Better patient care
+              </li>
             </ul>
 
-            <button
-              className="self-start inline-flex items-center gap-2 rounded-full font-semibold text-white bg-[#1a3a5f] px-6 py-3.5 text-sm shadow-sm transition-all hover:brightness-110 hover:shadow-md active:scale-[0.97]"
-              onClick={() => openModal("vet")}
-            >
-              Join Early Access
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M5 12h14M13 6l6 6-6 6" />
-              </svg>
+            {/* BACKEND LOGIC */}
+
+            <button className="parent-btn" onClick={() => openModal("vet")}>
+              Join as a Veterinarian
             </button>
           </div>
         </div>
       </div>
-
-      <p className="text-center mt-10 md:mt-14 text-sm text-gray-500 leading-relaxed">
-        <span className="mr-1">🌱</span>
-        <strong className="text-gray-700 font-semibold">
-          Planning to bring home your first pet?
-        </strong>{" "}
-        PetOlife will help you get started responsibly.
-      </p>
     </div>
   </section>
 );
 
 // ---------- Trust ----------
+import communityImg from "../../assets/community.png";
+import clinicImg from "../../assets/real-clinic.png";
+import feedbackImg from "../../assets/vet-feedback.png";
+
 const trustIndicators = [
   {
     icon: (
-      <svg
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
-        <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
-      </svg>
+      <img
+        src={feedbackImg}
+        alt="Veterinary Feedback"
+        className="trust-icon-image"
+      />
     ),
     label: "Veterinary Feedback",
     desc: "Shaped by insights from practising veterinarians.",
   },
   {
-    icon: (
-      <svg
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M3 3v18h18" />
-        <path d="m19 9-5 5-4-4-3 3" />
-      </svg>
-    ),
+    icon: <img src={clinicImg} alt="clinic" className="trust-icon-image" />,
     label: "Real Clinic Learnings",
     desc: "Built on real-world clinic workflows and challenges.",
   },
   {
     icon: (
-      <svg
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-      </svg>
+      <img
+        src={communityImg}
+        alt="communityImg people"
+        className="trust-icon-image community-icon"
+      />
     ),
     label: "Pet Parent Community",
     desc: "Designed around real needs of responsible pet parents.",
@@ -581,8 +474,8 @@ const trustIndicators = [
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+        <path d="m9 12 2 2 4-4" />
       </svg>
     ),
     label: "Privacy-Focused",
@@ -612,9 +505,7 @@ const Trust = ({ openModal }) => (
           Built with <span className="text-teal">Pet Parents</span>.<br />
           Built with <span className="text-green">Veterinarians</span>.
         </h2>
-        <p className="trust-mission">
-          Building a Health Identity for Every Pet.
-        </p>
+        <p>Building a Health Identity for Every Pet.</p>
       </div>
       <div className="trust-grid">
         {trustIndicators.map((item, idx) => (
@@ -737,9 +628,12 @@ const Footer = () => {
               </div>
             </div>
             <div className="footer-bottom">
-              <p>
-                &copy; {new Date().getFullYear()} PetOlife. All rights reserved.
-              </p>
+              <center>
+                <p>
+                  &copy; {new Date().getFullYear()} PetOlife. All rights
+                  reserved.
+                </p>
+              </center>
               <div className="footer-legal">
                 <a href="#">Privacy Policy</a>
                 <span className="footer-divider">|</span>
