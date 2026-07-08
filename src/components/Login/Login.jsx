@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Login.css";
-import logoImg from "../../assets/logo.png";
+import logoImg from "../../assets/login-logo.png";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 
 function Logo() {
   return (
@@ -16,25 +16,55 @@ function Logo() {
 function GoogleIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 48 48" className="google-icon">
-      <path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.8 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/>
-      <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 15.1 18.9 12 24 12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
-      <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.5 26.7 36 24 36c-5.3 0-9.7-3.2-11.3-7.7l-6.5 5C9.5 39.6 16.2 44 24 44z"/>
-      <path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.9 2.4-2.5 4.4-4.5 5.8l6.2 5.2C36.9 37 44 32 44 24c0-1.3-.1-2.6-.4-3.9z"/>
+      <path
+        fill="#FFC107"
+        d="M43.6 20.1H42V20H24v8h11.3C33.7 32.8 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"
+      />
+      <path
+        fill="#FF3D00"
+        d="M6.3 14.7l6.6 4.8C14.5 15.1 18.9 12 24 12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"
+      />
+      <path
+        fill="#4CAF50"
+        d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.5 26.7 36 24 36c-5.3 0-9.7-3.2-11.3-7.7l-6.5 5C9.5 39.6 16.2 44 24 44z"
+      />
+      <path
+        fill="#1976D2"
+        d="M43.6 20.1H42V20H24v8h11.3c-.9 2.4-2.5 4.4-4.5 5.8l6.2 5.2C36.9 37 44 32 44 24c0-1.3-.1-2.6-.4-3.9z"
+      />
     </svg>
   );
 }
 
 function EyeIcon({ open }) {
   return open ? (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
-      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
-      <line x1="1" y1="1" x2="23" y2="23"/>
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="#999"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+      <line x1="1" y1="1" x2="23" y2="23" />
     </svg>
   ) : (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-      <circle cx="12" cy="12" r="3"/>
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="#999"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+      <circle cx="12" cy="12" r="3" />
     </svg>
   );
 }
@@ -42,8 +72,17 @@ function EyeIcon({ open }) {
 function BackBtn({ onClick }) {
   return (
     <button className="back-btn" onClick={onClick} aria-label="Go back">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M19 12H5M12 5l-7 7 7 7"/>
+      <svg
+        width="22"
+        height="22"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#1a1a1a"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M19 12H5M12 5l-7 7 7 7" />
       </svg>
     </button>
   );
@@ -58,7 +97,10 @@ export function SuccessScreen({ type, userName, onContinue }) {
   const [countdown, setCountdown] = useState(3);
 
   useEffect(() => {
-    if (countdown <= 0) { onContinue(); return; }
+    if (countdown <= 0) {
+      onContinue();
+      return;
+    }
     const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
     return () => clearTimeout(timer);
   }, [countdown, onContinue]);
@@ -67,8 +109,17 @@ export function SuccessScreen({ type, userName, onContinue }) {
     <div className="screen success-screen">
       <div className="success-icon-wrap">
         <div className="success-circle">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="20 6 9 17 4 12"/>
+          <svg
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#fff"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="20 6 9 17 4 12" />
           </svg>
         </div>
       </div>
@@ -83,8 +134,10 @@ export function SuccessScreen({ type, userName, onContinue }) {
       <div className="success-badge">
         <span>PetOLife Member</span>
       </div>
+
       <p className="success-redirect-note">
-        Redirecting in {countdown}s…
+      <p style={{ marginTop: 16, color: "#666", fontSize: "14px" }}>
+   
       </p>
     </div>
   );
@@ -92,7 +145,13 @@ export function SuccessScreen({ type, userName, onContinue }) {
 
 function RegistrationScreen({ onLogin, onSuccess }) {
   const [form, setForm] = useState({
-    name: "", mobile: "", password: "", pincode: "", city: "", state: "",
+    name: "",
+    email: "",
+    mobile: "",
+    password: "",
+    pincode: "",
+    city: "",
+    state: "",
   });
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState("");
@@ -124,7 +183,11 @@ function RegistrationScreen({ onLogin, onSuccess }) {
         throw new Error(data.detail || "Invalid pincode");
       }
       const data = await res.json();
-      setForm((prev) => ({ ...prev, city: data.city || "", state: data.state || "" }));
+      setForm((prev) => ({
+        ...prev,
+        city: data.city || "",
+        state: data.state || "",
+      }));
     } catch (err) {
       setPincodeError(err.message || "Could not lookup pincode");
       setForm((prev) => ({ ...prev, city: "", state: "" }));
@@ -140,15 +203,30 @@ function RegistrationScreen({ onLogin, onSuccess }) {
   }, [form.pincode, lookupPincode]);
 
   const handleRegister = async () => {
-    if (!form.name.trim()) { setError("Please enter your name."); return; }
+    if (!form.name.trim()) {
+      setError("Please enter your name.");
+      return;
+    }
+    if (!form.email.trim()) {
+      setError("Please enter your email.");
+      return;
+    }
     if (!form.mobile.trim() || form.mobile.replace(/\D/g, "").length < 10) {
-      setError("Please enter a valid 10-digit mobile number."); return;
+      setError("Please enter a valid 10-digit mobile number.");
+      return;
     }
     if (!form.password || form.password.length < 6) {
-      setError("Password must be at least 6 characters."); return;
+      setError("Password must be at least 6 characters.");
+      return;
     }
-    if (form.pincode.length !== 6) { setError("Please enter a valid 6-digit pincode."); return; }
-    if (!form.city) { setError("Could not determine city from pincode."); return; }
+    if (form.pincode.length !== 6) {
+      setError("Please enter a valid 6-digit pincode.");
+      return;
+    }
+    if (!form.city) {
+      setError("Could not determine city from pincode.");
+      return;
+    }
 
     setLoading(true);
     setError("");
@@ -181,10 +259,13 @@ function RegistrationScreen({ onLogin, onSuccess }) {
         body: JSON.stringify({ phone, password: userPassword }),
       });
       const loginData = await loginRes.json();
-      if (!loginRes.ok) throw new Error(loginData.detail || "Auto-login failed");
+      if (!loginRes.ok)
+        throw new Error(loginData.detail || "Auto-login failed");
 
-      if (loginData.access_token) localStorage.setItem("access_token", loginData.access_token);
-      if (loginData.refresh_token) localStorage.setItem("refresh_token", loginData.refresh_token);
+      if (loginData.access_token)
+        localStorage.setItem("access_token", loginData.access_token);
+      if (loginData.refresh_token)
+        localStorage.setItem("refresh_token", loginData.refresh_token);
       if (loginData.user) {
         const enrichedUser = {
           ...loginData.user,
@@ -211,16 +292,31 @@ function RegistrationScreen({ onLogin, onSuccess }) {
   return (
     <div className="screen auth-screen">
       <Logo />
-      <div className="welcome-tagline">
-        <span className="tagline-black">Join as a<br /></span>
-        <span className="tagline-green"><em>Pet Parent</em></span>
-      </div>
-
+      <h2 className="auth-title" style={{ marginTop: 0 }}>
+        "Create your pet's lifelong digital health identity today!"
+      </h2>
       {error && <p className="auth-error">{error}</p>}
 
       <div className="form-group">
         <label>Pet Parent Name</label>
-        <input type="text" placeholder="Enter your full name" value={form.name} onChange={set("name")} autoComplete="name" />
+        <input
+          type="text"
+          placeholder="Enter your full name"
+          value={form.name}
+          onChange={set("name")}
+          autoComplete="name"
+        />
+      </div>
+
+      <div className="form-group">
+        <label>Email Address</label>
+        <input
+          type="email"
+          placeholder="Enter your email"
+          value={form.email}
+          onChange={set("email")}
+          autoComplete="email"
+        />
       </div>
 
       <div className="form-group">
@@ -248,19 +344,23 @@ function RegistrationScreen({ onLogin, onSuccess }) {
             type={showPass ? "text" : "password"}
             placeholder="Create a password (min 6 chars)"
             value={form.password}
-            onChange={(e) => setForm((prev) => ({ ...prev, password: e.target.value }))}
+            onChange={(e) =>
+              setForm((prev) => ({ ...prev, password: e.target.value }))
+            }
             autoComplete="new-password"
           />
-          <button className="eye-btn" type="button" onClick={() => setShowPass(!showPass)}>
+          <button
+            className="eye-btn"
+            type="button"
+            onClick={() => setShowPass(!showPass)}
+          >
             <EyeIcon open={showPass} />
           </button>
         </div>
       </div>
 
       <div className="form-group">
-        <label>
-          Pincode {pincodeLoading && <SmallSpinner />}
-        </label>
+        <label>Pincode {pincodeLoading && <SmallSpinner />}</label>
         <input
           type="text"
           placeholder="Enter 6-digit pincode"
@@ -269,7 +369,12 @@ function RegistrationScreen({ onLogin, onSuccess }) {
             const val = e.target.value.replace(/\D/g, "").slice(0, 6);
             setForm((prev) => ({ ...prev, pincode: val }));
             if (val.length < 6) {
-              setForm((prev) => ({ ...prev, pincode: val, city: "", state: "" }));
+              setForm((prev) => ({
+                ...prev,
+                pincode: val,
+                city: "",
+                state: "",
+              }));
               setPincodeError("");
             }
           }}
@@ -282,33 +387,63 @@ function RegistrationScreen({ onLogin, onSuccess }) {
       <div className="pincode-row">
         <div className="form-group">
           <label>City</label>
-          <input type="text" placeholder="Auto-filled" value={form.city} readOnly className={form.city ? "field-readonly field-filled" : "field-readonly"} />
+          <input
+            type="text"
+            placeholder="Auto-filled"
+            value={form.city}
+            readOnly
+            className={
+              form.city ? "field-readonly field-filled" : "field-readonly"
+            }
+          />
         </div>
         <div className="form-group">
           <label>State</label>
-          <input type="text" placeholder="Auto-filled" value={form.state} readOnly className={form.state ? "field-readonly field-filled" : "field-readonly"} />
+          <input
+            type="text"
+            placeholder="Auto-filled"
+            value={form.state}
+            readOnly
+            className={
+              form.state ? "field-readonly field-filled" : "field-readonly"
+            }
+          />
         </div>
       </div>
 
-      <button className="btn-primary" style={{ marginTop: 8 }} onClick={handleRegister} disabled={loading}>
+      <button
+        className="btn-primary"
+        style={{ marginTop: 8 }}
+        onClick={handleRegister}
+        disabled={loading}
+      >
         {loading ? "Creating Account…" : "Create Account"}
       </button>
 
-      <div className="or-divider"><span>OR</span></div>
+      <div className="or-divider">
+        <span>OR</span>
+      </div>
 
-      <button className="btn-google" onClick={async () => {
-        try {
-          const res = await fetch(`${API_BASE}/api/auth/google`);
-          const data = await res.json();
-          if (data.url) window.location.href = data.url;
-        } catch { setError("Google signup is not available yet."); }
-      }}>
+      <button
+        className="btn-google"
+        onClick={async () => {
+          try {
+            const res = await fetch(`${API_BASE}/api/auth/google`);
+            const data = await res.json();
+            if (data.url) window.location.href = data.url;
+          } catch {
+            setError("Google signup is not available yet.");
+          }
+        }}
+      >
         <GoogleIcon /> Sign up with Google
       </button>
 
       <p className="auth-footer" style={{ marginTop: 16 }}>
         Already have an account?{" "}
-        <span className="link-green" onClick={onLogin}>Login</span>
+        <span className="link-green" onClick={onLogin}>
+          Login
+        </span>
       </p>
     </div>
   );
@@ -323,7 +458,10 @@ function LoginScreen({ onSignUp, onSuccess }) {
   const [showForgot, setShowForgot] = useState(false);
 
   const handleLogin = async () => {
-    if (!identifier || !password) { setError("Please fill in all fields."); return; }
+    if (!identifier || !password) {
+      setError("Please fill in all fields.");
+      return;
+    }
     setLoading(true);
     setError("");
     try {
@@ -332,9 +470,9 @@ function LoginScreen({ onSignUp, onSuccess }) {
       if (isEmail) {
         payload.email = identifier;
       } else {
-        let phone = identifier.replace(/[\s\-\(\)]/g, '');
+        let phone = identifier.replace(/[\s\-\(\)]/g, "");
         if (!phone.startsWith("+")) {
-          phone = phone.replace(/\D/g, '');
+          phone = phone.replace(/\D/g, "");
           if (phone.length === 10) phone = "+91" + phone;
           else if (!phone.startsWith("+")) phone = "+" + phone;
         }
@@ -349,8 +487,10 @@ function LoginScreen({ onSignUp, onSuccess }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || data.error || "Login failed");
 
-      if (data.access_token) localStorage.setItem("access_token", data.access_token);
-      if (data.refresh_token) localStorage.setItem("refresh_token", data.refresh_token);
+      if (data.access_token)
+        localStorage.setItem("access_token", data.access_token);
+      if (data.refresh_token)
+        localStorage.setItem("refresh_token", data.refresh_token);
 
       if (data.user) {
         // city is now in Supabase user_metadata (saved during signup)
@@ -371,7 +511,7 @@ function LoginScreen({ onSignUp, onSuccess }) {
           try {
             const profileRes = await fetch(
               `${API_BASE}/api/user-profile/${data.user.id}`,
-              { headers: { Authorization: `Bearer ${data.access_token}` } }
+              { headers: { Authorization: `Bearer ${data.access_token}` } },
             );
             if (profileRes.ok) {
               const profileData = await profileRes.json();
@@ -402,13 +542,20 @@ function LoginScreen({ onSignUp, onSuccess }) {
     <div className="screen auth-screen">
       <BackBtn onClick={onSignUp} />
       <Logo />
-      <h2 className="auth-title" style={{ marginTop: 0 }}>Login</h2>
+      <h2 className="auth-title-log" style={{ marginTop: 0 }}>
+        Welcome back! Your pet's health journey continues here.
+      </h2>
 
       {error && <p className="auth-error">{error}</p>}
 
       <div className="form-group">
         <label>Email or Phone Number</label>
-        <input type="text" placeholder="Enter your email or phone" value={identifier} onChange={e => setIdentifier(e.target.value)} />
+        <input
+          type="text"
+          placeholder="Enter your email or phone"
+          value={identifier}
+          onChange={(e) => setIdentifier(e.target.value)}
+        />
       </div>
 
       <div className="form-group">
@@ -418,7 +565,7 @@ function LoginScreen({ onSignUp, onSuccess }) {
             type={showPass ? "text" : "password"}
             placeholder="Enter your password"
             value={password}
-            onChange={e => setPassword(e.target.value)}
+            onChange={(e) => setPassword(e.target.value)}
           />
           <button className="eye-btn" onClick={() => setShowPass(!showPass)}>
             <EyeIcon open={showPass} />
@@ -427,32 +574,41 @@ function LoginScreen({ onSignUp, onSuccess }) {
       </div>
 
       <div className="forgot-row">
-        <span className="link-green" onClick={() => setShowForgot(true)}>Forgot Password?</span>
+        <span className="link-green" onClick={() => setShowForgot(true)}>
+          Forgot Password?
+        </span>
       </div>
 
-      {showForgot && (
-        <ForgotPasswordForm onBack={() => setShowForgot(false)} />
-      )}
+      {showForgot && <ForgotPasswordForm onBack={() => setShowForgot(false)} />}
 
       <button className="btn-primary" onClick={handleLogin} disabled={loading}>
         {loading ? "Logging in…" : "Login"}
       </button>
 
-      <div className="or-divider"><span>OR</span></div>
+      <div className="or-divider">
+        <span>OR</span>
+      </div>
 
-      <button className="btn-google" onClick={async () => {
-        try {
-          const res = await fetch(`${API_BASE}/api/auth/google`);
-          const data = await res.json();
-          if (data.url) window.location.href = data.url;
-        } catch { setError("Google login is not available yet."); }
-      }}>
+      <button
+        className="btn-google"
+        onClick={async () => {
+          try {
+            const res = await fetch(`${API_BASE}/api/auth/google`);
+            const data = await res.json();
+            if (data.url) window.location.href = data.url;
+          } catch {
+            setError("Google login is not available yet.");
+          }
+        }}
+      >
         <GoogleIcon /> Continue with Google
       </button>
 
       <p className="auth-footer">
         New user?{" "}
-        <span className="link-green" onClick={onSignUp}>Create Account</span>
+        <span className="link-green" onClick={onSignUp}>
+          Create Account
+        </span>
       </p>
     </div>
   );
@@ -489,30 +645,91 @@ function ForgotPasswordForm({ onBack }) {
 
   if (sent) {
     return (
-      <div style={{marginTop: 12, padding: '16px', background: '#f0faf3', borderRadius: '12px'}}>
-        <p style={{color: '#138a36', fontWeight: 600, marginBottom: 4}}>✓ Reset email sent!</p>
-        <p style={{color: '#555', fontSize: '13px'}}>Check your inbox for a password reset link.</p>
-        <button onClick={onBack} style={{marginTop: 8, cursor: 'pointer', border: 'none', background: 'none', color: '#138a36', fontWeight: 600}}>Back to Login</button>
+      <div
+        style={{
+          marginTop: 12,
+          padding: "16px",
+          background: "#f0faf3",
+          borderRadius: "12px",
+        }}
+      >
+        <p style={{ color: "#138a36", fontWeight: 600, marginBottom: 4 }}>
+          ✓ Reset email sent!
+        </p>
+        <p style={{ color: "#555", fontSize: "13px" }}>
+          Check your inbox for a password reset link.
+        </p>
+        <button
+          onClick={onBack}
+          style={{
+            marginTop: 8,
+            cursor: "pointer",
+            border: "none",
+            background: "none",
+            color: "#138a36",
+            fontWeight: 600,
+          }}
+        >
+          Back to Login
+        </button>
       </div>
     );
   }
 
   return (
-    <div style={{marginTop: 12, padding: '16px', background: '#f8f9fa', borderRadius: '12px'}}>
-      <h4 style={{margin: '0 0 8px', fontSize: '15px', color: '#333'}}>Reset Password</h4>
-      {error && <p className="auth-error" style={{fontSize: '13px', marginBottom: 8}}>{error}</p>}
+    <div
+      style={{
+        marginTop: 12,
+        padding: "16px",
+        background: "#f8f9fa",
+        borderRadius: "12px",
+      }}
+    >
+      <h4 style={{ margin: "0 0 8px", fontSize: "15px", color: "#333" }}>
+        Reset Password
+      </h4>
+      {error && (
+        <p className="auth-error" style={{ fontSize: "13px", marginBottom: 8 }}>
+          {error}
+        </p>
+      )}
       <input
         type="email"
         placeholder="Enter your email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        style={{width: '100%', padding: '10px 14px', border: '1px solid #ddd', borderRadius: '8px', fontSize: '14px', marginBottom: 10, boxSizing: 'border-box'}}
+        style={{
+          width: "100%",
+          padding: "10px 14px",
+          border: "1px solid #ddd",
+          borderRadius: "8px",
+          fontSize: "14px",
+          marginBottom: 10,
+          boxSizing: "border-box",
+        }}
       />
-      <div style={{display: 'flex', gap: '8px'}}>
-        <button className="btn-primary" onClick={handleReset} disabled={loading} style={{flex: 1, fontSize: '14px', padding: '10px'}}>
+      <div style={{ display: "flex", gap: "8px" }}>
+        <button
+          className="btn-primary"
+          onClick={handleReset}
+          disabled={loading}
+          style={{ flex: 1, fontSize: "14px", padding: "10px" }}
+        >
           {loading ? "Sending…" : "Send Reset Link"}
         </button>
-        <button onClick={onBack} style={{flex: 0, padding: '10px 16px', border: '1px solid #ddd', borderRadius: '8px', background: '#fff', cursor: 'pointer', fontSize: '14px', color: '#555'}}>
+        <button
+          onClick={onBack}
+          style={{
+            flex: 0,
+            padding: "10px 16px",
+            border: "1px solid #ddd",
+            borderRadius: "8px",
+            background: "#fff",
+            cursor: "pointer",
+            fontSize: "14px",
+            color: "#555",
+          }}
+        >
           Cancel
         </button>
       </div>
@@ -539,13 +756,23 @@ export default function Login() {
     <div className="login-root">
       <div className="login-card">
         {screen === "register" && (
-          <RegistrationScreen onLogin={() => setScreen("login")} onSuccess={handleSuccess} />
+          <RegistrationScreen
+            onLogin={() => setScreen("login")}
+            onSuccess={handleSuccess}
+          />
         )}
         {screen === "login" && (
-          <LoginScreen onSignUp={() => setScreen("register")} onSuccess={handleSuccess} />
+          <LoginScreen
+            onSignUp={() => setScreen("register")}
+            onSuccess={handleSuccess}
+          />
         )}
         {screen === "success" && (
-          <SuccessScreen type={successData?.type} userName={successData?.name} onContinue={handleSuccessContinue} />
+          <SuccessScreen
+            type={successData?.type}
+            userName={successData?.name}
+            onContinue={handleSuccessContinue}
+          />
         )}
       </div>
     </div>
