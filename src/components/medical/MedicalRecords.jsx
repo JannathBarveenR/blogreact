@@ -1,7 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import "./MedicalRecords.css";
 import fetchWithAuth from "../../utils/fetchWithAuth";
-import { appCache, CACHE_KEYS, TTL } from "../../utils/appCache";
 import ProfileCard from "../Home/ProfileCard/ProfileCard";
 
 import {
@@ -56,6 +55,12 @@ export default function MedicalRecords({
   const pdfInputRef = useRef(null);
   const cameraInputRef = useRef(null);
 
+  // The pet object matching the currently active pet, so ProfileCard
+  // shows real data instead of its placeholder fallback, and so its
+  // dropdown actually lists your pets.
+  const selectedPet =
+    pets.find((p) => p.id === activePetId) || (pets.length > 0 ? pets[0] : null);
+
   const handleChooseImage = () => {
     imageInputRef.current?.click();
   };
@@ -88,27 +93,17 @@ export default function MedicalRecords({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Fetch medical records from the API for the active pet
-  const fetchRecords = useCallback(async (forceRefresh = false) => {
+  const fetchRecords = useCallback(async () => {
     if (!activePetId) {
       setAllRecords([]);
       return;
     }
-
-    if (!forceRefresh) {
-      const cached = appCache.get(CACHE_KEYS.medicalRecords(activePetId), TTL.medicalRecords);
-      if (cached) {
-        setAllRecords(cached);
-        return;
-      }
-    }
-
     setLoadingRecords(true);
     try {
       const res = await fetchWithAuth(`/api/medical-records/${activePetId}`);
       if (res.ok) {
         const data = await res.json();
         setAllRecords(data || []);
-        appCache.set(CACHE_KEYS.medicalRecords(activePetId), data || []);
       }
     } catch (err) {
       console.error("Error fetching medical records:", err);
@@ -118,7 +113,7 @@ export default function MedicalRecords({
   }, [activePetId]);
 
   useEffect(() => {
-    fetchRecords(false);
+    fetchRecords();
   }, [fetchRecords]);
 
   useEffect(() => {
@@ -176,10 +171,9 @@ export default function MedicalRecords({
           date: "",
           notes: "",
         });
-        appCache.invalidate(CACHE_KEYS.medicalRecords(activePetId));
         setSelectedFile(null);
         setProgress(0);
-        await fetchRecords(true);
+        await fetchRecords();
       } else {
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData.detail || "Upload failed");
@@ -205,8 +199,7 @@ export default function MedicalRecords({
         method: "DELETE",
       });
       if (res.ok) {
-        appCache.invalidate(CACHE_KEYS.medicalRecords(activePetId));
-        await fetchRecords(true);
+        await fetchRecords();
       } else {
         const errData = await res.json().catch(() => ({}));
         alert(`Failed to delete record: ${errData.detail || "Database error"}`);
@@ -228,8 +221,7 @@ export default function MedicalRecords({
         },
       );
       if (res.ok) {
-        appCache.invalidate(CACHE_KEYS.medicalRecords(activePetId));
-        await fetchRecords(true);
+        await fetchRecords();
       } else {
         console.error("Failed to toggle favorite");
       }
@@ -280,7 +272,12 @@ export default function MedicalRecords({
       <header className="mr-header">
         <h1>Medical Records</h1>
       </header>
-      <ProfileCard />
+      <ProfileCard
+        pets={pets}
+        selectedPet={selectedPet}
+        handlePetSelect={onPetSelect}
+        onAddPet={onAddPet}
+      />
 
       {/* HERO IMAGE */}
       <section className="hero-banner">
@@ -289,6 +286,18 @@ export default function MedicalRecords({
 
       {/* RECORDS SECTION */}
       <section className="records-section">
+        {!loadingRecords && currentRecords.length > 0 && (
+          <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0 4px 12px' }}>
+            <button
+              className="upload-records-btn"
+              onClick={() => setShowUploadSheet(true)}
+              style={{ padding: '8px 16px', fontSize: '13px', borderRadius: '10px' }}
+            >
+              <Upload size={16} />
+              Add Record
+            </button>
+          </div>
+        )}
         <div className="empty-state">
           {loadingRecords ? (
             <div className="upload-spinner"></div>

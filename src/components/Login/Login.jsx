@@ -136,8 +136,7 @@ export function SuccessScreen({ type, userName, onContinue }) {
       </div>
 
       <p className="success-redirect-note">
-      <p style={{ marginTop: 16, color: "#666", fontSize: "14px" }}>
-   
+        Redirecting in {countdown}s…
       </p>
     </div>
   );
