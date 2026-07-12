@@ -1,0 +1,125 @@
+/* ── Pet Health Banner ──────────────── */
+.pet-banner {
+  position: relative;
+  width: 100%;
+  min-height: 220px;
+  border-radius: 22px;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center right;
+  display: flex;
+  align-items: center;
+}
+
+.pet-banner-overlay {
+    display: none;
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    #f3f6ef 0%,
+    #f3f6ef 38%,
+    rgba(243, 246, 239, 0.75) 55%,
+    rgba(243, 246, 239, 0.15) 72%,
+    rgba(243, 246, 239, 0) 88%
+  );
+}
+
+.pet-banner-content {
+  position: relative;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(250, 251, 247, 0.94) 0%,
+    rgba(250, 251, 247, 0.82) 28%,
+    rgba(250, 251, 247, 0.55) 46%,
+    rgba(250, 251, 247, 0.22) 62%,
+    rgba(250, 251, 247, 0.05) 74%,
+    rgba(250, 251, 247, 0) 84%
+  );
+  z-index: 1;
+  padding: 28px 24px;
+  max-width: 62%;
+  display: flex;
+  flex-direction: column;
+}
+
+.pet-banner-heading {
+  margin: 0;
+  font-size: 1.5rem;
+  line-height: 1.35;
+  font-weight: 700;
+  color:#004B49;
+}
+
+.pet-banner-status {
+  color: #4a8f43;
+}
+
+.pet-banner-subtext {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #3b3b3b;
+}
+
+.pet-banner-badge-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  margin-top: 8px;
+}
+
+.pet-banner-badge {
+  position: relative;
+  z-index: 2;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 6px 16px rgba(31, 61, 43, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4a8f43;
+}
+
+.pet-banner-badge svg {
+  width: 30px;
+  height: 30px;
+}
+
+.pet-banner-leaf {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  color: #cfe6c8;
+  z-index: 1;
+}
+
+.pet-banner-leaf--left {
+  bottom: -6px;
+  left: -18px;
+  transform: rotate(-20deg);
+}
+
+.pet-banner-leaf--right {
+  bottom: -8px;
+  right: -18px;
+  transform: scaleX(-1) rotate(-20deg);
+}
+
+@media (max-width: 480px) {
+  .pet-banner {
+    min-height: 180px;
+  }
+  .pet-banner-content {
+    max-width: 72%;
+    padding: 20px 18px;
+  }
+  .pet-banner-heading {
+    font-size: 1.25rem;
+  }
+}

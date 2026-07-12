@@ -1,0 +1,135 @@
+.moments-banner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  aspect-ratio: 1.9 / 1;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  margin-top: -7%;
+  border-radius: 28px;
+  padding: clamp(20px, 5vw, 56px) clamp(24px, 6vw, 64px);
+  background-color: #f0f4e8;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  font-family: 'Manrope', sans-serif;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.moments-banner * {
+  box-sizing: border-box;
+}
+
+.moments-content {
+  position: relative;
+  z-index: 1;
+  max-width: 420px;
+  padding-top: 30px;
+}
+
+.moments-title {
+  margin: 0 0 14px;
+  font-weight: 800;
+  font-size: clamp(28px, 4vw, 42px);
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+}
+
+.moments-title-dark {
+    color: #0f3d2e;
+  display: block;
+  margin-bottom: -2px;
+}
+
+.moments-title-line2 {
+  display: flex;
+  align-items: center;
+  margin-bottom: -14px;
+}
+
+.moments-title-dark,
+.moments-title-line2 {
+  display: block;
+}
+
+.moments-title-light {
+  color: #6fa93f;
+}
+
+.moments-heart {
+  color: #cfe6ba;
+  flex-shrink: 0;
+}
+
+.moments-subtitle {
+  max-width: 360px;
+  font-size: clamp(14px, 1.4vw, 16px);
+  line-height: 1.6;
+  color: #5c6b64;
+  margin: 0;
+}
+
+/* ---------- Tablet ---------- */
+@media (max-width: 960px) {
+  .moments-banner {
+    padding: clamp(16px, 4vw, 36px);
+  }
+
+  .moments-content {
+    max-width: 340px;
+  }
+
+  .moments-title {
+    font-size: clamp(24px, 4.5vw, 34px);
+  }
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 600px) {
+  .moments-banner {
+    padding: 16px;
+    border-radius: 20px;
+    align-items: flex-start;
+  }
+
+  .moments-content {
+    max-width: 58%;
+  }
+
+  .moments-paw-badge {
+    width: 28px;
+    height: 28px;
+    margin-bottom: 8px;
+  }
+
+  .moments-title {
+    font-size: clamp(15px, 5.5vw, 20px);
+    line-height: 1.35;           /* add this line */
+    margin-bottom: 6px;
+  }
+
+
+  .moments-heart {
+    width: 13px;
+    height: 13px;
+  }
+
+  .moments-subtitle {
+    font-size: 10px;
+    max-width: 100%;
+  }
+
+  .moments-trust {
+    margin-top: 8px;
+    font-size: 9px;
+    padding: 5px 10px;
+    gap: 5px;
+  }
+
+  .moments-trust-heart {
+    width: 10px;
+    height: 10px;
+  }
+}

@@ -1,0 +1,337 @@
+.add-pet-card {
+  position: relative;
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
+  margin-top: -38px !important;
+  background-color: #f7f6f1;      /* was #ffffff — now matches hero background */
+  border-radius: 32px;
+  padding:28px 28px;
+  box-shadow: 0 20px 50px rgba(0, 75, 73, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  font-family: 'Manrope', sans-serif;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.add-pet-card * {
+  box-sizing: border-box;
+}
+
+/* Safe & Secure badge */
+.ap-badge {
+  position: absolute;
+  top: clamp(16px, 3.5vw, 32px);
+  left: clamp(16px, 3.5vw, 32px);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #e9f1e0;            /* was #eaf3e2 */
+  color: #2f5c2a;                 /* was #1f5c1f */
+  font-size: 13px;
+  font-weight: 700;
+  padding: 7px 14px 7px 8px;
+  border-radius: 999px;
+  z-index: 1;
+}
+
+.ap-badge-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #84B662;
+}
+
+/* Icon + ring + plus bubble */
+.ap-icon-wrap {
+  position: relative;
+  margin-top: clamp(8px, 3vw, 20px);
+  margin-bottom: 16px;
+  z-index: 1;
+}
+
+
+@keyframes apFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+
+
+@keyframes apPulse {
+  0% { transform: scale(0.85); opacity: 0.4; }
+  70% { transform: scale(1.2); opacity: 0; }
+  100% { transform: scale(1.2); opacity: 0; }
+}
+
+.ap-icon-ring {
+  width: 84px;
+  height: 84px;
+  margin-top: 15px;
+  border-radius: 50%;
+  border: 2px dashed #cfe0c2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ap-icon-circle {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: #eef6e7;            /* unchanged — still reads well on cream */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+
+@keyframes apPawWag {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(3deg) scale(1.015); }
+}
+
+.ap-plus-badge {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #84B662, #2f7d2a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 14px rgba(47, 125, 42, 0.35), 0 0 0 4px #ffffff;
+  cursor: pointer;
+  animation: apWiggle 2.6s ease-in-out infinite;
+}
+
+@keyframes apWiggle {
+  0%, 85%, 100% { transform: rotate(0deg) scale(1); }
+  90% { transform: rotate(-6deg) scale(1.04); }
+  95% { transform: rotate(5deg) scale(1.04); }
+}
+
+
+/* Heading */
+.ap-title {
+  margin: 0 0 16px;
+  font-weight: 600;
+  font-size: clamp(22px, 5vw, 46px);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  position: relative;
+  z-index: 1;
+}
+
+.ap-title-dark {
+  color: #0f3d2e;    
+}
+
+.ap-title-light {
+  color: #84B662;           
+}
+
+.ap-title-line2 {
+  position: relative;
+  display: block;
+  margin-top: -7px;
+}
+
+
+/* Subtitle */
+.ap-subtitle {
+  max-width: 460px;
+  font-size: clamp(12px, 1.6vw, 17px);
+  line-height: 1.6;
+  color: #5c6b64;                 /* unchanged, already matches hero-subtitle */
+  margin: 0 0 32px;
+  margin-top: -5px !important;
+  margin-bottom: 5px;
+  position: relative;
+  z-index: 1;
+}
+.ap-btn-tail1{
+    width:130px;
+    height:130px;
+    object-fit:contain;
+}
+.ap-btn-tail2{
+    width:50px;
+    height:50px;
+    object-fit:contain;
+}
+
+
+.ap-tail-img{
+    width:180px !important;
+    height:180px !important;
+    object-fit:contain;
+    user-select:none;
+    pointer-events:none;
+   
+}
+
+@keyframes tailWag{
+    0%{
+        transform:rotate(-12deg);
+    }
+    50%{
+        transform:rotate(12deg);
+    }
+    100%{
+        transform:rotate(-12deg);
+    }
+}
+/* CTA button */
+.ap-cta{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+
+  width:fit-content;
+  min-width:200px;
+  height:44px;
+
+  padding:0 24px;
+  margin-top: 5px;
+  margin-bottom: 7px;
+
+  border:none;
+  border-radius:999px;
+  background:linear-gradient(135deg,#84B662,#2f7d2a);
+
+  color:#fff;
+  font-size:15px;
+  font-weight:600;
+
+  white-space:nowrap;
+  flex-shrink:0;
+  cursor:pointer;
+}
+
+.ap-cta:hover {
+  transform: translateY(-3px) scale(1.015);
+  box-shadow: 0 18px 36px rgba(47, 125, 42, 0.38);
+}
+
+.ap-cta:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.ap-cta-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #ffffff;
+}
+
+.ap-cta-chevron {
+  margin-left: auto;
+  animation: apNudge 1.6s ease-in-out infinite;
+}
+
+@keyframes apNudge {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(4px); }
+}
+
+/* Decorative background layer */
+.ap-dots {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  width: 64px;
+  height: 32px;
+  opacity: 0.5;
+  z-index: 0;
+}
+
+.ap-leaf {
+  position: absolute;
+  bottom: -18px;
+  width: 80px;
+  height: 110px;
+  opacity: 0.7;
+  z-index: 0;
+  animation: apSway 5s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+.ap-leaf-left {
+  left: -18px;
+}
+
+.ap-leaf-right {
+  right: -18px;
+  transform: scaleX(-1);
+  animation-name: apSwayFlip;
+  animation-delay: 0.8s;
+}
+
+@keyframes apSway {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(2.5deg); }
+}
+
+@keyframes apSwayFlip {
+  0%, 100% { transform: scaleX(-1) rotate(0deg); }
+  50% { transform: scaleX(-1) rotate(2.5deg); }
+}
+
+.ap-paw-wm {
+  position: absolute;
+  color: #e3efd8;
+  opacity: 0.4;
+  z-index: 0;
+  animation: apFadeDrift 4s ease-in-out infinite;
+}
+
+.ap-paw-wm-1 {
+  width: 36px;
+  height: 36px;
+  top: 38%;
+  right: 6%;
+  transform: rotate(-10deg);
+}
+
+.ap-paw-wm-2 {
+  width: 26px;
+  height: 26px;
+  top: 52%;
+  right: 3%;
+  transform: rotate(15deg);
+  animation-delay: 1.2s;
+}
+
+@keyframes apFadeDrift {
+  0%, 100% { opacity: 0.3; transform: translateY(0); }
+  50% { opacity: 0.55; transform: translateY(-4px); }
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .ap-icon-float,
+  .ap-icon-pulse,
+  .ap-paw-bounce,
+  .ap-plus-badge,
+  .ap-sparkle-svg,
+  .ap-leaf,
+  .ap-leaf-right,
+  .ap-paw-wm,
+  .ap-cta-chevron {
+    animation: none !important;
+  }
+}

@@ -1,64 +1,33 @@
 import React from "react";
-import petsImage from "../../../assets/banner.png";
+import { Heart } from "lucide-react";
+import bannerBg from "../../../assets/banner-bg.png";
+import "./HealthBanner.css";
 
-export default function MomentsBanner({ onLearnMore }) {
+const HealthBanner = () => {
   return (
-    <section className="relative w-full overflow-hidden rounded-[24px] bg-[#F4F5F0] shadow-[0_8px_25px_rgba(0,75,73,0.08)]">
-      <div className="flex items-center">
-        {/* Text */}
-        <div className="
-  w-[58%]
-  sm:w-[52%]
-  md:w-[45%]
-  px-6
-  sm:px-8
-  md:px-10
-  py-7
-  sm:py-8
-">
-          
-<h2
-  className="
-    text-[#004B49]
-    font-extrabold
-    absolute left-2 top-2
-    text-[15px]
-    sm:text-[24px]
-    md:text-[28px]
-    leading-[1.15]
-    tracking-[-0.03em]
-  "
->
-  Every moment matters
-</h2>
-<p
-  className="
-    mt-3
-    max-w-[230px]
-    absolute left-2 top-8
-    text-[#5E706D]
-    text-[14px]
-    sm:text-[15px]
-    md:text-[17px]
-    leading-6
-    font-medium
-  "
->
-  Track, care and keep your
-  <br/>
-  pet happy &amp; healthy.
-</p>
-        </div>
+    <section
+      className="moments-banner"
+      style={{ backgroundImage: `url(${bannerBg})` }}
+    >
+      <div className="moments-content">
+        <h2 className="moments-title">
+          <span className="moments-title-dark">Every Moment</span>
+          <span className="moments-title-line2">
+            <span className="moments-title-light">Matters</span>
+            <Heart size={20} className="moments-heart" />
+          </span>
+        </h2>
 
-        {/* Image */}
-        <div className="w-[45%] sm:w-[50%] md:w-[58%]">
-          <img
-            src={petsImage}
-            alt="Golden retriever puppy and kitten"
-            className="h-full w-full object-cover object-left"
-          />
-        </div>
+        <p className="moments-subtitle">
+          Track your pet's health, care 
+          <br/>
+          routines and happy memories
+          <br/>  all in
+          one loving place.
+        </p>
       </div>
     </section>
   );
-}
+};
+
+export default HealthBanner;

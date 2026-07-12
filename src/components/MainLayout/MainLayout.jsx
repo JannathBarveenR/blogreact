@@ -10,7 +10,6 @@ import TimelinePage from "../Timeline/TimelinePage";
 import UserProfile from "../UserProfile/UserProfile";
 import fetchWithAuth from "../../utils/fetchWithAuth";
 import useAuth from "../../hooks/useAuth";
-import { appCache, CACHE_KEYS, TTL } from "../../utils/appCache";
 
 const MainLayout = () => {
   const navigate = useNavigate();
@@ -30,52 +29,13 @@ const MainLayout = () => {
     }
   }, [location.state]);
 
-  const prefetchSecondaryData = (userId, currentPets) => {
-    // 1. Prefetch user profile
-    const profileKey = CACHE_KEYS.userProfile(userId);
-    if (!appCache.get(profileKey, TTL.userProfile)) {
-      fetchWithAuth(`/api/user-profile/${userId}`)
-        .then(r => r.ok ? r.json() : null)
-        .then(data => {
-          if (data) appCache.set(profileKey, data);
-        })
-        .catch(() => {});
-    }
-
-    // 2. Prefetch medical records for active pet
-    const activePet = activePetId || (currentPets && currentPets[0]?.id);
-    if (activePet) {
-      const recordsKey = CACHE_KEYS.medicalRecords(activePet);
-      if (!appCache.get(recordsKey, TTL.medicalRecords)) {
-        fetchWithAuth(`/api/medical-records/${activePet}`)
-          .then(r => r.ok ? r.json() : null)
-          .then(data => {
-            if (data) appCache.set(recordsKey, data);
-          })
-          .catch(() => {});
-      }
-    }
-  };
-
-  const fetchPets = async (forceRefresh = false) => {
+  const fetchPets = async () => {
     if (!user) return;
-    const cacheKey = CACHE_KEYS.pets(user.id);
-
-    if (!forceRefresh) {
-      const cached = appCache.get(cacheKey, TTL.pets);
-      if (cached) {
-        setPets(cached);
-        setLoadingPets(false);
-        prefetchSecondaryData(user.id, cached);
-        return;
-      }
-    }
-
     setLoadingPets(true);
     try {
-      // Try local storage first as cold fallback
+      // Try local storage first
       const localPets = localStorage.getItem(`pets_${user.id}`);
-      if (localPets && !forceRefresh) {
+      if (localPets) {
         const parsed = JSON.parse(localPets);
         setPets(parsed);
         const savedActive = localStorage.getItem(`active_pet_id_${user.id}`);
@@ -86,26 +46,20 @@ const MainLayout = () => {
         }
       }
 
-      // Fetch pets
+      // ✅ Fetch only THIS user's pets using their user.id
       const res = await fetchWithAuth(`/api/pet-profile/by-user/${user.id}`);
       if (res.ok) {
         const data = await res.json();
         setPets(data);
-        appCache.set(cacheKey, data);
         localStorage.setItem(`pets_${user.id}`, JSON.stringify(data));
         
         const savedActive = localStorage.getItem(`active_pet_id_${user.id}`);
-        let finalActivePetId = activePetId;
         if (savedActive && data.some(p => p.id === savedActive)) {
           setActivePetId(savedActive);
-          finalActivePetId = savedActive;
         } else if (data.length > 0) {
           setActivePetId(data[0].id);
-          finalActivePetId = data[0].id;
           localStorage.setItem(`active_pet_id_${user.id}`, data[0].id);
         }
-        
-        prefetchSecondaryData(user.id, data);
       }
     } catch (err) {
       console.error("Failed to fetch pets", err);
@@ -118,12 +72,16 @@ const MainLayout = () => {
     fetchPets();
   }, [user]);
 
+  // Single source of truth for "go start the add-pet flow" —
+  // used by AddPetCard, BottomNav's FAB, Home, MedicalRecords, and UserProfile.
   const handleAddPet = () => {
     navigate("/create-pet-profile");
   };
 
-  const handleFab = () => {
-    navigate("/create-pet-profile");
+  // Same pattern QuickActions already uses for its "Medical Records" card —
+  // just flip the active tab, no route change needed.
+  const handleUploadRecords = () => {
+    setActiveTab("medicalrecords");
   };
 
   const handlePetSelect = (selectedPet) => {
@@ -134,20 +92,20 @@ const MainLayout = () => {
     }
   };
 
-  return (
-    <>
-      <div style={{ paddingBottom: '70px', height: '100vh', overflowY: 'auto' }}>
-        <TopNav />
-        {/* Keep-alive structure using display: none for inactive tabs */}
-        <div style={{ display: activeTab === "home" ? "block" : "none" }}>
-          <Home
-            pets={pets}
-            activePetId={activePetId}
-            onPetSelect={handlePetSelect}
-            onAddPet={handleAddPet}
-          />
+  const renderContent = () => {
+    if (activeTab === "timeline" || activeTab === "checklist") {
+      return (
+        <div style={{ paddingBottom: '70px', height: '100vh', overflowY: 'auto' }}>
+          <TopNav />
+          <TimelinePage />
         </div>
-        <div style={{ display: (activeTab === "medicalrecords" || activeTab === "docs") ? "block" : "none" }}>
+      );
+    }
+    
+    if (activeTab === "medicalrecords" || activeTab === "docs") {
+      return (
+        <div style={{ paddingBottom: '70px', height: '100vh', overflowY: 'auto' }}>
+          <TopNav />
           <MedicalRecords
             pets={pets}
             activePetId={activePetId}
@@ -155,23 +113,46 @@ const MainLayout = () => {
             onAddPet={handleAddPet}
           />
         </div>
-        <div style={{ display: activeTab === "profile" ? "block" : "none" }}>
+      );
+    }
+
+    if (activeTab === "profile") {
+      return (
+        <div style={{ paddingBottom: '70px', height: '100vh', overflowY: 'auto' }}>
+
           <UserProfile
             pets={pets}
             activePetId={activePetId}
             onPetSelect={handlePetSelect}
             onAddPet={handleAddPet}
-            refreshPets={() => fetchPets(true)}
+            refreshPets={fetchPets}
           />
         </div>
-        <div style={{ display: (activeTab === "timeline" || activeTab === "checklist") ? "block" : "none" }}>
-          <TimelinePage />
-        </div>
+      );
+    }
+
+    // HOME TAB
+    return (
+      <div style={{ paddingBottom: '70px', height: '100vh', overflowY: 'auto' }}>
+        <TopNav />
+        <Home
+          pets={pets}
+          activePetId={activePetId}
+          onPetSelect={handlePetSelect}
+          onAddPet={handleAddPet}
+        />
       </div>
+    );
+  };
+
+  return (
+    <>
+      {renderContent()}
       <BottomNav
         active={activeTab}
-        onNavigate={setActiveTab}
-        onFabPress={handleFab}
+        onNavigate={(page) => setActiveTab(page)}
+        onAddPet={handleAddPet}
+        onUploadRecords={handleUploadRecords}
       />
     </>
   );

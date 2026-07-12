@@ -7,6 +7,28 @@ import fetchWithAuth from "../../../utils/fetchWithAuth";
 import { PetAvatar } from "../../common/PetAvatar";
 import "./Step4.css";
 
+// Centralized age calculation so every consumer of pet data gets the
+// same, always-populated string. Never returns "" if a valid birthDate
+// is given.
+function calculateAgeString(birthDate) {
+  if (!birthDate) return "";
+
+  const dob = new Date(birthDate);
+  const today = new Date();
+
+  let years = today.getFullYear() - dob.getFullYear();
+  let months = today.getMonth() - dob.getMonth();
+
+  if (months < 0) {
+    years--;
+    months += 12;
+  }
+
+  if (years < 0 || months < 0) return "";
+
+  return `${years}y ${months}m`;
+}
+
 function Step4({ goBack, petData, setStep, isSubmitting, setIsSubmitting, submitError, setSubmitError, onNavigateToPetHome }) {
   const progress = 100;
 
@@ -24,18 +46,11 @@ function Step4({ goBack, petData, setStep, isSubmitting, setIsSubmitting, submit
 
   React.useEffect(() => {
     if (localPetData.birthDate) {
-      const dob = new Date(localPetData.birthDate);
-      const today = new Date();
-      let y = today.getFullYear() - dob.getFullYear();
-      let m = today.getMonth() - dob.getMonth();
-      if (m < 0) {
-        y--;
-        m += 12;
-      }
-      if (y >= 0 && m >= 0) {
+      const computed = calculateAgeString(localPetData.birthDate);
+      if (computed) {
         setLocalPetData((prev) => ({
           ...prev,
-          approxAge: `${y}y ${m}m`,
+          approxAge: computed,
         }));
       }
     }
@@ -46,13 +61,21 @@ function Step4({ goBack, petData, setStep, isSubmitting, setIsSubmitting, submit
     setSubmitError("");
 
     try {
+      // Single source of truth for the display age, computed once here.
+      // We no longer blank this out when birthDate exists — we resolve it
+      // to a concrete string up front so nothing downstream has to guess.
+      const resolvedAge =
+        (localPetData.birthDate && calculateAgeString(localPetData.birthDate)) ||
+        localPetData.approxAge ||
+        "";
+
       const formData = new FormData();
       formData.append("pet_type", localPetData.petType || "");
       formData.append("pet_name", (localPetData.petName || "").trim());
       if (localPetData.breed)      formData.append("breed", localPetData.breed);
       if (localPetData.gender)     formData.append("gender", localPetData.gender);
       if (localPetData.birthDate)  formData.append("birth_date", localPetData.birthDate);
-      if (localPetData.approxAge)  formData.append("approx_age", localPetData.approxAge);
+      if (resolvedAge)             formData.append("approx_age", resolvedAge);
       if (localPetData.petPhotoFile) formData.append("pet_photo", localPetData.petPhotoFile);
 
       const storedUserData = localStorage.getItem("user");
@@ -92,6 +115,9 @@ function Step4({ goBack, petData, setStep, isSubmitting, setIsSubmitting, submit
       const userId      = localUser ? JSON.parse(localUser).id : "guest";
       const storageKey  = `pets_${userId}`;
 
+      // newPet: shape stored in localStorage (used to seed the dashboard
+      // list on reload). `approx_age` is ALWAYS populated now — we don't
+      // rely on `birth_date` surviving downstream to recompute it.
       const newPet = {
         id: petProfileId,
         petolife_id: petolifeId,
@@ -99,7 +125,9 @@ function Step4({ goBack, petData, setStep, isSubmitting, setIsSubmitting, submit
         pet_type: localPetData.petType,
         breed: localPetData.breed,
         gender: localPetData.gender,
-        birth_date: localPetData.birthDate,
+        birth_date: localPetData.birthDate || "",
+        approx_age: resolvedAge,
+        age: resolvedAge, // duplicate under `age` too, since PetIdCardModal checks this key first
         pet_photo_url: profileData.data?.pet_photo_url,
       };
 
@@ -107,21 +135,23 @@ function Step4({ goBack, petData, setStep, isSubmitting, setIsSubmitting, submit
       const existingPets    = existingPetsStr ? JSON.parse(existingPetsStr) : [];
       localStorage.setItem(storageKey, JSON.stringify([newPet, ...existingPets]));
 
-const petForHome = {
-  id: petProfileId,
-  petolife_id: petolifeId,
-  name: (localPetData.petName || "").trim(),
-  pet_type: localPetData.petType || "",
-  breed: localPetData.breed || "Not added",
-  gender: localPetData.gender || "Male",
-  birth_date: localPetData.birthDate || "",
-  age: localPetData.birthDate ? "" : (localPetData.approxAge || "Not added"),
-  image: profileData.data?.pet_photo_url ||
-         (localPetData.petPhotoFile ? URL.createObjectURL(localPetData.petPhotoFile) : ""),
-  pet_ids: validIds,
-};
+      // petForHome: shape passed directly in-memory to the dashboard via
+      // onNavigateToPetHome. Also always populated now.
+      const petForHome = {
+        id: petProfileId,
+        petolife_id: petolifeId,
+        name: (localPetData.petName || "").trim(),
+        pet_type: localPetData.petType || "",
+        breed: localPetData.breed || "Not added",
+        gender: localPetData.gender || "Male",
+        birth_date: localPetData.birthDate || "",
+        age: resolvedAge || "Not added",
+        image: profileData.data?.pet_photo_url ||
+               (localPetData.petPhotoFile ? URL.createObjectURL(localPetData.petPhotoFile) : ""),
+        pet_ids: validIds,
+      };
 
-onNavigateToPetHome({ newPet: petForHome });
+      onNavigateToPetHome({ newPet: petForHome });
     } catch (err) {
       console.error("Submit error:", err);
       setSubmitError(err.message || "Something went wrong. Please try again.");

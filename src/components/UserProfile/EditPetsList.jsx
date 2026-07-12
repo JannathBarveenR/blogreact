@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { FiEdit2, FiArrowLeft, FiPlus, FiCheck, FiX } from "react-icons/fi";
-import NO_PETS_IMG from "../../assets/no-pets.png";
+import { Dog, Cat, Rabbit, Bird, PawPrint } from "lucide-react";
 import "./EditPetsList.css";
 const EMPTY_FORM = {
   pet_name: "",
@@ -34,7 +34,7 @@ const EditPetsList = ({
       pet_name: pet.pet_name || pet.name || "",
       species: pet.species || pet.pet_type || "",
       breed: pet.breed || "",
-      age: pet.age ?? "",
+      age: pet.age || pet.approx_age || "",
       pet_photo_url: pet.pet_photo_url || pet.image || "",
     });
   };
@@ -67,6 +67,7 @@ const EditPetsList = ({
         pet_type: form.species,
         breed: form.breed,
         age: form.age,
+        approx_age: form.age,
         pet_photo_url: form.pet_photo_url,
         image: form.pet_photo_url,
       };
@@ -76,6 +77,32 @@ const EditPetsList = ({
       setSaving(false);
     }
   };
+  const getPetPhoto = (pet) => pet.pet_photo_url || pet.image || null;
+
+const getPetIcon = (pet) => {
+  const type = (pet.species || pet.pet_type || pet.type || "")
+    .toLowerCase()
+    .trim();
+
+  switch (type) {
+    case "dog":
+      return Dog;
+
+    case "cat":
+      return Cat;
+
+    case "rabbit":
+    case "bunny":
+      return Rabbit;
+
+    case "bird":
+    case "parrot":
+      return Bird;
+
+    default:
+      return PawPrint;
+  }
+};
 const handleDelete = async () => {
   if (!deletePetId) return;
 
@@ -120,7 +147,9 @@ const handleDelete = async () => {
 
       {pets.length === 0 ? (
         <div className="edit-pets-empty">
-          <img src={NO_PETS_IMG} alt="No pets added" className="edit-pets-empty-img" />
+          <div className="edit-pets-empty-icon">
+  <PawPrint size={72} strokeWidth={1.8} />
+</div>
           <h4>No pets to edit yet</h4>
           <p>Add a pet first, then come back here to update their details.</p>
           <button className="edit-pets-add-btn" onClick={onAddPet}>
@@ -131,7 +160,8 @@ const handleDelete = async () => {
         <div className="edit-pets-list">
           {pets.map((pet) => {
             const name = pet.pet_name || pet.name || "Unnamed";
-            const photo = pet.pet_photo_url || pet.image || NO_PETS_IMG;
+            const photo = getPetPhoto(pet);
+const PetIcon = getPetIcon(pet);
             const species = pet.species || pet.pet_type || "";
             const petId = getPetId(pet);
             const isEditing = editingPetId === petId;
@@ -148,11 +178,17 @@ const handleDelete = async () => {
                       onClick={() => isEditing && fileInputRef.current?.click()}
                       style={isEditing ? { cursor: "pointer" } : undefined}
                     >
-                      <img
-                        src={isEditing ? form.pet_photo_url || NO_PETS_IMG : photo}
-                        alt={name}
-                        className="edit-pet-avatar"
-                      />
+                      {(isEditing ? form.pet_photo_url : photo) ? (
+                        <img
+                          src={isEditing ? form.pet_photo_url : photo}
+                          alt={name}
+                          className="edit-pet-avatar"
+                        />
+                      ) : (
+                        <div className="edit-pet-avatar edit-pet-avatar-placeholder">
+                          <PetIcon size={34} strokeWidth={2} />
+                        </div>
+                      )}
 
                       {!isEditing && (
                         <button

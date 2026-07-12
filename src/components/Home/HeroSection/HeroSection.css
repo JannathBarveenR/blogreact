@@ -1,0 +1,138 @@
+.hero {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1264 / 842;      /* locks to the source image — guarantees zero cropping */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  font-family: 'Manrope', sans-serif;
+  box-sizing: border-box;
+  overflow: hidden !important;
+}
+
+.hero * {
+  box-sizing: border-box;
+}
+
+.hero-inner {
+  position: relative;
+  height: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+}
+
+.hero-left {
+  width: 46%;
+  padding: clamp(4%, 5vw, 6%) 0 clamp(4%, 5vw, 6%) clamp(4%, 6vw, 6%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(10px, 1.4vw, 25px);
+  margin-left: 1px;
+}.hero-text{
+  margin-left: -5px;
+  margin-top: 2px;
+}
+
+.hero-badge {
+  margin-left: -19px;
+  display: inline-flex;
+  align-items: left;
+  gap: 10px;
+  background: #f5f5f5;
+  border-radius: 999px;
+  padding: 6px 14px 6px 6px;
+  font-size: clamp(18px, 1.3vw, 14px);
+  text-align: center;
+  font-weight: 600;
+  color: #004B23;
+  white-space: nowrap;
+  height: 40px;
+  width: fit-content;
+}
+
+.hero-badge-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: clamp(33px, 2vw, 22px);
+  height: clamp(33px, 2vw, 22px);
+  border-radius: 50%;
+  background: #ffffff;
+  color: #84B662;
+}
+
+.hero-badge-icon svg {
+  width: 65%;
+  height: 65%;
+}
+
+.hero-title {
+  margin: 0;
+  font-weight: 800;
+  font-size: clamp(20px , 3.6vw, 52px);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+}
+
+.hero-title-dark {
+  display: block;
+  color: #004B23;
+}
+
+.hero-title-green {
+  display: block;
+  color: #84B662;
+}
+
+.hero-subtitle {
+  max-width: 26em;
+  font-size: clamp(10px, 1.15vw, 15px);
+  line-height: 1.5;
+  color: #5E706D;
+  margin: 0;
+}
+
+.hero-cta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+  margin-top: 4px;
+  height: clamp(26px, 5vw, 52px);
+  padding: 3px 20px 3px 3px;
+  border: none;
+  border-radius: 999px;
+  background: #1F6B3A;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: clamp(18px, 1.3vw, 15px);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.hero-cta:hover {
+  background: #195c30;
+  transform: translateY(-1px);
+}
+
+.hero-cta-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: clamp(20px, 4.4vw, 38px);
+  height: clamp(20px, 4.4vw, 38px);
+  border-radius: 50%;
+  background: #ffffff;
+  color: #1F6B3A;
+}
+
+.hero-cta-icon svg {
+  width: 50%;
+  height: 50%;
+}

@@ -1,0 +1,415 @@
+/* =========================================
+   PETOLIFE ID CARD — portrait, single-screen
+========================================= */
+
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
+
+*{
+    box-sizing:border-box;
+}
+
+.pid-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.55);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
+    padding:clamp(8px, 2vh, 24px);
+    overflow:hidden;
+    backdrop-filter:blur(4px);
+}
+
+/* Portrait card, capped to viewport height. Flex column so every
+   section stacks, and the photo section is the one flexible piece
+   that grows/shrinks to absorb extra/short vertical space. */
+.pid-card{
+    position:relative;
+    width:min(92vw, 380px);
+    height:auto;
+    max-height:calc(100vh - 16px);
+    background:linear-gradient(180deg, #F5FAF3 0%, #ffffff 22%);
+    border-radius:clamp(18px, 4vw, 30px);
+    padding:clamp(14px, 2.6vh, 26px) clamp(16px, 4vw, 24px);
+    font-family:"Manrope",sans-serif;
+    overflow:hidden;
+    box-shadow:0 20px 60px rgba(0,0,0,.18);
+    border:1px solid #E6EDDF;
+    margin:auto;
+    display:flex;
+    flex-direction:column;
+}
+
+/* close */
+.pid-close{
+    position:absolute;
+    top:clamp(10px, 2vh, 18px);
+    right:clamp(10px, 2vh, 18px);
+    width:clamp(28px, 5vh, 36px);
+    height:clamp(28px, 5vh, 36px);
+    border:none;
+    border-radius:50%;
+    background:#EDF5EA;
+    cursor:pointer;
+    color:#21562f;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:clamp(13px, 2vh, 16px);
+    transition:.2s;
+    z-index:20;
+}
+
+.pid-close:hover{
+    background:#dfead9;
+}
+
+/* decorative background paws */
+.pid-bg-paw{
+    position:absolute;
+    font-size:70px;
+    opacity:.05;
+    pointer-events:none;
+    z-index:0;
+}
+.pid-bg-paw-1{ top:8px; left:-6px; }
+.pid-bg-paw-2{ bottom:14%; right:-10px; transform:rotate(18deg); }
+
+/* ================= HEADER ================= */
+.pid-header{
+    flex-shrink:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    position:relative;
+    z-index:1;
+}
+
+.pid-brand-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.pid-brand-paw{
+    color:#2E7D32;
+    font-size:clamp(16px, 2.6vh, 20px);
+}
+
+.pid-brand-name{
+    margin:0;
+    font-size:clamp(19px, 3.4vh, 26px);
+    font-weight:800;
+    color:#1d5d35;
+    letter-spacing:.2px;
+}
+
+.pid-brand-name span{
+    color:#6FB34A;
+}
+
+.pid-subtitle{
+    margin-top:-4px;
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:clamp(6px, 1.2vh, 10px) 10px;
+    border-top:1px solid #E8ECE6;
+    border-bottom:1px solid #E8ECE6;
+    color:#21562f;
+    font-size:clamp(10px, 1.7vh, 13px);
+    font-weight:800;
+    letter-spacing:1.4px;
+}
+
+.pid-subtitle svg{
+    color:#2E7D32;
+    font-size:clamp(11px, 1.8vh, 14px);
+}
+
+/* ================= PHOTO ================= */
+.pid-photo-wrap{
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    z-index:1;
+    margin-top:clamp(-20px, -1vh, -6px);
+    padding:clamp(4px, 1vh, 10px) 0;
+}
+
+.pid-photo-ring{
+    width: 120px !important;
+    height: 120px !important;
+    border-radius:50%;
+    overflow:hidden;
+    border:4px solid #ffffff;
+    outline:3px solid #DCEBD5;
+    box-shadow:0 12px 30px rgba(30,90,45,.18);
+    background:#F4F8F2;
+    flex-shrink:0;
+}
+
+.pid-photo{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+.icon-photo{
+    object-fit:contain;
+    padding:18%;
+}
+
+/* ================= NAME / ID ROWS ================= */
+.pid-row{
+    flex-shrink:0;
+    position:relative;
+    z-index:1;
+}
+
+.pid-row--split{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    padding:clamp(5px, 1vh, 8px) 0;
+}
+
+.pid-col{
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+    margin-top:-1px;
+}
+
+.pid-mini-label{
+    font-size:clamp(10px, 1.5vh, 12px);
+    color:#7C8B7E;
+    font-weight:600;
+    margin-bottom:2px;
+}
+
+.pid-name-value{
+    font-size:clamp(16px, 2.6vh, 21px);
+    font-weight:800;
+    color:#16211f;
+    word-break:break-word;
+}
+
+.pid-id-value{
+    font-size:clamp(16px, 2.8vh, 22px);
+    font-weight:800;
+    color:#2E7D32;
+    letter-spacing:.4px;
+    word-break:break-word;
+}
+
+.pid-verified-badge{
+    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    gap:5px;
+    background:#EAF5E5;
+    color:#21562f;
+    border-radius:20px;
+    padding:clamp(5px, 1vh, 7px) clamp(8px, 2vw, 12px);
+    font-size:clamp(9px, 1.4vh, 11px);
+    font-weight:700;
+    white-space:nowrap;
+}
+
+.pid-verified-badge svg{
+    color:#2E7D32;
+    font-size:clamp(10px, 1.6vh, 12px);
+}
+
+/* Copy button — default state, and a brief "done" state after a
+   successful copy (green fill + checkmark), like a standard copy UI. */
+.pid-copy-btn{
+    flex-shrink:0;
+    width:clamp(28px, 4.6vh, 34px);
+    height:clamp(28px, 4.6vh, 34px);
+    border:1px solid #DCEBD5;
+    border-radius:10px;
+    background:#F5FAF3;
+    color:#2E7D32;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    font-size:clamp(12px, 1.8vh, 14px);
+    transition:background .2s, border-color .2s, color .2s, transform .15s;
+}
+
+.pid-copy-btn:hover{
+    background:#e8f2e3;
+}
+
+.pid-copy-btn:active{
+    transform:scale(.92);
+}
+
+.pid-copy-btn--done{
+    background:#2E7D32;
+    border-color:#2E7D32;
+    color:#ffffff;
+}
+
+.pid-copy-btn--done:hover{
+    background:#2E7D32;
+}
+
+.pid-divider-line{
+    flex-shrink:0;
+    height:1px;
+    background:#E8ECE6;
+    margin:clamp(4px, 1vh, 8px) 0;
+}
+.pid-logo{
+    height:54px;
+    width:auto;
+    object-fit:contain;
+}
+/* ================= DETAILS GRID ================= */
+.pid-grid{
+    flex-shrink:0;
+    display:grid;
+    margin-left:-6px;   /* adjust as needed */
+    grid-template-columns:1fr 1fr;
+    gap:clamp(6px, 1.4vh, 12px) clamp(2px, 1vw, 8px);
+    position:relative;
+    z-index:1;
+}
+.pid-grid > .pid-grid-item:nth-child(even){
+    justify-self:start;
+    margin-left:-26px;   /* adjust as needed */
+}
+
+.pid-grid-item{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    min-width:0;
+}
+
+.pid-grid-icon{
+    flex-shrink:0;
+    width:clamp(24px, 4vh, 30px);
+    height:clamp(24px, 4vh, 30px);
+    border-radius:50%;
+    background:#EEF7EA;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#2E7D32;
+    font-size:clamp(11px, 1.7vh, 14px);
+    margin-top:1px;
+}
+
+.pid-grid-text{
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+}
+
+.pid-grid-label{
+    font-size:clamp(10px, 1.5vh, 12px);
+    color:#7C8B7E;
+    font-weight:600;
+}
+
+.pid-grid-value{
+    font-size:clamp(12px, 1.9vh, 15px);
+    font-weight:800;
+    color:#202020;
+    word-break:break-word;
+    margin-top:1px;
+}
+
+/* Phone row: masked value + eye toggle, sitting inline together */
+.pid-phone-row{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin-top:1px;
+    min-width:0;
+}
+
+.pid-phone-row .pid-grid-value{
+    margin-top:0;
+    letter-spacing:1px;
+}
+
+.pid-eye-btn{
+    flex-shrink:0;
+    width:clamp(18px, 3vh, 22px);
+    height:clamp(18px, 3vh, 22px);
+    border:none;
+    background:transparent;
+    color:#2E7D32;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    font-size:clamp(11px, 1.7vh, 13px);
+    padding:0;
+}
+
+.pid-eye-btn:hover{
+    color:#1d5d35;
+}
+
+/* ================= QR ================= */
+.pid-qr-section{
+    flex-shrink:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    margin-top:clamp(4px, 1.2vh, 10px);
+    position:relative;
+    z-index:1;
+}
+
+.pid-qr-box{
+    padding:clamp(6px, 1.4vh, 10px);
+    background:#fff;
+    border:2px solid #2E7D32;
+    border-radius:clamp(10px, 1.8vh, 14px);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.pid-qr-box svg{
+    width:min(18vh, 26vw, 128px);
+    height:min(18vh, 26vw, 128px);
+    display:block;
+}
+
+.pid-qr-caption{
+    margin-top:clamp(5px, 1vh, 8px);
+    display:flex;
+    align-items:center;
+    gap:5px;
+    color:#4d5f50;
+    font-size:clamp(9px, 1.4vh, 11px);
+    font-weight:600;
+    text-align:center;
+}
+
+.pid-qr-caption svg{
+    color:#2E7D32;
+    font-size:clamp(10px, 1.6vh, 12px);
+    flex-shrink:0;
+}
+
+/* ---------- Small-width tweaks ---------- */
+@media(max-width:360px){
+.pid-grid{
+    grid-template-columns:1fr;
+}
+}

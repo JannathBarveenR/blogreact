@@ -1,5 +1,5 @@
 :root {
-  --brand-teal: #004b49;
+  --brand-teal: #004B23;
   --brand-green: #84b662;
   --brand-green-dark: #6a9a4c;
   --bg-page: #f4f8f1;
@@ -10,28 +10,45 @@
 
 /* ── Profile Card ───────────────── */
 .profile-card {
-  background: #fff;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdf9 100%);
   border-radius: var(--radius-card, 20px);
-  padding: 16px;
+  padding: 16px 18px;
   display: flex;
   align-items: center;
-  gap: 14px;
-  box-shadow: 0 6px 20px rgba(0, 75, 73, 0.08);
+  gap: 16px;
+  box-shadow: 0 8px 24px rgba(0, 75, 73, 0.1);
   border: 1px solid var(--card-border);
   position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.profile-card.clickable:hover {
+  box-shadow: 0 10px 28px rgba(0, 75, 73, 0.14);
+  transform: translateY(-1px);
+}
+
+.profile-card.clickable:active {
+  transform: translateY(0) scale(0.995);
 }
 
 .profile-avatar {
   flex-shrink: 0;
-  width: 72px;
-  height: 72px;
+  width: 68px;
+  height: 68px;
   border-radius: 50%;
   overflow: hidden;
-  border: 3px solid var(--brand-green);
+  padding: 3px;
+  background: conic-gradient(
+    from 180deg,
+    var(--brand-green) 0%,
+    #b9dd9a 50%,
+    var(--brand-green) 100%
+  );
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-page);
+  box-shadow: 0 4px 12px rgba(132, 182, 98, 0.35);
 }
 
 .avatar-img,
@@ -40,69 +57,104 @@
   height: 100%;
   object-fit: cover;
   border-radius: 50%;
+  border: 2px solid #fff;
 }
 
 .profile-info {
   flex: 1;
+  min-width: 0;
 }
 
 .profile-name-row {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
 }
 
 .profile-name {
   margin: 0;
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: 1.2rem;
+  font-weight: 800;
   color: var(--brand-teal);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .profile-breed {
-  margin: 2px 0 6px;
-  font-size: 0.85rem;
-  color: var(--muted);
+  margin: 2px 0 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--brand-green-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .profile-meta {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .meta-item {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 0.78rem;
-  font-weight: 600;
+  gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--brand-teal);
+  background: #eef6f6;
+  border: 1px solid #d9ece9;
+  padding: 4px 9px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+
+.meta-item:nth-child(2) {
   color: var(--brand-green-dark);
+  background: #f1f8ea;
+  border-color: #e0eed0;
 }
 
 .meta-icon,
 .profile-meta img,
 .pet-switcher__meta img {
-  width: 14px !important;
-  height: 14px !important;
-  max-width: 14px !important;
-  max-height: 14px !important;
+  width: 12px !important;
+  height: 12px !important;
+  max-width: 12px !important;
+  max-height: 12px !important;
   object-fit: contain !important;
   flex-shrink: 0;
   display: inline-block;
 }
 
+.profile-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: var(--brand-green-dark);
+  transition: transform 0.28s ease;
+}
+
+.profile-chevron.rotate {
+  transform: rotate(180deg);
+}
+
 .profile-paw {
   position: absolute;
-  top: 14px;
-  right: 16px;
-  opacity: 0.16;
+  top: 12px;
+  right: 14px;
+  opacity: 0.1;
+  transform: rotate(-12deg);
 }
 
 .profile-paw img {
-  width: 28px;
-  height: 28px;
-  filter: hue-rotate(70deg) saturate(0.7);
+  width: 42px;
+  height: 42px;
+  filter: hue-rotate(70deg) saturate(0.8);
 }
 
 /* Shared card */
@@ -194,20 +246,6 @@
 
 .clickable {
   cursor: pointer;
-}
-
-.profile-chevron {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  color: var(--brand-green-dark);
-  transition: transform 0.28s ease;
-  margin-left: 6px;
-}
-
-.profile-chevron.rotate {
-  transform: rotate(180deg);
 }
 
 /* Floating switcher card */
@@ -303,16 +341,28 @@
 .pet-switcher__meta {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-top: 4px;
+  gap: 8px;
+  margin-top: 5px;
+  flex-wrap: wrap;
 }
 
 .pet-switcher__meta span {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 12px;
-  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--brand-teal);
+  background: #eef6f6;
+  border: 1px solid #d9ece9;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.pet-switcher__meta span:nth-child(2) {
+  color: var(--brand-green-dark);
+  background: #f1f8ea;
+  border-color: #e0eed0;
 }
 
 /* green selected tick */
