@@ -1,8 +1,7 @@
-/* ====== Page Wrapper ====== */
 .profile-dashboard {
   background: #f6f7f6;
   padding: 24px 20px 100px;
-  font-family: "Poppins", "Segoe UI", sans-serif;
+  font-family: 'Manrope', sans-serif;   /* was "Poppins", "Segoe UI", sans-serif */
   max-width: 480px;
   margin: 0 auto;
 }
@@ -16,6 +15,12 @@
   box-shadow: 0 10px 25px rgba(0,0,0,.06);
   overflow: hidden;
   margin-bottom: 28px;
+  animation: userCardFadeIn 0.4s ease;
+}
+
+@keyframes userCardFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 .user-view {
   display: flex;

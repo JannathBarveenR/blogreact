@@ -12,6 +12,7 @@ import NoRecordsCard from "./NoRecordsCard/NoRecordsCard";
 import "./NoRecordsCard/NoRecordsCard.css";
 import HeroSection from "./HeroSection/HeroSection";
 import AddPetCard from "./AddPetCard/AddPetCard";
+import Banner from "./Banner/Banner";
 
 export default function PetHome({
   pets = [],
@@ -49,6 +50,7 @@ export default function PetHome({
   if (!selectedPet || pets.length === 0) {
     return (
       <main className="pet-home">
+
         <HeroSection />
 
         <div style={{ marginTop: '24px' }}>
@@ -59,7 +61,7 @@ export default function PetHome({
           <HealthBanner />
         </div>
 
-        <div style={{ height: '80px' }} />
+        <div style={{ height: 'var(--bottom-nav-height, 64px)' }} />
       </main>
     );
   }
@@ -76,9 +78,14 @@ export default function PetHome({
         onAddPet={onAddPet}
       />
 
-      <QuickActions />
+        <div style={{ marginTop: '-24px' }}>
+          <Banner />
+        </div>
+        <div style={{ marginTop: '16px' }}>
+          <QuickActions  />
+        </div>
+      
       <ReminderCard />
-      <NoRecordsCard selectedPet={selectedPet} />
     </div>
   );
 }

@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from "react";
 import { PetAvatar } from "../../common/PetAvatar";
 import "./ProfileCard.css";
 
-import calendarIcon from "./calendar-icon.png";
 import maleIcon from "./male-icon.png";
 import femaleIcon from "./female-icon.png";
 import pawIcon from "./paw-icon.png";
@@ -10,34 +9,14 @@ import pawIcon from "./paw-icon.png";
 function normalizePet(pet) {
   if (!pet) return null;
 
-  let ageStr = pet.age;
-  if (!ageStr && pet.birth_date) {
-    try {
-      const birth = new Date(pet.birth_date);
-      const now = new Date();
-      const months = (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth());
-      if (months >= 12) {
-        const years = Math.floor(months / 12);
-        ageStr = `${years} Year${years > 1 ? 's' : ''}`;
-      } else if (months > 0) {
-        ageStr = `${months} Month${months !== 1 ? 's' : ''}`;
-      } else {
-        ageStr = 'Puppy / Kitten';
-      }
-    } catch {
-      ageStr = pet.birth_date;
-    }
-  }
-
   return {
     id: pet.id || Math.random().toString(),
-    petolifeId: pet.petolife_id || pet.petolifeId || "",
+    petolifeId: pet.petolife_id || pet.petolifeId || pet.pet_id || pet.id || "",
     name: pet.pet_name || pet.name || "Pet",
     image: pet.pet_photo_url || pet.image || "",
     petType: pet.pet_type || pet.type || "",
     breed: pet.breed || "Breed not added",
     gender: pet.gender || "Male",
-    age: ageStr || "Not added",
     birthDate: pet.birth_date || "",
     petIds: pet.pet_ids || pet.petIds || [],
   };
@@ -97,11 +76,36 @@ export default function ProfileCard({
     image: pawIcon,
     breed: "Breed not added",
     gender: "Male",
-    age: "Not added",
+    petolifeId: "",
   };
 
   const normalizedPets = (pets || []).map(normalizePet).filter(Boolean);
+function getPetAge(birthDate) {
+  if (!birthDate) return "Age not added";
 
+  const birth = new Date(birthDate);
+  const today = new Date();
+
+  let years = today.getFullYear() - birth.getFullYear();
+  let months = today.getMonth() - birth.getMonth();
+
+  if (today.getDate() < birth.getDate()) {
+    months--;
+  }
+
+  if (months < 0) {
+    years--;
+    months += 12;
+  }
+
+  if (years > 0) {
+    return `${years} ${years === 1 ? "Year" : "Years"}${
+      months > 0 ? ` ${months} ${months === 1 ? "Month" : "Months"}` : ""
+    }`;
+  }
+
+  return `${months} ${months === 1 ? "Month" : "Months"}`;
+}
   const genderIcon =
     selectedPet.gender?.toLowerCase() === "female"
       ? femaleIcon
@@ -133,8 +137,8 @@ export default function ProfileCard({
 
           <div className="profile-meta">
             <span className="meta-item">
-              <img src={calendarIcon} alt="" className="meta-icon" />
-              {selectedPet.age}
+              <img src={pawIcon} alt="" className="meta-icon" />
+              {getPetAge(selectedPet.birthDate)}
             </span>
 
             <span className="meta-item">
@@ -142,10 +146,6 @@ export default function ProfileCard({
               {selectedPet.gender}
             </span>
           </div>
-        </div>
-
-        <div className="profile-paw">
-          <img src={pawIcon} alt="paw" />
         </div>
       </div>
 
@@ -174,8 +174,8 @@ export default function ProfileCard({
 
                 <div className="pet-switcher__meta">
                   <span>
-                    <img src={calendarIcon} alt="" className="meta-icon" />
-                    {pet.age}
+                    <img src={pawIcon} alt="" className="meta-icon" />
+                    {getPetAge(pet.birthDate)}
                   </span>
 
                   <span>

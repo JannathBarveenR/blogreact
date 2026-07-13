@@ -2,8 +2,8 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import "./QuickActions.css";
 
-import checklistIcon from "./checklist-icon.png";
-import medicalRecordsIcon from "./medical-records-icon.png";
+import checklistIcon from "../../../assets/checklist-icon.png";
+import medicalRecordsIcon from "../../../assets/medical-icon.png";
 
 export default function QuickActions({ onNavigateTab }) {
   const navigate = useNavigate();
@@ -32,12 +32,8 @@ export default function QuickActions({ onNavigateTab }) {
       </div>
 
       <div className="quick-actions-grid">
-        <div
-          className="action-card action-card--green"
-          style={{ cursor: "pointer" }}
-          onClick={handleTimeline}
-        >
-          <div className="action-card-icon">
+        <div className="action-card action-card--green" onClick={handleTimeline}>
+          <div className="action-card-icon action-card-icon--green">
             <img src={checklistIcon} alt="" />
           </div>
           <div className="action-card-content">
@@ -50,26 +46,23 @@ export default function QuickActions({ onNavigateTab }) {
           </div>
           <button
             type="button"
-            className="action-card-btn action-card-btn--green"
+            className="action-card-cta action-card-cta--green"
             onClick={(e) => {
               e.stopPropagation();
               handleTimeline();
             }}
           >
-            →
+            View timeline
+            <span className="action-card-cta-arrow">→</span>
           </button>
         </div>
 
-        <div
-          className="action-card action-card--purple"
-          style={{ cursor: "pointer" }}
-          onClick={handleRecords}
-        >
-          <div className="action-card-icon">
+        <div className="action-card action-card--teal" onClick={handleRecords}>
+          <div className="action-card-icon action-card-icon--teal" >
             <img src={medicalRecordsIcon} alt="" />
           </div>
           <div className="action-card-content">
-            <h4 className="action-card-title action-card-title--purple">
+            <h4 className="action-card-title action-card-title--teal">
               Medical Records
             </h4>
             <p className="action-card-desc">
@@ -78,13 +71,14 @@ export default function QuickActions({ onNavigateTab }) {
           </div>
           <button
             type="button"
-            className="action-card-btn action-card-btn--purple"
+            className="action-card-cta action-card-cta--teal"
             onClick={(e) => {
               e.stopPropagation();
               handleRecords();
             }}
           >
-            →
+            View records
+            <span className="action-card-cta-arrow">→</span>
           </button>
         </div>
       </div>

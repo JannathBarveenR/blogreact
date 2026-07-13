@@ -1,191 +1,259 @@
-/* ── TimelinePage.css (Petolife theme) ── */
-
-:root {
-  --brand-teal: #004b49;
-  --brand-green: #84b662;
-  --brand-green-dark: #6a9a4c;
-  --bg-page: #f4f8f1;
-  --ink: #16211f;
-  --muted: #6d756d;
-  --card-border: #e5ede1;
-}
-
-.timeline-page {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  background: linear-gradient(180deg, var(--bg-page) 0%, #ffffff 60%, #f4f7f5 100%);
-  overflow-y: auto;
-  padding-bottom: 80px;
-}
-
-.timeline-body {
-  flex: 1;
+.ptcs-page {
+  min-height: calc(100vh - 130px); /* subtract TopNav + BottomNav height, adjust to match yours */
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px 20px;
+  padding: 24px 16px;
+  background: #f4f6f2; /* pick the tone you want the whole page to be — same as card's outer edge or a hair lighter than white */
+  box-sizing: border-box;
 }
-
-.timeline-card {
-  background: #ffffff;
-  border-radius: 28px;
-  padding: 36px 24px;
-  text-align: center;
-  box-shadow: 0 12px 36px rgba(0, 75, 73, 0.1);
-  border: 1.5px solid var(--card-border);
-  max-width: 400px;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  animation: fadeIn 0.4s ease;
-}
-
-.timeline-icon-wrap {
+.ptcs-card {
   position: relative;
-  width: 84px;
-  height: 84px;
-  border-radius: 50%;
-  background: #eef6e7;
+  overflow: hidden;
+  max-width: 420px;
+  max-height: 100%;
+  margin: 0 auto;
+  padding: 36px 28px 28px;
+  background: #fdfdfb;
+  border-radius: 28px;
+  box-shadow: 0 20px 50px rgba(30, 60, 40, 0.08);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  text-align: center;
+}
+
+/* decorative faint paw prints in the background */
+.ptcs-bg-paw {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  color: #e9f2e6;
+  z-index: 0;
+}
+.ptcs-bg-paw--tl {
+  top: 18px;
+  left: -10px;
+  transform: rotate(-15deg);
+}
+.ptcs-bg-paw--tr {
+  top: 70px;
+  right: -14px;
+  width: 44px;
+  height: 44px;
+  transform: rotate(20deg);
+}
+.ptcs-bg-paw--br {
+  bottom: 90px;
+  left: -16px;
+  width: 50px;
+  height: 50px;
+  transform: rotate(10deg);
+}
+
+.ptcs-hero {
+  position: relative;
+  z-index: 1;
   display: flex;
-  align-items: center;
   justify-content: center;
   margin-bottom: 20px;
 }
 
-.timeline-pulse-ring {
-  position: absolute;
-  inset: -6px;
-  border-radius: 50%;
-  border: 2px solid var(--brand-green);
-  opacity: 0.25;
-  animation: pulse 2s infinite;
+.ptcs-hero-img {
+  width: 100%;
+  max-width: 300px;
+  height: auto;
+  object-fit: contain;
 }
 
-@keyframes pulse {
-  0% { transform: scale(0.95); opacity: 0.45; }
-  50% { transform: scale(1.1); opacity: 0.1; }
-  100% { transform: scale(0.95); opacity: 0.45; }
-}
-
-/* Timeline path draws itself in on load */
-.timeline-icon-path {
-  stroke-dasharray: 20;
-  stroke-dashoffset: 20;
-  animation: drawPath 1s 0.2s ease forwards;
-}
-
-@keyframes drawPath {
-  to { stroke-dashoffset: 0; }
-}
-
-/* Milestone dots pop in one after another, after the path finishes */
-.timeline-icon-dot {
-  opacity: 0;
-  transform-origin: center;
-  transform: scale(0);
-  animation: dotPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-}
-
-.dot-1 { animation-delay: 0.5s; }
-.dot-2 { animation-delay: 0.7s; }
-.dot-3 { animation-delay: 0.9s; }
-
-@keyframes dotPop {
-  to { opacity: 1; transform: scale(1); }
-}
-
-.timeline-badge {
-  display: inline-block;
-  background: #eef6e7;
-  color: var(--brand-teal);
-  font-size: 12px;
-  font-weight: 700;
-  padding: 6px 14px;
+.ptcs-badge {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 18px;
+  background: #e6f4e3;
+  color: #4a8f43;
+  font-size: 13px;
+  font-weight: 600;
   border-radius: 999px;
-  margin-bottom: 12px;
-  letter-spacing: 0.3px;
+  margin-bottom: 18px;
 }
 
-.timeline-title {
-  margin: 0 0 4px;
-  font-size: 24px;
-  font-weight: 800;
-  color: var(--ink);
+.ptcs-badge svg {
+  width: 12px;
+  height: 12px;
 }
 
-.timeline-status {
-  margin: 0 0 16px;
-  font-size: 18px;
+.ptcs-heading {
+  position: relative;
+  z-index: 1;
+  margin: 0 0 12px;
+  font-size: 26px;
+  line-height: 1.25;
   font-weight: 700;
-  color: var(--brand-teal);
+  color: #004B23;
 }
 
-.timeline-desc {
-  margin: 0 0 24px;
-  font-size: 14px;
-  color: var(--muted);
-  line-height: 1.6;
+.ptcs-heading-accent {
+  color: #2f6b2a;
 }
 
-.timeline-features-preview {
+.ptcs-subtitle {
+  position: relative;
+  z-index: 1;
+  margin: 0 auto 28px;
+  max-width: 300px;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: #7b8a7f;
+}
+
+.ptcs-features {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 26px;
+}
+
+.ptcs-feature-card {
+  background: #ffffff;
+  border: 1px solid #eef1ec;
+  border-radius: 16px;
+  padding: 16px 8px 14px;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 10px;
-  width: 100%;
-  background: var(--bg-page);
-  border: 1px solid var(--card-border);
-  border-radius: 18px;
-  padding: 16px;
-  text-align: left;
 }
 
-.preview-feature-item {
+.ptcs-feature-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #eaf6e7;
+  color: #4a8f43;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ptcs-feature-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.ptcs-feature-title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #004B23;
+}
+
+.ptcs-divider {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink);
-  opacity: 0;
-  transform: translateX(-8px);
-  animation: itemSlideIn 0.4s ease forwards;
+  margin-bottom: 20px;
 }
 
-@keyframes itemSlideIn {
-  to { opacity: 1; transform: translateX(0); }
+.ptcs-divider-line {
+  flex: 1;
+  height: 0;
+  border-top: 1.5px dashed #dfe6dc;
 }
 
-.feat-dot {
-  width: 8px;
-  height: 8px;
+.ptcs-divider-heart {
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
-  background: var(--brand-green);
+  background: #eaf6e7;
+  color: #7bbf6f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+}
+
+.ptcs-divider-heart svg {
+  width: 13px;
+  height: 13px;
+}
+
+.ptcs-notify {
   position: relative;
+  z-index: 1;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  background: #eef8ec;
+  border-radius: 18px;
+  padding: 14px 18px;
 }
 
-.feat-dot::after {
-  content: "";
-  position: absolute;
-  inset: -3px;
+.ptcs-notify-icon {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  border: 1.5px solid var(--brand-green);
-  opacity: 0;
-  animation: dotRipple 2.4s ease-out infinite;
+  background: #4a8f43;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.preview-feature-item:nth-child(1) .feat-dot::after { animation-delay: 0.6s; }
-.preview-feature-item:nth-child(2) .feat-dot::after { animation-delay: 1.2s; }
-.preview-feature-item:nth-child(3) .feat-dot::after { animation-delay: 1.8s; }
-
-@keyframes dotRipple {
-  0% { transform: scale(0.6); opacity: 0.6; }
-  100% { transform: scale(1.8); opacity: 0; }
+.ptcs-notify-icon svg {
+  width: 16px;
+  height: 16px;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+.ptcs-notify-text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #3d5c3a;
+}
+
+.ptcs-notify-paw {
+  position: absolute;
+  color: #d9ecd4;
+  z-index: -1;
+}
+
+.ptcs-notify-paw--1 {
+  width: 34px;
+  height: 34px;
+  right: 14px;
+  bottom: -8px;
+  transform: rotate(-10deg);
+}
+
+.ptcs-notify-paw--2 {
+  width: 24px;
+  height: 24px;
+  right: 46px;
+  top: -6px;
+  transform: rotate(15deg);
+}
+
+@media (max-width: 380px) {
+  .ptcs-card {
+    padding: 28px 18px 22px;
+  }
+  .ptcs-heading {
+    font-size: 22px;
+  }
+  .ptcs-features {
+    gap: 8px;
+  }
+  .ptcs-feature-title {
+    font-size: 11px;
+  }
 }

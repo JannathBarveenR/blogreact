@@ -121,7 +121,7 @@ function Step2({ goNext, goBack, petData }) {
     }}
   >
     <span>{selectedBreed || "Search or select breed"}</span>
-    <span className="chevron">›</span>
+    
   </button>
 </div>
 

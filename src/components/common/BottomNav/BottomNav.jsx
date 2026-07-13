@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import "./BottomNav.css";
 
-const ACTIVE = "#004b49";   // brand-teal
+const ACTIVE = "#84B662";   // brand-teal
 const INACTIVE = "#8a948a"; // muted
 
 const NAV_ITEMS = [
@@ -55,41 +56,171 @@ const NAV_ITEMS = [
   },
 ];
 
-const BottomNav = ({ active = "home", onNavigate, onFabPress }) => {
+// Options in the FAB popup. Each has a "key" you can switch on in the
+// parent's onFabOptionSelect callback to decide where to navigate.
+const FAB_OPTIONS = [
+  {
+    key: "addPet",
+    title: "Add a Pet",
+    subtitle: "Create a new profile for your pet",
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 64 64" fill="#004b49">
+        <ellipse cx="32" cy="42" rx="9" ry="7" />
+        <ellipse cx="21" cy="32" rx="4" ry="5" />
+        <ellipse cx="43" cy="32" rx="4" ry="5" />
+        <ellipse cx="26.5" cy="24" rx="3.4" ry="4.5" />
+        <ellipse cx="37.5" cy="24" rx="3.4" ry="4.5" />
+      </svg>
+    ),
+  },
+  {
+    key: "familyAccess",
+    title: "Add Family Access",
+    subtitle: "Invite family members to co-manage",
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#004b49" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+    ),
+  },
+  {
+    key: "uploadRecords",
+    title: "Upload Medical Records",
+    subtitle: "Add vaccination or vet documents",
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#004b49" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="12" y1="11" x2="12" y2="17" />
+        <line x1="9" y1="14" x2="15" y2="14" />
+      </svg>
+    ),
+  },
+];
+
+const BottomNav = ({
+  active = "home",
+  onNavigate,
+  onFabOptionSelect,
+  onAddPet,          // same prop shape as AddPetCard's onAddPet — pass the same function to both
+  onAddFamilyAccess,
+  onUploadRecords,
+}) => {
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  const handleFabClick = () => {
+    setSheetOpen(true);
+  };
+
+  const handleOptionClick = (optionKey) => {
+    setSheetOpen(false);
+
+    if (optionKey === "addPet" && onAddPet) {
+      onAddPet();
+      return;
+    }
+    if (optionKey === "familyAccess" && onAddFamilyAccess) {
+      onAddFamilyAccess();
+      return;
+    }
+    if (optionKey === "uploadRecords" && onUploadRecords) {
+      onUploadRecords();
+      return;
+    }
+
+    // fallback: generic dispatcher, for anyone not using the dedicated props above
+    if (onFabOptionSelect) onFabOptionSelect(optionKey);
+  };
+
+  // The popup itself, rendered separately so it can be portaled out.
+  const popup = sheetOpen ? (
+    <div className="fabsheet-backdrop" onClick={() => setSheetOpen(false)}>
+      <div
+        className="fabsheet"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Quick add menu"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="fabsheet__handle" />
+        <h3 className="fabsheet__title">What would you like to do?</h3>
+
+        <div className="fabsheet__options">
+          {FAB_OPTIONS.map((opt) => (
+            <button
+              key={opt.key}
+              className="fabsheet__option"
+              onClick={() => handleOptionClick(opt.key)}
+            >
+              <span className="fabsheet__option-icon">{opt.icon}</span>
+              <span className="fabsheet__option-text">
+                <span className="fabsheet__option-title">{opt.title}</span>
+                <span className="fabsheet__option-subtitle">{opt.subtitle}</span>
+              </span>
+              <svg
+                className="fabsheet__chevron"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#8a948a"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+          ))}
+        </div>
+
+      </div>
+    </div>
+  ) : null;
+
   return (
-    <nav className="bottomnav" aria-label="Main navigation">
-      {NAV_ITEMS.map((item) => {
-        if (item.isFab) {
+    <>
+      <nav className="bottomnav" aria-label="Main navigation">
+        {NAV_ITEMS.map((item) => {
+          if (item.isFab) {
+            return (
+              <button
+                key={item.key}
+                className="bottomnav__fab"
+                aria-label="Add"
+                onClick={handleFabClick}
+              >
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+              </button>
+            );
+          }
+
+          const isActive = active === item.key;
           return (
             <button
               key={item.key}
-              className="bottomnav__fab"
-              aria-label="Add"
-              onClick={onFabPress}
+              className={`bottomnav__item ${isActive ? "bottomnav__item--active" : ""}`}
+              aria-label={item.label}
+              aria-current={isActive ? "page" : undefined}
+              onClick={() => onNavigate && onNavigate(item.key)}
             >
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round">
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
+              <span className="bottomnav__icon">{item.icon(isActive)}</span>
+              <span className="bottomnav__label">{item.label}</span>
             </button>
           );
-        }
+        })}
+      </nav>
 
-        const isActive = active === item.key;
-        return (
-          <button
-            key={item.key}
-            className={`bottomnav__item ${isActive ? "bottomnav__item--active" : ""}`}
-            aria-label={item.label}
-            aria-current={isActive ? "page" : undefined}
-            onClick={() => onNavigate && onNavigate(item.key)}
-          >
-            <span className="bottomnav__icon">{item.icon(isActive)}</span>
-            <span className="bottomnav__label">{item.label}</span>
-          </button>
-        );
-      })}
-    </nav>
+      {/* Rendered into document.body so a transformed/overflow-hidden
+          ancestor elsewhere in the app can't clip or misposition it. */}
+      {popup && createPortal(popup, document.body)}
+    </>
   );
 };
 

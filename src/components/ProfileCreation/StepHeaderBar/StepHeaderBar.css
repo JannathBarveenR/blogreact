@@ -8,7 +8,7 @@
 .step-back-btn {
   border: none;
   background: transparent;
-  color: var(--brand-teal, #004b49);
+  color: var(--brand-teal, #004B23);
   display: inline-flex;
   align-items: center;
   gap: 8px;
