@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import "./LandingPg.css"; // merged stylesheet
 
 // ---------- Navbar ----------
-import logo from "../../assets/logo-with-tagline.png";
+import logo from "../../assets/logo-with-tagline.webp";
 const Navbar = ({ openModal }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -88,7 +88,7 @@ const Navbar = ({ openModal }) => {
 };
 
 // ---------- Hero ----------
-import heroPets from "../../assets/hero-pets.png";
+import heroPets from "../../assets/hero-pets.webp";
 
 const Hero = ({ openModal, onJoinPetParent }) => (
   <section id="home" className="hero">
@@ -109,9 +109,9 @@ const Hero = ({ openModal, onJoinPetParent }) => (
 );
 
 // ---------- Workingprocess ----------
-import petProfileImg from "../../assets/pet-profile.png";
-import healthRecordsImg from "../../assets/health-records.png";
-import healthTimelineImg from "../../assets/health-timeline.png";
+import petProfileImg from "../../assets/pet-profile.webp";
+import healthRecordsImg from "../../assets/health-records.webp";
+import healthTimelineImg from "../../assets/health-timeline.webp";
 
 const steps = [
   {
@@ -168,7 +168,7 @@ const Workingprocess = () => {
               <span className="glow-orb glow-orb-3"></span>
               {/* Left */}
               <div className="working-image">
-                <img src={step.image} alt={step.alt} />
+                <img src={step.image} alt={step.alt} loading="lazy" />
               </div>
               {/* Right */}
               <div className="working-content">
@@ -221,7 +221,7 @@ const VetTimeline = () => (
         {vetSteps.map((item, index) => (
           <div className="timelineItem" key={index}>
             <div className="timelineCircle">
-              <img src={item.image} alt={item.title} />
+              <img src={item.image} alt={item.title} loading="lazy" />
             </div>
             <h4>{item.title}</h4>
           </div>
@@ -232,7 +232,7 @@ const VetTimeline = () => (
 );
 
 // ---------- BeforeAfter ----------
-import problemSolutionImg from "../../assets/problem-solution.jpeg";
+import problemSolutionImg from "../../assets/problem-solution.webp";
 const BeforeAfter = () => (
   <section className="section ba-section">
     <div className="container">
@@ -250,6 +250,7 @@ const BeforeAfter = () => (
           src={problemSolutionImg}
           alt="Before and after PetOlife — from scattered pet care to organized health management"
           className="ba-image"
+          loading="lazy"
         />
       </div>
     </div>
@@ -257,8 +258,8 @@ const BeforeAfter = () => (
 );
 
 // ---------- Categories ----------
-import firstImg from "../../assets/firstimg.png";
-import thirdImg from "../../assets/thirdimg.png";
+import firstImg from "../../assets/firstimg.webp";
+import thirdImg from "../../assets/thirdimg.webp";
 import {
   FaFileMedical,
   FaSyringe,
@@ -361,7 +362,7 @@ const Categories = ({ openModal }) => (
           </div>
 
           <div className="parent-image">
-            <img src={firstImg} alt="Pet Parent" />
+            <img src={firstImg} alt="Pet Parent" loading="lazy" />
           </div>
         </div>
 
@@ -369,7 +370,7 @@ const Categories = ({ openModal }) => (
 
         <div className="vet-card">
           <div className="vet-image">
-            <img src={thirdImg} alt="Veterinarian" />
+            <img src={thirdImg} alt="Veterinarian" loading="lazy" />
           </div>
 
           <div className="vet-content">
@@ -430,9 +431,9 @@ const Categories = ({ openModal }) => (
 );
 
 // ---------- Trust ----------
-import communityImg from "../../assets/community.png";
-import clinicImg from "../../assets/real-clinic.png";
-import feedbackImg from "../../assets/vet-feedback.png";
+import communityImg from "../../assets/community.webp";
+import clinicImg from "../../assets/real-clinic.webp";
+import feedbackImg from "../../assets/vet-feedback.webp";
 
 const trustIndicators = [
   {
@@ -441,13 +442,14 @@ const trustIndicators = [
         src={feedbackImg}
         alt="Veterinary Feedback"
         className="trust-icon-image"
+        loading="lazy"
       />
     ),
     label: "Veterinary Feedback",
     desc: "Shaped by insights from practising veterinarians.",
   },
   {
-    icon: <img src={clinicImg} alt="clinic" className="trust-icon-image" />,
+    icon: <img src={clinicImg} alt="clinic" className="trust-icon-image" loading="lazy" />,
     label: "Real Clinic Learnings",
     desc: "Built on real-world clinic workflows and challenges.",
   },
@@ -457,6 +459,7 @@ const trustIndicators = [
         src={communityImg}
         alt="communityImg people"
         className="trust-icon-image community-icon"
+        loading="lazy"
       />
     ),
     label: "Pet Parent Community",
@@ -541,7 +544,7 @@ const Trust = ({ openModal }) => (
 );
 
 // ---------- Footer ----------
-import footerLogo from "../../assets/logo.png";
+import footerLogo from "../../assets/logo.webp";
 const Footer = () => {
   const companyLinks = [
     { label: "About Us", href: "#about" },
@@ -572,7 +575,7 @@ const Footer = () => {
         <div className="container">
           <div className="footer-grid">
             <div className="footer-brand">
-              <img src={footerLogo} alt="PetOlife" className="footer-logo" />
+              <img src={footerLogo} alt="PetOlife" className="footer-logo" loading="lazy" />
               <p className="footer-tagline">
                 Building a Health Identity for Every Pet.
               </p>

@@ -28,8 +28,8 @@ import {
   HelpCircle,
   FileQuestion,
 } from "lucide-react";
-import heroImage from "../../assets/medical-banner.png";
-import emptyDog from "../../assets/empty-dog.png";
+import heroImage from "../../assets/medical-banner.webp";
+import emptyDog from "../../assets/empty-dog.webp";
 
 const FIXED_CATEGORIES = ["All", "Favorites"];
 const DYNAMIC_CATEGORIES = [

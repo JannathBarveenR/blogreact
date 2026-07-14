@@ -19,12 +19,12 @@ import PetIdCardModal from "./PetIdCardModal";
 
 import "./UserProfile.css";
 
-import dogIcon from "../../assets/dog.png";
-import catIcon from "../../assets/cats.png";
-import rabbitIcon from "../../assets/rabbit.png";
-import birdIcon from "../../assets/bird.png";
-import defaultPetIcon from "../../assets/other.png";
-import NO_PETS_IMG from "../../assets/no-pets.png";
+import dogIcon from "../../assets/dog.webp";
+import catIcon from "../../assets/cats.webp";
+import rabbitIcon from "../../assets/rabbit.webp";
+import birdIcon from "../../assets/bird.webp";
+import defaultPetIcon from "../../assets/other.webp";
+import NO_PETS_IMG from "../../assets/no-pets.webp";
 
 const UserProfile = ({ pets = [], activePetId, onPetSelect, onAddPet, onUpdatePet }) => {
   const { user, logout } = useAuth();

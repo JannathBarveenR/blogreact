@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import "./TopNav.css";
-import polLogo from "../../../assets/POL_logo_tagline.png";
+import polLogo from "../../../assets/POL_logo_tagline.webp";
 
 /**
  * Shared TopNav — used by HomeScreen, ChecklistPage, and other in-app pages.

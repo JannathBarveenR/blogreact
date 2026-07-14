@@ -16,7 +16,7 @@ import {
 } from "react-icons/fa";
 import { FiX } from "react-icons/fi";
 import "./PetIdCardModal.css";
-import petolifeLogo from "../../assets/POL_logo_tagline.png";
+import petolifeLogo from "../../assets/POL_logo_tagline.webp";
 
 
 const PetIdCardModal = ({

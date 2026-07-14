@@ -1,5 +1,5 @@
 import React from "react";
-import heroBg from "../../../assets/pet-parent.png";
+import heroBg from "../../../assets/pet-parent.webp";
 import "./HeroSection.css";
 
 export default function HeroSection() {

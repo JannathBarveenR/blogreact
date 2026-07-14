@@ -1,6 +1,6 @@
 import React from "react";
 import "./TimelinePage.css";
-import timelineImg from "../../assets/timeline.png"; 
+import timelineImg from "../../assets/timeline.webp"; 
 // Small inline icon components (no external icon library needed)
 const CalendarIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -91,7 +91,7 @@ export default function TimelinePage() {
       <PawIcon className="ptcs-bg-paw ptcs-bg-paw--br" />
 
       <div className="ptcs-hero">
-        {/* Replace src with your own asset, e.g. "/timeline.png" */}
+        {/* Replace src with your own asset, e.g. "/timeline.webp" */}
         <img src={timelineImg} alt="Puppy sitting beside a calendar" className="ptcs-hero-img" />
       </div>
 

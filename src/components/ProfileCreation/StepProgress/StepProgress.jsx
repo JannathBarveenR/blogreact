@@ -1,7 +1,7 @@
 import React from "react";
 import { TOTAL_STEPS } from "../constants";
-import dogParent from "../../../assets/dog-parent.png";
-import homeCard from "../../../assets/dog-home.png";
+import dogParent from "../../../assets/dog-parent.webp";
+import homeCard from "../../../assets/dog-home.webp";
 
 function CelebrationBurst({ left, top, delay = 0 }) {
   return (

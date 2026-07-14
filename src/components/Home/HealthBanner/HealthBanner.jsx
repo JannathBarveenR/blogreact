@@ -1,6 +1,6 @@
 import React from "react";
 import { Heart } from "lucide-react";
-import bannerBg from "../../../assets/banner-bg.png";
+import bannerBg from "../../../assets/banner-bg.webp";
 import "./HealthBanner.css";
 
 const HealthBanner = () => {

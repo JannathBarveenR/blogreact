@@ -1,6 +1,6 @@
 import React from "react";
 import "./Banner.css";
-import petBg from "../../../assets/pet-health-banner.png"; // swap to your image path
+import petBg from "../../../assets/pet-health-banner.webp"; // swap to your image path
 
 const ShieldCheckIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

@@ -1,7 +1,7 @@
 import React from "react";
 import { ShieldCheck, ChevronRight, Plus } from "lucide-react";
 import "./AddPetCard.css";
-import tailImg from "../../../assets/tail.png";
+import tailImg from "../../../assets/tail.webp";
 
 const AddPetCard = ({ onAddPet }) => {
   return (

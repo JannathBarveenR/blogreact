@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { PetAvatar } from '../common/PetAvatar';
 import './petcard.css';
-import logoImg from '../../assets/logo.png';
+import logoImg from '../../assets/logo.webp';
 
 export default function PetCard({ petData: propPetData }) {
   const [fullProfile, setFullProfile] = useState(null);
