@@ -1,22 +1,25 @@
-# PetOLife AI Timeline — Backend & Database Implementation Specification
-## Version 5.0 (2-Call Architecture)
+# PetNoter-Style Medical Timeline — Backend & Database Implementation Specification
+## Version 6.0 (Manual-First Foundation + Optional AI Layer)
 
-**Previous Version:** 4.0
-**Change Summary:** Added `medical_event_insights` table, restructured `pol_analyses` into typed columns, added `extracted_json` and `active_timeline_version` fields, added `medical_event_insights` router, added async task endpoints, added rollback endpoint, updated all sequence diagrams to reflect 2-call flow, added token logging to Gemini adapter, and defined near-duplicate thresholds.
+**Previous Version:** 5.0 (2-Call AI-Centric Architecture)
+
+**Change Summary (v5.0 → v6.0), IR:**
+- Unified `medical_events` schema now serves manual entries and AI-extracted entries identically — added `category` and `entry_source` columns, made `confidence`/`field_confidence` nullable, defaulted `verification_status = 'verified'` for manual rows.
+- New synchronous manual-entry routers: `vet_visits.py`, `vaccinations.py`, `medications.py`, `deworming_anti_tick.py`, `general_notes.py` — all write directly to `medical_events`, no background task involved.
+- Reminder Engine now runs synchronously on form submission (no async task needed — there's no external API call in Phase 1).
+- Timeline endpoint now defaults to `group_by=category`, with `group_by=date` as an explicit alternate query param.
+- `ocr.py`, `insights.py`, and the async Gemini task infrastructure are retained but re-scoped as **Phase 2, feature-flagged, entirely optional** — a pet/account can run with `ai_enabled = false` forever.
+- `timeline_versions` + `/rollback` demoted to Phase 2/3; a lightweight `event_edit_history` table replaces it for Phase 1 audit needs.
+- Community tables (`community_consent`, `experience_cards`) demoted to Phase 3.
 
 ---
 
 ## 1. System Overview & Integration Strategy
 
-This document defines the backend API, service layout, and database schema for the PetOLife AI Timeline feature.
-
-The AI Timeline is integrated directly into the existing PetOLife MVP V2 application. The integration follows an **isolated V2 architecture** to prevent regressions in the base V1 app:
-
-1. **Routing Isolation:** Existing V1 endpoints (`/api/...`) remain unchanged and active. All new AI Timeline features are exposed under `/api/v2/...`.
-2. **Logic Reusability:** Common database operations are extracted into a **Shared Service Layer**. Both V1 and V2 routers delegate to this shared layer.
-3. **Timeline Feature Isolation:** All timeline-specific AI processing logic, Gemini adapters, extraction schemas, and mutation logic are encapsulated under `backend/app/timeline/`.
-4. **Database Backward Compatibility:** Database updates are strictly additive. New columns on existing V1 tables are nullable with defaults.
-5. **2-Call Gemini Constraint:** Every upload produces exactly two Gemini calls regardless of diary size. Both calls are backgrounded and never block HTTP request threads.
+1. **Manual-first routing:** `/api/v2/pets/{pet_id}/vet-visits`, `/vaccinations`, `/medications`, `/deworming`, `/general-notes` are synchronous, single-request-response endpoints. No `202 Accepted`, no background worker — the request completes with the created row and its generated reminders in one round trip.
+2. **AI routing is isolated and optional:** everything Gemini-related lives under `/api/v2/pets/{pet_id}/ai/...` and is gated by a per-pet or per-account `ai_enabled` flag. If `ai_enabled = false`, these routes 403 with a clear "AI features not enabled for this pet" message — they never silently no-op into the core pipeline.
+3. **Shared Service Layer unchanged in spirit:** common CRUD still lives in `app/services/`.
+4. **Database Backward Compatibility:** all changes remain additive. Existing `medical_events` rows (if any existed from the old 2-call draft) simply get `entry_source = 'ai_extracted'` backfilled and `category` backfilled from `event_type`.
 
 ---
 
@@ -25,425 +28,261 @@ The AI Timeline is integrated directly into the existing PetOLife MVP V2 applica
 ```text
 backend/
 ├── app/
-│   ├── main.py                          # Updated to mount V2 routers under /api/v2
-│   ├── config.py                        # Loads SUPABASE_URL, GEMINI_API_KEY, etc.
-│   ├── supabase_client.py               # Central Supabase client wrapper
-│   ├── routers/
-│   │   ├── auth.py                      # V1 Auth router (unchanged)
-│   │   ├── checklist.py                 # V1 Checklist router (unchanged)
-│   │   ├── location.py                  # V1 Location/Pincode router (unchanged)
-│   │   ├── medical_records.py           # V1 Medical Records (refactored → shared service)
-│   │   ├── pet_health_id.py             # V1 Pet Health ID router (unchanged)
-│   │   ├── pet_profile.py               # V1 Pet Profile (refactored → shared service)
-│   │   ├── user_profile.py              # V1 User Profile router (unchanged)
-│   │   └── v2/                          # [NEW] Version 2 Routers
-│   │       ├── __init__.py
-│   │       ├── pet_profile.py           # [NEW] V2 Pet router
-│   │       ├── medical_records.py       # [NEW] V2 Medical Records
-│   │       ├── ocr.py                   # [NEW] V2 OCR extraction routes
-│   │       ├── timeline.py              # [NEW] V2 Timeline + rollback endpoint
-│   │       ├── insights.py              # [NEW] V2 Node, Collective, & POL Bot queries
-│   │       ├── reminders.py             # [NEW] V2 Reminders calendar endpoint
-│   │       └── community.py             # [NEW] V2 Consent and community queries
-│   ├── services/                        # [NEW] Shared Service Layer
-│   │   ├── __init__.py
-│   │   ├── pet_service.py               # [NEW] Reusable Pet CRUD operations
-│   │   └── medical_record_service.py    # [NEW] Reusable storage upload and retrieval
-│   ├── timeline/                        # [NEW] Isolated Timeline Sub-Package
-│   │   ├── __init__.py
-│   │   ├── schemas/
-│   │   │   ├── extraction.py            # [NEW] ExtractionBundle Pydantic models
-│   │   │   ├── intelligence.py          # [NEW] IntelligenceBundle Pydantic models
-│   │   │   ├── events.py                # [NEW] MedicalEventNode schemas
-│   │   │   ├── insights.py              # [NEW] NodeInsight and CollectiveInsight models
-│   │   │   └── reminders.py             # [NEW] Reminder models
-│   │   ├── services/
-│   │   │   ├── ocr_service.py           # [NEW] Call 1 — Unified Extraction orchestration
-│   │   │   ├── insight_engine.py        # [NEW] Call 2 — Unified Intelligence orchestration
-│   │   │   ├── event_builder.py         # [NEW] Verified JSON → MedicalEventNode
-│   │   │   ├── mutation_engine.py       # [NEW] Immutable append-only version increments
-│   │   │   ├── reminder_engine.py       # [NEW] Rule engine + AI reminder merge
-│   │   │   ├── community_engine.py      # [NEW] Similarity matching and anonymisation
-│   │   │   └── fallback_router.py       # [NEW] Health monitor + rule-based fallback
-│   │   └── adapters/
-│   │       ├── ai_provider_base.py      # [NEW] Abstract AI provider interface
-│   │       └── gemini_adapter.py        # [NEW] Gemini client with token logging
-│   └── utils/
-│       └── auth.py                      # JWT validation (reused by V2)
+│   ├── main.py                              # Mounts V2 routers; AI routers mounted under /ai
+│   ├── config.py                            # SUPABASE_URL, GEMINI_API_KEY (optional, may be unset)
+│   ├── supabase_client.py
+│   ├── services/
+│   │   ├── pet_service.py
+│   │   ├── medical_event_service.py         # [NEW] shared insert/update logic for ALL categories
+│   │   ├── reminder_service.py              # [NEW] rule-based reminder generation, called synchronously
+│   │   └── pdf_export_service.py            # [NEW] category-grouped PDF generation
+│   └── routers/
+│       └── v2/
+│           ├── pet_profile.py
+│           ├── vet_visits.py                # [NEW] manual vet-visit form endpoint
+│           ├── vaccinations.py              # [NEW] manual vaccination form endpoint
+│           ├── medications.py               # [NEW] manual medication form endpoint
+│           ├── deworming_anti_tick.py       # [NEW] manual deworming/anti-tick form endpoint
+│           ├── general_notes.py             # [NEW] manual general health note endpoint
+│           ├── documents.py                 # document vault upload/list/delete
+│           ├── timeline.py                  # category-first + chronological views
+│           ├── reminders.py                 # calendar + list views
+│           ├── export.py                    # [NEW] PDF export endpoint
+│           └── ai/                          # [Phase 2 — feature-flagged]
+│               ├── ocr.py                   # Gemini Call 1 — Unified Extraction
+│               ├── insights.py              # Gemini Call 2 — Unified Intelligence
+│               └── community.py             # [Phase 3] anonymised community insights
+├── timeline/
+│   ├── schemas/
+│   │   ├── medical_event.py                 # [NEW] single unified Pydantic model, all categories
+│   │   ├── extraction.py                    # Phase 2 — ExtractionBundle
+│   │   └── intelligence.py                  # Phase 2 — IntelligenceBundle
+│   ├── services/
+│   │   ├── event_builder.py                 # form/AI output → medical_events row (shared by both paths)
+│   │   ├── reminder_engine.py               # pure rule-based logic, no AI dependency
+│   │   ├── ocr_service.py                   # Phase 2 — Call 1 orchestration
+│   │   └── insight_engine.py                # Phase 2 — Call 2 orchestration
+│   └── adapters/
+│       ├── ai_provider_base.py              # Phase 2 — abstract interface
+│       └── gemini_adapter.py                # Phase 2 — only imported if ai_enabled
+└── utils/
+    └── auth.py
 ```
 
 ---
 
-## 3. Shared Service Layer Design
+## 3. Unified Medical Event Schema (Core Contract)
+
+Every manual form and every Gemini extraction converges on this one Pydantic model:
 
 ```python
-# app/services/pet_service.py
-from app.supabase_client import supabase
+# app/timeline/schemas/medical_event.py
 
-class PetService:
-    @staticmethod
-    async def get_all_user_pets(user_id: str):
-        response = supabase.table("pet_profiles").select("*").eq("user_id", user_id).execute()
-        return response.data
-
-    @staticmethod
-    async def get_pet_by_id(pet_id: str, user_id: str):
-        response = supabase.table("pet_profiles").select("*, pet_ids(*)").eq("id", pet_id).execute()
-        return response.data[0] if response.data else None
+class MedicalEventNode(BaseModel):
+    pet_id: UUID
+    category: Literal[
+        "vet_visit", "vaccination", "medication",
+        "deworming", "anti_tick", "document", "general_note"
+    ]
+    entry_source: Literal["manual", "ai_extracted"] = "manual"
+    event_date: date
+    event_data: dict          # category-specific structured fields (see Ch.4 of architecture doc)
+    linked_visit_id: UUID | None = None
+    verification_status: Literal["verified", "pending", "rejected", "superseded"] = "verified"
+    confidence: float | None = None            # null for manual rows
+    field_confidence: dict | None = None       # null for manual rows
+    source_document_id: UUID | None = None
+    event_hash: str | None = None              # computed server-side
 ```
 
-```python
-# app/routers/pet_profile.py (V1 Router — refactored)
-from fastapi import APIRouter, Depends
-from app.services.pet_service import PetService
-from app.utils.auth import get_current_user
+Manual routers construct this model with `entry_source="manual"` and `verification_status="verified"` and hand it to the **same** `event_builder.build_and_insert()` function that Phase 2's `ocr_service.py` eventually calls after a user confirms an AI-extracted candidate.
 
-router = APIRouter(prefix="/api/pet-profile", tags=["V1 Pet Profile"])
+---
 
-@router.get("/")
-async def get_pets(current_user = Depends(get_current_user)):
-    return await PetService.get_all_user_pets(current_user.id)
+## 4. Manual Entry Endpoints (Phase 1 Core — Synchronous, No AI)
+
+### 4.1. Vet Visit
+
+```
+POST /api/v2/pets/{pet_id}/vet-visits
+Body: { visit_date, clinic_name?, doctor_name?, reason_for_visit, diagnosis?,
+        treatment_plan?, tests_done?, prescriptions?, weight_at_visit?,
+        follow_up_date?, doctor_notes?, attachments?[] }
+
+→ event_builder.build_and_insert(category="vet_visit", entry_source="manual")
+→ reminder_engine.generate_for_event(event)   # synchronous — no queue
+→ 201 Created { medical_event, reminders_created[] }
 ```
 
-```python
-# app/routers/v2/pet_profile.py (V2 Router — reuses service)
-from fastapi import APIRouter, Depends
-from app.services.pet_service import PetService
-from app.utils.auth import get_current_user
+### 4.2. Vaccination
 
-router = APIRouter(prefix="/api/v2/pets", tags=["V2 Pet Profile"])
+```
+POST /api/v2/pets/{pet_id}/vaccinations
+Body: { vaccine_name, date_given, dose?, vet_details?, next_due_date?, recurrence? }
 
-@router.get("/")
-async def get_pets_v2(current_user = Depends(get_current_user)):
-    pets = await PetService.get_all_user_pets(current_user.id)
-    return {"status": "success", "data": pets}
+→ if next_due_date omitted, backend computes it from recurrence (or default booster table)
+→ event_builder.build_and_insert(category="vaccination", entry_source="manual")
+→ reminder_engine.generate_for_event(event)
+→ 201 Created
+```
+
+### 4.3. Medication
+
+```
+POST /api/v2/pets/{pet_id}/medications
+Body: { medication_name, dosage, frequency, start_date, end_date?, linked_visit_id? }
+
+→ event_builder.build_and_insert(category="medication", entry_source="manual")
+→ reminder_engine.generate_for_event(event)   # medication_end reminder if end_date present
+→ 201 Created
+```
+
+### 4.4. Deworming / Anti-tick
+
+```
+POST /api/v2/pets/{pet_id}/deworming
+Body: { treatment_type: "deworming" | "anti_tick", date_given, next_due_date? }
+
+→ default next_due_date = date_given + 90 days for deworming, if omitted
+→ event_builder.build_and_insert(category=treatment_type, entry_source="manual")
+→ reminder_engine.generate_for_event(event)
+→ 201 Created
+```
+
+### 4.5. General Health Note
+
+```
+POST /api/v2/pets/{pet_id}/general-notes
+Body: { note_date, title?, note_text, tags?[] }
+
+→ event_builder.build_and_insert(category="general_note", entry_source="manual")
+→ 201 Created   # no reminder generated for this category
+```
+
+### 4.6. Editing an Existing Event
+
+```
+PATCH /api/v2/pets/{pet_id}/medical-events/{event_id}
+Body: { any subset of category fields }
+
+→ Logs previous + new value into event_edit_history
+→ Updates medical_events row in place
+→ Re-runs reminder_engine.generate_for_event(event) if a reminder-relevant field changed
+→ 200 OK
 ```
 
 ---
 
-## 4. Gemini Adapter with Token Logging
+## 5. Timeline & Documents Endpoints
 
-Every Gemini call logs usage data. This is mandatory, not optional.
-
-```python
-# app/timeline/adapters/gemini_adapter.py
-
-class GeminiAdapter(AIProviderBase):
-
-    async def call_extraction(self, file_uri: str, pet_id: str) -> ExtractionBundle:
-        """Call 1 — Unified Extraction."""
-        response = await self._client.generate_content(
-            model="gemini-2.0-flash",
-            contents=[file_uri, EXTRACTION_PROMPT],
-            generation_config={"response_mime_type": "application/json"}
-        )
-        await self._log_token_usage(
-            operation="call_1_extraction",
-            pet_id=pet_id,
-            input_tokens=response.usage_metadata.prompt_token_count,
-            output_tokens=response.usage_metadata.candidates_token_count,
-        )
-        return ExtractionBundle.model_validate_json(response.text)
-
-    async def call_intelligence(self, verified_events: list, pol_context: dict, pet_id: str) -> IntelligenceBundle:
-        """Call 2 — Unified Intelligence."""
-        payload = {
-            "verified_events": verified_events,
-            "existing_summary": pol_context
-        }
-        response = await self._client.generate_content(
-            model="gemini-2.0-flash",
-            contents=[json.dumps(payload), INTELLIGENCE_PROMPT],
-            generation_config={"response_mime_type": "application/json"}
-        )
-        await self._log_token_usage(
-            operation="call_2_intelligence",
-            pet_id=pet_id,
-            input_tokens=response.usage_metadata.prompt_token_count,
-            output_tokens=response.usage_metadata.candidates_token_count,
-        )
-        return IntelligenceBundle.model_validate_json(response.text)
-
-    async def _log_token_usage(self, operation: str, pet_id: str, input_tokens: int, output_tokens: int):
-        supabase.table("ai_token_logs").insert({
-            "operation": operation,
-            "pet_id": pet_id,
-            "input_tokens": input_tokens,
-            "output_tokens": output_tokens,
-            "model_version": self.model_version,
-            "logged_at": datetime.utcnow().isoformat()
-        }).execute()
 ```
+GET /api/v2/pets/{pet_id}/timeline?group_by=category   (default)
+GET /api/v2/pets/{pet_id}/timeline?group_by=date        (chronological "All Events" view)
 
----
-
-## 5. Near-Duplicate Detection Thresholds
-
-These thresholds are applied in `mutation_engine.py` during conflict resolution:
-
-```python
-# app/timeline/services/mutation_engine.py
-
-NEAR_DUPLICATE_CONFIG = {
-    "date_proximity_days": 3,       # Visit dates within 3 days = same visit candidate
-    "doctor_similarity_score": 0.80, # Levenshtein ratio threshold
-    "diagnosis_overlap_pct": 0.60,   # 60% of diagnosis tokens must overlap
-    "medication_overlap_pct": 0.50,  # 50% of medication names must overlap
+→ Default response shape:
+{
+  "vet_visit":   [ ...events, date-desc... ],
+  "vaccination": [ ...events, date-desc... ],
+  "medication":  [ ... ],
+  "deworming":   [ ... ],
+  "anti_tick":   [ ... ],
+  "document":    [ ... ],
+  "general_note":[ ... ]
 }
+```
 
-# Resolution logic:
-# All four conditions exceed threshold → auto-merge
-# Two or three conditions exceed threshold → flag for manual user review
-# Fewer than two → treat as a distinct new event
+```
+POST /api/v2/pets/{pet_id}/documents/upload      # attach to a specific medical_events row or pet-level
+GET  /api/v2/pets/{pet_id}/documents
+DELETE /api/v2/pets/{pet_id}/documents/{doc_id}
 ```
 
 ---
 
-## 6. Reminder Engine Boundary
+## 6. Reminder Engine Endpoints
+
+```
+GET /api/v2/pets/{pet_id}/reminders?type=&status=&range=monthly
+→ Returns rows from `reminders` table. In Phase 1, every row has is_ai_generated=false.
+```
+
+Rule table (unchanged logic from the architecture doc, now the *only* source of reminders in Phase 1):
 
 ```python
-# app/timeline/services/reminder_engine.py
-
-RULE_ENGINE_OWNS = [
-    "vaccination",      # Annual / schedule-based
-    "deworming",        # Every 90 days
-    "anti_tick",        # Schedule-based
-    "medication_end",   # End-of-course reminder
-]
-
-AI_REMINDER_INTERPRETS = [
-    "follow_up",        # Doctor note implies future review without explicit date
-    "monitoring",       # Doctor note implies condition/weight monitoring
-    "conditional",      # "Review if symptoms persist" style notes
-]
-
-# Rule engine always runs first.
-# AI reminder rows (from IntelligenceBundle.reminder_note) are only inserted
-# for AI_REMINDER_INTERPRETS types, with is_ai_generated=true.
-# Both sets are deduplicated before frontend queries.
+REMINDER_RULES = {
+    "vaccination": lambda e: e.next_due_date or (e.date_given + recurrence_offset(e.recurrence)),
+    "deworming":   lambda e: e.next_due_date or (e.date_given + timedelta(days=90)),
+    "anti_tick":   lambda e: e.next_due_date,
+    "medication":  lambda e: e.end_date,
+    "vet_visit":   lambda e: e.follow_up_date,   # only if user supplied one
+}
 ```
 
 ---
 
-## 7. FastAPI V2 Router Hierarchy
+## 7. PDF Export Endpoint
 
-All V2 endpoints require a valid Supabase JWT in `Authorization: Bearer <token>`.
-
-### 7.1. V2 Documents & Uploads
-
-`POST /api/v2/pets/{pet_id}/documents/upload`
-- Uploads medical files (PDFs/Images) to Supabase Storage
-- Inserts row in `medical_records` with `ocr_status = 'pending'`
-- Returns `doc_id`
-
-`GET /api/v2/pets/{pet_id}/documents`
-- Lists all records including `ocr_status`
-
-`DELETE /api/v2/pets/{pet_id}/documents/{doc_id}`
-- Deletes record row and storage file
-
-### 7.2. V2 OCR Pipeline (Call 1 — Async)
-
-`POST /api/v2/pets/{pet_id}/documents/{doc_id}/ocr`
-- Enqueues background extraction task
-- Immediately updates `ocr_status = 'processing'`
-- Returns `202 Accepted`
-- Background task executes Call 1 (Gemini Unified Extraction)
-- On completion: stores `ExtractionBundle` in `medical_records.extracted_json`, inserts `medical_events` rows (status: `pending`), updates `ocr_status = 'extracted'`, sends WebSocket/SSE notification
-
-`GET /api/v2/pets/{pet_id}/documents/{doc_id}/ocr`
-- Polls extraction status and returns `ExtractionBundle` when ready
-
-### 7.3. V2 Verification
-
-`PUT /api/v2/pets/{pet_id}/documents/{doc_id}/verify`
-- Receives user-reviewed and edited JSON
-- Computes SHA-256 event hash
-- Runs duplicate/near-duplicate checks
-- Updates `medical_events` rows to `verification_status = 'verified'`
-- Updates `medical_records.ocr_status = 'verified'`
-
-### 7.4. V2 Intelligence Generation (Call 2 — Async)
-
-`POST /api/v2/pets/{pet_id}/timeline/generate-insights`
-- Enqueues background intelligence task
-- Returns `202 Accepted`
-- Background task fetches all verified `medical_events` + current `pol_analyses` context
-- Executes Call 2 (Gemini Unified Intelligence)
-- On completion:
-  - Upserts `medical_event_insights` rows (one per `event_id`)
-  - Updates `pol_analyses` (new version, structured columns)
-  - Inserts AI reminders into `reminders` (`is_ai_generated = true`)
-  - Runs rule engine → inserts rule-based reminders (`is_ai_generated = false`)
-  - Runs `mutation_engine.py` → increments `timeline_versions`
-  - Sends WebSocket/SSE notification
-
-`GET /api/v2/pets/{pet_id}/timeline/insights-status`
-- Polls Call 2 processing status
-
-### 7.5. V2 Timeline
-
-`GET /api/v2/pets/{pet_id}/timeline`
-- Returns chronological list of events for the pet's `active_timeline_version`
-- Checks Gemini health: sets `X-Timeline-Mode: AI` or `X-Timeline-Mode: Fallback` header
-
-`POST /api/v2/pets/{pet_id}/timeline/fallback-form`
-- Submits manual Vet Visit Form when AI is unavailable
-- Inserts a rule-based `medical_events` row (same schema as AI path)
-
-`POST /api/v2/pets/{pet_id}/timeline/rollback`
-- Body: `{ "target_version": N }`
-- Sets `pet_profiles.active_timeline_version = N`
-- Returns timeline at version N without deleting any data
-
-### 7.6. V2 AI Insights
-
-`GET /api/v2/pets/{pet_id}/insights/node/{event_id}`
-- Returns `medical_event_insights` row for a single event
-- Includes `human_summary`, `visit_understanding`, `suggested_actions`, `medical_disclaimer`
-
-`GET /api/v2/pets/{pet_id}/insights/collective`
-- Returns `pol_analyses` structured columns for the current version
-
-### 7.7. V2 Reminders
-
-`GET /api/v2/pets/{pet_id}/reminders`
-- Returns merged rule-based + AI reminders from `reminders` table
-- Supports query params: `?type=vaccination&status=pending&range=monthly`
-
-### 7.8. V2 Community Insights
-
-`PUT /api/v2/pets/{pet_id}/community/consent`
-- Toggles `community_consent.mode` between `private` and `anonymous`
-- On revocation: triggers deletion of associated `experience_cards` rows
-
-`GET /api/v2/community/insights`
-- Query similarity cases based on species, breed, diagnosis, age range
+```
+GET /api/v2/pets/{pet_id}/export/pdf?categories=all
+→ pdf_export_service.generate(pet_id, categories)
+→ Groups events by category (matching the in-app view)
+→ If ai_enabled and medical_event_insights exist, appends an optional
+  "AI Notes (Informational Only)" section at the end — never mixed into
+  the core category sections
+→ Returns application/pdf
+```
 
 ---
 
-## 8. Database Schema & Versioning Strategy
+## 8. Database Schema
 
-All changes are strictly additive. V1 app runs on the updated database without modification.
-
-### 8.1. Migration File Naming
-
-```
-backend/supabase/migrations/20260714120000_add_v2_timeline_tables.sql
-```
-
-### 8.2. Additive Updates to Existing V1 Tables
-
-#### Table: `medical_records` (V1 table — additive columns)
-
-```sql
-ALTER TABLE medical_records
-ADD COLUMN IF NOT EXISTS ocr_status TEXT DEFAULT 'pending'
-    CHECK (ocr_status IN ('pending', 'processing', 'extracted', 'verified', 'failed')),
-ADD COLUMN IF NOT EXISTS ocr_extracted_at TIMESTAMPTZ,
-ADD COLUMN IF NOT EXISTS ocr_error TEXT,
-ADD COLUMN IF NOT EXISTS extracted_json JSONB;
--- extracted_json stores the full ExtractionBundle from Call 1
-```
-
-#### Table: `pet_profiles` (V1 table — additive column)
-
-```sql
-ALTER TABLE pet_profiles
-ADD COLUMN IF NOT EXISTS active_timeline_version INTEGER DEFAULT NULL;
--- NULL means no timeline yet. Used by rollback endpoint.
-```
-
-### 8.3. New V2 Tables
-
-#### Table: `timeline_versions`
-
-```sql
-CREATE TABLE IF NOT EXISTS timeline_versions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    pet_id UUID NOT NULL REFERENCES pet_profiles(id) ON DELETE CASCADE,
-    version_number INTEGER NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    changelog TEXT,
-    UNIQUE(pet_id, version_number)
-);
-
-CREATE INDEX IF NOT EXISTS idx_timeline_versions_pet ON timeline_versions(pet_id);
-```
-
-#### Table: `medical_events`
+### 8.1. `medical_events` (Unified — Manual + AI)
 
 ```sql
 CREATE TABLE IF NOT EXISTS medical_events (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     pet_id UUID NOT NULL REFERENCES pet_profiles(id) ON DELETE CASCADE,
-    timeline_version INTEGER NOT NULL,
-    source_document_id UUID REFERENCES medical_records(id) ON DELETE SET NULL,
-    source_page_range JSONB,                          -- e.g. [1, 3] from ExtractionBundle
-    event_hash VARCHAR(64) NOT NULL,
-    confidence FLOAT NOT NULL CHECK (confidence >= 0.0 AND confidence <= 1.0),
-    field_confidence JSONB NOT NULL DEFAULT '{}',     -- per-field confidence scores
-    verification_status TEXT NOT NULL DEFAULT 'pending'
-        CHECK (verification_status IN ('pending', 'verified', 'rejected', 'superseded')),
-    event_type TEXT NOT NULL,
+    category TEXT NOT NULL CHECK (category IN (
+        'vet_visit', 'vaccination', 'medication',
+        'deworming', 'anti_tick', 'document', 'general_note'
+    )),
+    entry_source TEXT NOT NULL DEFAULT 'manual'
+        CHECK (entry_source IN ('manual', 'ai_extracted')),
+    event_date DATE NOT NULL,
     event_data JSONB NOT NULL DEFAULT '{}',
+    linked_visit_id UUID REFERENCES medical_events(id) ON DELETE SET NULL,
+    verification_status TEXT NOT NULL DEFAULT 'verified'
+        CHECK (verification_status IN ('verified', 'pending', 'rejected', 'superseded')),
+    confidence FLOAT,                          -- NULL for manual rows
+    field_confidence JSONB,                     -- NULL for manual rows
+    source_document_id UUID REFERENCES medical_records(id) ON DELETE SET NULL,
+    event_hash VARCHAR(64),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    ai_version VARCHAR(32)
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS idx_medical_events_pet_version ON medical_events(pet_id, timeline_version);
-CREATE INDEX IF NOT EXISTS idx_medical_events_hash ON medical_events(event_hash);
-CREATE INDEX IF NOT EXISTS idx_medical_events_data ON medical_events USING gin (event_data);
-CREATE INDEX IF NOT EXISTS idx_medical_events_status ON medical_events(pet_id, verification_status);
+-- Category-first is the default access pattern, so it is the leading index
+CREATE INDEX IF NOT EXISTS idx_events_pet_category_date ON medical_events(pet_id, category, event_date DESC);
+CREATE INDEX IF NOT EXISTS idx_events_pet_date ON medical_events(pet_id, event_date DESC); -- chronological view
+CREATE INDEX IF NOT EXISTS idx_events_hash ON medical_events(event_hash);
+CREATE INDEX IF NOT EXISTS idx_events_data ON medical_events USING gin (event_data);
 ```
 
-#### Table: `medical_event_insights` ← NEW in v5.0
-
-Stores per-node AI insights from `IntelligenceBundle.node_insights[]`. This table was missing in v4.0.
+### 8.2. `event_edit_history` (Lightweight audit, replaces heavy versioning for Phase 1)
 
 ```sql
-CREATE TABLE IF NOT EXISTS medical_event_insights (
+CREATE TABLE IF NOT EXISTS event_edit_history (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     event_id UUID NOT NULL REFERENCES medical_events(id) ON DELETE CASCADE,
-    pet_id UUID NOT NULL REFERENCES pet_profiles(id) ON DELETE CASCADE,
-    human_summary TEXT,
-    visit_understanding TEXT,
-    suggested_actions JSONB NOT NULL DEFAULT '[]',
-    medical_disclaimer TEXT NOT NULL
-        DEFAULT 'This is informational only and not a substitute for veterinary advice.',
-    ai_model_version VARCHAR(32),
-    generated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    UNIQUE(event_id)                                  -- one insight row per event
+    previous_data JSONB NOT NULL,
+    new_data JSONB NOT NULL,
+    edited_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS idx_event_insights_pet ON medical_event_insights(pet_id);
-CREATE INDEX IF NOT EXISTS idx_event_insights_event ON medical_event_insights(event_id);
+CREATE INDEX IF NOT EXISTS idx_edit_history_event ON event_edit_history(event_id);
 ```
 
-#### Table: `pol_analyses` ← Restructured in v5.0 (typed columns replace single JSONB blob)
-
-```sql
-CREATE TABLE IF NOT EXISTS pol_analyses (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    pet_id UUID NOT NULL REFERENCES pet_profiles(id) ON DELETE CASCADE,
-    version INTEGER NOT NULL,
-    -- Structured columns replacing single summary JSONB blob
-    overall_summary TEXT,
-    hierarchical_summary JSONB NOT NULL DEFAULT '{}',  -- by_year, by_condition, treatment_progression
-    active_conditions JSONB NOT NULL DEFAULT '[]',
-    vaccination_status JSONB NOT NULL DEFAULT '{}',
-    -- Metadata
-    insight_version INTEGER NOT NULL DEFAULT 1,
-    token_count INTEGER,                               -- total tokens used to generate this version
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    UNIQUE(pet_id, version)
-);
-
-CREATE INDEX IF NOT EXISTS idx_pol_analyses_pet ON pol_analyses(pet_id);
-```
-
-#### Table: `reminders`
+### 8.3. `reminders`
 
 ```sql
 CREATE TABLE IF NOT EXISTS reminders (
@@ -459,7 +298,7 @@ CREATE TABLE IF NOT EXISTS reminders (
     frequency TEXT CHECK (frequency IN ('daily', 'weekly', 'monthly', 'quarterly', 'yearly')),
     priority TEXT NOT NULL DEFAULT 'medium' CHECK (priority IN ('high', 'medium', 'low')),
     status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'completed', 'missed')),
-    is_ai_generated BOOLEAN NOT NULL DEFAULT false,
+    is_ai_generated BOOLEAN NOT NULL DEFAULT false,   -- always false in Phase 1
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -467,197 +306,108 @@ CREATE INDEX IF NOT EXISTS idx_reminders_pet_date ON reminders(pet_id, due_date)
 CREATE INDEX IF NOT EXISTS idx_reminders_pet_status ON reminders(pet_id, status);
 ```
 
-#### Table: `community_consent`
+### 8.4. `documents`
 
 ```sql
-CREATE TABLE IF NOT EXISTS community_consent (
-    pet_id UUID PRIMARY KEY REFERENCES pet_profiles(id) ON DELETE CASCADE,
-    mode TEXT NOT NULL DEFAULT 'private' CHECK (mode IN ('private', 'anonymous')),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-```
-
-#### Table: `experience_cards`
-
-```sql
-CREATE TABLE IF NOT EXISTS experience_cards (
+CREATE TABLE IF NOT EXISTS documents (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    anonymous_pet_id UUID NOT NULL,   -- SHA-256 hash of real pet_id — never a FK
-    species TEXT NOT NULL,
-    breed TEXT,
-    diagnosis TEXT NOT NULL,
-    medication TEXT,
-    age_at_event INTEGER,
-    weight_at_event FLOAT,
-    outcome_stats JSONB NOT NULL DEFAULT '{}',
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    pet_id UUID NOT NULL REFERENCES pet_profiles(id) ON DELETE CASCADE,
+    source_event_id UUID REFERENCES medical_events(id) ON DELETE SET NULL,
+    file_url TEXT NOT NULL,
+    file_type TEXT,
+    label TEXT,
+    uploaded_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS idx_exp_cards_lookup ON experience_cards(species, breed, diagnosis);
+CREATE INDEX IF NOT EXISTS idx_documents_pet ON documents(pet_id);
 ```
 
-#### Table: `ai_token_logs` ← NEW in v5.0
+### 8.5. `pet_profiles` (additive column)
+
+```sql
+ALTER TABLE pet_profiles
+ADD COLUMN IF NOT EXISTS ai_enabled BOOLEAN NOT NULL DEFAULT false;
+-- Phase 2 features are entirely gated behind this flag, per pet.
+```
+
+---
+
+## 9. Phase 2 — AI Layer Tables & Endpoints (Feature-Flagged, Optional)
+
+Everything below only activates when `pet_profiles.ai_enabled = true`. If false, these endpoints 403.
+
+### 9.1. Endpoints
+
+```
+POST /api/v2/pets/{pet_id}/ai/documents/{doc_id}/ocr       # Call 1 — Unified Extraction (async, 202)
+GET  /api/v2/pets/{pet_id}/ai/documents/{doc_id}/ocr       # poll ExtractionBundle
+PUT  /api/v2/pets/{pet_id}/ai/documents/{doc_id}/verify    # confirm candidates → real medical_events rows
+POST /api/v2/pets/{pet_id}/ai/timeline/generate-insights   # Call 2 — Unified Intelligence (async, 202)
+GET  /api/v2/pets/{pet_id}/ai/insights/node/{event_id}
+GET  /api/v2/pets/{pet_id}/ai/insights/collective
+```
+
+`PUT .../verify` is the critical bridge: confirmed candidates are handed to the **same** `event_builder.build_and_insert()` used by the manual routers, with `entry_source="ai_extracted"` and `verification_status="verified"`. From that point on they're indistinguishable from manual rows to the Timeline Engine, Reminder Engine, and PDF Export Engine.
+
+### 9.2. `medical_event_insights`
+
+```sql
+CREATE TABLE IF NOT EXISTS medical_event_insights (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_id UUID NOT NULL REFERENCES medical_events(id) ON DELETE CASCADE,
+    pet_id UUID NOT NULL REFERENCES pet_profiles(id) ON DELETE CASCADE,
+    human_summary TEXT,
+    visit_understanding TEXT,
+    suggested_actions JSONB NOT NULL DEFAULT '[]',
+    medical_disclaimer TEXT NOT NULL
+        DEFAULT 'This is informational only and not a substitute for veterinary advice.',
+    insight_type TEXT NOT NULL DEFAULT 'ai' CHECK (insight_type IN ('ai', 'ai_community')),
+    ai_model_version VARCHAR(32),
+    generated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE(event_id)
+);
+```
+
+### 9.3. `pol_analyses`
+
+```sql
+CREATE TABLE IF NOT EXISTS pol_analyses (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    pet_id UUID NOT NULL REFERENCES pet_profiles(id) ON DELETE CASCADE,
+    version INTEGER NOT NULL,
+    overall_summary TEXT,
+    hierarchical_summary JSONB NOT NULL DEFAULT '{}',
+    active_conditions JSONB NOT NULL DEFAULT '[]',
+    vaccination_status JSONB NOT NULL DEFAULT '{}',
+    token_count INTEGER,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE(pet_id, version)
+);
+```
+
+### 9.4. `ai_token_logs`
 
 ```sql
 CREATE TABLE IF NOT EXISTS ai_token_logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    operation TEXT NOT NULL,           -- 'call_1_extraction' | 'call_2_intelligence'
+    operation TEXT NOT NULL,   -- 'call_1_extraction' | 'call_2_intelligence'
     pet_id UUID REFERENCES pet_profiles(id) ON DELETE SET NULL,
     input_tokens INTEGER NOT NULL,
     output_tokens INTEGER NOT NULL,
     model_version VARCHAR(32),
     logged_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-
-CREATE INDEX IF NOT EXISTS idx_token_logs_pet ON ai_token_logs(pet_id);
-CREATE INDEX IF NOT EXISTS idx_token_logs_operation ON ai_token_logs(operation, logged_at);
 ```
+
+### 9.5. Phase 3 (deferred entirely): `community_consent`, `experience_cards`, `timeline_versions`, `/rollback`
+
+These remain designed on paper (see the earlier v0.4 draft for full definitions) but are explicitly out of scope until Phase 3, once the manual core and the AI layer are both stable in production.
 
 ---
 
-## 9. End-to-End Integrated Workflows
+## 10. Migration & Deployment Order
 
-### 9.1. Upload, Call 1 Extraction & Verification Flow
-
-```mermaid
-sequenceDiagram
-    participant User as User (UI Client)
-    participant V2R as V2 Router (/api/v2)
-    participant MRService as Shared Medical Record Service
-    participant Storage as Supabase Bucket
-    participant BG as Background Task Worker
-    participant Gemini as Gemini Adapter (Call 1)
-    participant DB as PostgreSQL DB
-
-    User->>V2R: POST /documents/upload (PDF/Image)
-    V2R->>MRService: upload_document()
-    MRService->>Storage: Store file in bucket
-    MRService->>DB: Insert medical_records (ocr_status: 'pending')
-    V2R-->>User: 200 Upload Confirmed + doc_id
-
-    User->>V2R: POST /documents/{doc_id}/ocr
-    V2R->>DB: Update ocr_status = 'processing'
-    V2R->>BG: Enqueue extraction_task(doc_id)
-    V2R-->>User: 202 Accepted
-
-    BG->>Gemini: Send file via File API URI [CALL 1]
-    Gemini-->>BG: ExtractionBundle JSON (all visits, OCR text, per-field confidence)
-    BG->>DB: Store extracted_json in medical_records
-    BG->>DB: Insert N rows in medical_events (verification_status: 'pending')
-    BG->>DB: Update ocr_status = 'extracted'
-    BG-->>User: WebSocket/SSE: extraction_complete
-
-    User->>V2R: GET /documents/{doc_id}/ocr
-    V2R-->>User: ExtractionBundle (rendered in verification UI)
-
-    User->>V2R: PUT /documents/{doc_id}/verify (edited JSON)
-    V2R->>DB: Compute SHA-256 event hashes
-    V2R->>DB: Run near-duplicate checks
-    V2R->>DB: Update medical_events (verification_status: 'verified')
-    V2R->>DB: Update medical_records (ocr_status: 'verified')
-    V2R-->>User: 200 Verification Complete
-```
-
-### 9.2. Call 2 Intelligence Generation Flow
-
-```mermaid
-sequenceDiagram
-    participant User as User (UI Client)
-    participant V2R as V2 Router (/api/v2)
-    participant BG as Background Task Worker
-    participant Gemini as Gemini Adapter (Call 2)
-    participant RuleEngine as Rule Engine
-    participant MutationEngine as Mutation Engine
-    participant DB as PostgreSQL DB
-
-    User->>V2R: POST /timeline/generate-insights
-    V2R->>BG: Enqueue intelligence_task(pet_id)
-    V2R-->>User: 202 Accepted
-
-    BG->>DB: Fetch all verified medical_events for pet
-    BG->>DB: Fetch current pol_analyses (incremental context)
-    BG->>Gemini: Send verified events + pol context [CALL 2]
-    Gemini-->>BG: IntelligenceBundle JSON
-    Note over Gemini,BG: node_insights[] + collective_insight + reminder_note
-
-    BG->>DB: Upsert medical_event_insights (one row per event_id)
-    BG->>DB: Insert new pol_analyses version (structured columns)
-    BG->>DB: Insert AI reminders → reminders (is_ai_generated=true)
-    BG->>RuleEngine: Generate rule-based reminders
-    RuleEngine->>DB: Insert rule reminders → reminders (is_ai_generated=false)
-    BG->>MutationEngine: Increment timeline_versions
-    MutationEngine->>DB: Insert timeline_versions row
-    MutationEngine->>DB: Update pet_profiles.active_timeline_version
-    BG-->>User: WebSocket/SSE: insights_ready
-```
-
-### 9.3. Fallback Healthcheck & Timeline Generation Flow
-
-```mermaid
-sequenceDiagram
-    participant User as User (UI Client)
-    participant V2R as V2 Router (/api/v2)
-    participant Fallback as Fallback Router
-    participant Gemini as Gemini API
-    participant DB as PostgreSQL DB
-
-    User->>V2R: GET /timeline
-    V2R->>Fallback: check_ai_health()
-    alt Gemini Available
-        Fallback-->>V2R: AI mode active
-        V2R->>DB: Fetch medical_events (verified, active_timeline_version)
-        V2R->>DB: Fetch medical_event_insights
-        V2R->>DB: Fetch pol_analyses (current version)
-        V2R-->>User: AI Timeline (Header: X-Timeline-Mode: AI)
-    else Gemini Down / Quota Exceeded
-        Fallback-->>V2R: Fallback active
-        V2R->>DB: Fetch medical_events (chronological sort only)
-        V2R-->>User: Basic Timeline (Header: X-Timeline-Mode: Fallback)
-    end
-```
-
-### 9.4. Rollback Flow
-
-```mermaid
-sequenceDiagram
-    participant User as User (UI Client)
-    participant V2R as V2 Router (/api/v2)
-    participant DB as PostgreSQL DB
-
-    User->>V2R: POST /timeline/rollback { target_version: N }
-    V2R->>DB: Validate version N exists in timeline_versions
-    V2R->>DB: SET pet_profiles.active_timeline_version = N
-    V2R->>DB: Fetch medical_events WHERE timeline_version <= N AND verified
-    V2R->>DB: Fetch pol_analyses WHERE version = N
-    V2R->>DB: Recompute reminders from events at version N
-    V2R-->>User: 200 + Timeline at Version N
-    Note over V2R,DB: No data deleted. active_timeline_version is a pointer.
-```
-
----
-
-## 10. Migration & Rollback Strategy
-
-### Deployment Order
-
-1. Apply SQL migrations to Supabase (additive — V1 app continues running safely)
-2. Deploy backend with V2 routers, shared services, and timeline module
-3. Deploy frontend with updated `TimelinePage.jsx` calling `/api/v2/...` endpoints
-
-### Revert Strategy
-
-- Frontend rolled back to timeline placeholder — V1 endpoints unaffected
-- `app/routers/v2/` directory reverted — V1 routers continue unchanged
-- Database changes are additive: reverting code does not require schema rollback
-
-### Schema Change Summary (v4.0 → v5.0)
-
-| Change | Table | Type |
-|---|---|---|
-| Add `extracted_json JSONB` | `medical_records` | Additive column |
-| Add `active_timeline_version INTEGER` | `pet_profiles` | Additive column |
-| Add `source_page_range JSONB`, `field_confidence JSONB`, `superseded` status | `medical_events` | Additive columns + check constraint update |
-| New table | `medical_event_insights` | New |
-| Replace `summary JSONB` with typed columns | `pol_analyses` | Restructured |
-| Add `frequency`, `priority`, `anti_tick`, `monitoring`, `conditional` types | `reminders` | Additive columns + check constraint update |
-| New table | `ai_token_logs` | New |
+1. Apply `medical_events` unified schema (with `category`, `entry_source`) — additive.
+2. Deploy manual routers + `reminder_engine.py` (synchronous) — this alone is a shippable product.
+3. Deploy `documents.py`, `export.py` (PDF).
+4. Only once the above is stable: deploy the `ai_enabled` flag, `ai/` router namespace, and the Phase 2 Gemini adapter — fully optional, off by default for every pet until explicitly turned on.
