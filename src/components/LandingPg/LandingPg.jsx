@@ -90,23 +90,76 @@ const Navbar = ({ openModal }) => {
 // ---------- Hero ----------
 import heroPets from "../../assets/hero-pets.webp";
 
-const Hero = ({ openModal, onJoinPetParent }) => (
-  <section id="home" className="hero">
-    <div className="hero-bg">
-      <img src={heroPets} alt="" className="hero-bg-image" />
-    </div>
+const Hero = ({ openModal, onJoinPetParent }) => {
+  const fullText = "Building a Health Identity for Every Pet";
+  const part1 = "Building a Health Identity ";
+  const [typedText, setTypedText] = useState("");
+  const [isTypingDone, setIsTypingDone] = useState(false);
+  const [showSubtitle, setShowSubtitle] = useState(false);
 
-    <div className="hero-overlay-actions">
-      <button className="btn btn-primary" onClick={onJoinPetParent}>
-        Join as Pet Parent
-      </button>
+  useEffect(() => {
+    const charDelay = 75; // 40 characters in 3 seconds (3000 / 40 = 75ms)
+    let index = 0;
+    const intervalId = setInterval(() => {
+      setTypedText(fullText.substring(0, index + 1));
+      index++;
+      if (index >= fullText.length) {
+        clearInterval(intervalId);
+        setIsTypingDone(true);
+        setShowSubtitle(true);
+      }
+    }, charDelay);
 
-      <button className="btn btn-secondary" onClick={() => openModal("vet")}>
-        Join as Veterinarian
-      </button>
-    </div>
-  </section>
-);
+    return () => clearInterval(intervalId);
+  }, []);
+
+  const renderTitle = () => {
+    if (typedText.length <= part1.length) {
+      return (
+        <>
+          {typedText}
+          {!isTypingDone && <span className="typewriter-cursor">|</span>}
+        </>
+      );
+    } else {
+      const typedPart2 = typedText.substring(part1.length);
+      return (
+        <>
+          {part1}
+          <span className="text-green-accent">{typedPart2}</span>
+          {!isTypingDone && <span className="typewriter-cursor">|</span>}
+        </>
+      );
+    }
+  };
+
+  return (
+    <section id="home" className="hero">
+      <div className="hero-bg">
+        <img src={heroPets} alt="" className="hero-bg-image" />
+      </div>
+
+      <div className="hero-text-overlay">
+        <h1 className="hero-title-typewriter">
+          {renderTitle()}
+        </h1>
+        <p className={`hero-subtitle-fadein ${showSubtitle ? "visible" : ""}`}>
+          Helping pet parents organize health records, track care routines, and stay connected with trusted veterinary care.
+        </p>
+      </div>
+
+      <div className="hero-bottom-actions">
+        <button className="btn btn-primary" onClick={onJoinPetParent}>
+          Join as Pet Parent
+        </button>
+
+        <button className="btn btn-secondary" onClick={() => openModal("vet")}>
+          Join as Veterinarian
+        </button>
+      </div>
+    </section>
+  );
+};
 
 // ---------- Workingprocess ----------
 import petProfileImg from "../../assets/pet-profile.webp";
