@@ -191,111 +191,191 @@ Expected output: 4 tables listed, and `household_id` column of type `uuid`.
 
 ---
 
-## Complete Schema Overview (Updated)
+## Complete Schema Overview (Live Supabase Schema)
 
-| Table | Purpose | Key Relationships |
-|-------|---------|-------------------|
-| `households` | Core household entity | `owner_user_id` → auth user |
-| `household_members` | Users in a household | `household_id` → households, `user_id` → auth user |
-| `invite_tokens` | Secure invite links | `household_id` → households |
-| `task_activity_log` | Immutable task event log | `household_id` → households, `pet_id` → pet_profiles, `member_id` → household_members |
-| `pet_profiles` | Core pet data | `user_id` → auth user, `household_id` → households |
-| `pet_ids` | External IDs (KCI, microchip) | `pet_profile_id` → pet_profiles |
-| `care_team` | Vet + emergency contacts | `pet_profile_id` → pet_profiles (1:1) |
-| `daily_task_logs` | Daily care tasks per pet | `pet_profile_id` → pet_profiles |
-| `daily_streaks` | Streak tracking per pet | `pet_profile_id` → pet_profiles (1:1) |
-
-### Entity Relationship (Updated)
-
-```
-auth.users (Supabase Auth)
-    │
-    │ user_id (TEXT)
-    │
-    ├─── household_members ──── households ──── invite_tokens
-    │                              │
-    │                              │ household_id
-    │                              │
-    v                              v
-pet_profiles ──────┬────── pet_ids (1:many)
-                   │
-                   ├────── care_team (1:1)
-                   │
-                   ├────── daily_task_logs (1:many, per day)
-                   │
-                   ├────── daily_streaks (1:1)
-                   │
-                   └────── task_activity_log (1:many, per action)
-```
+The following tables exist on the live Supabase instance (`https://olmpcmvgvdsgvnwiriut.supabase.co`). This documentation has been updated to reflect the exact columns, primary keys, foreign keys, and datatypes retrieved directly from the live database.
 
 ---
 
-## Quick Copy: Run Everything at Once
+### 1. `user_profiles`
+Holds extended user metadata for authenticated accounts (linked to Supabase `auth.users`).
 
-Copy and paste this entire block into the Supabase SQL Editor to set up everything in one go:
+| Column Name | Datatype | Constraints | Notes |
+| :--- | :--- | :--- | :--- |
+| `id` | `uuid` | Primary Key, FK to `auth.users.id` | Handled during email/OAuth signup |
+| `full_name` | `text` | Nullable | Full name of the pet parent |
+| `phone` | `text` | Nullable | Registered mobile number |
+| `email` | `text` | Nullable | Registered email address |
+| `phone_verified` | `boolean` | Nullable | Flag indicating if phone OTP completed |
+| `auth_provider` | `text` | Nullable | Method used (e.g. email, google) |
+| `city` | `text` | Nullable | Resolved pincode lookup |
+| `state` | `text` | Nullable | Resolved pincode lookup |
+| `pincode` | `text` | Nullable | Indian 6-digit postal code |
+| `avatar_url` | `text` | Nullable | Pulled from Supabase Storage `avatars` bucket |
+| `created_at` | `timestamptz` | Default `now()` | Registration timestamp |
+| `updated_at` | `timestamptz` | Default `now()` | Auto-updated on profile edit |
 
-```sql
--- 1. Households
-CREATE TABLE IF NOT EXISTS households (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name TEXT NOT NULL,
-  owner_user_id TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-CREATE INDEX IF NOT EXISTS idx_households_owner ON households(owner_user_id);
+---
 
--- 2. Household Members
-CREATE TABLE IF NOT EXISTS household_members (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  household_id UUID NOT NULL REFERENCES households(id) ON DELETE CASCADE,
-  user_id TEXT NOT NULL,
-  display_name TEXT,
-  role TEXT NOT NULL DEFAULT 'family_member',
-  status TEXT NOT NULL DEFAULT 'active',
-  joined_at TIMESTAMPTZ DEFAULT now(),
-  UNIQUE(household_id, user_id)
-);
-CREATE INDEX IF NOT EXISTS idx_hm_household ON household_members(household_id);
-CREATE INDEX IF NOT EXISTS idx_hm_user ON household_members(user_id);
+### 2. `pet_profiles`
+Core entity representing pet profiles.
 
--- 3. Invite Tokens
-CREATE TABLE IF NOT EXISTS invite_tokens (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  token TEXT NOT NULL UNIQUE,
-  household_id UUID NOT NULL REFERENCES households(id) ON DELETE CASCADE,
-  role TEXT NOT NULL DEFAULT 'family_member',
-  invited_by TEXT NOT NULL,
-  invitee_name TEXT,
-  expires_at TIMESTAMPTZ NOT NULL,
-  max_uses INT DEFAULT 1,
-  used_count INT DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-CREATE INDEX IF NOT EXISTS idx_invite_token ON invite_tokens(token);
+| Column Name | Datatype | Constraints | Notes |
+| :--- | :--- | :--- | :--- |
+| `id` | `uuid` | Primary Key | Generated automatically |
+| `user_id` | `uuid` | FK to `user_profiles.id` | Scopes ownership of the pet |
+| `petolife_id` | `text` | Unique, Not Null | Generated unique code (e.g., `PET-CBE-DOG-000001`) |
+| `pet_type` | `text` | Not Null | Dog, Cat, Bird, Rabbit, etc. |
+| `pet_name` | `text` | Not Null | Pet's name |
+| `breed` | `text` | Nullable | Pet's breed |
+| `gender` | `text` | Nullable | Male or Female |
+| `birth_date` | `date` | Nullable | Date of birth |
+| `weight` | `numeric` | Nullable | Weight in kilograms |
+| `color` | `text` | Nullable | Fur color/markings |
+| `blood_group` | `text` | Nullable | Blood type |
+| `identification_marks` | `text` | Nullable | Distinct markings |
+| `pet_photo_url` | `text` | Nullable | Storage URL in `pet-photos` bucket |
+| `household_id` | `uuid` | Nullable | Linked family household |
+| `pet_health_id` | `text` | Nullable | Redundant reference string |
+| `city` | `text` | Nullable | City registered |
+| `state` | `text` | Nullable | State registered |
+| `pincode` | `text` | Nullable | Pincode |
+| `owner_name` | `text` | Nullable | Flat copy of parent full name |
+| `owner_phone` | `text` | Nullable | Flat copy of parent mobile |
+| `created_at` | `timestamptz` | Default `now()` | Profile creation time |
+| `updated_at` | `timestamptz` | Default `now()` | Profile update time |
 
--- 4. Task Activity Log
-CREATE TABLE IF NOT EXISTS task_activity_log (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  household_id UUID NOT NULL REFERENCES households(id) ON DELETE CASCADE,
-  pet_id UUID NOT NULL REFERENCES pet_profiles(id) ON DELETE CASCADE,
-  task_id TEXT NOT NULL,
-  task_title TEXT NOT NULL,
-  member_id UUID NOT NULL REFERENCES household_members(id),
-  member_name TEXT NOT NULL,
-  action TEXT NOT NULL,
-  timestamp TIMESTAMPTZ DEFAULT now()
-);
-CREATE INDEX IF NOT EXISTS idx_activity_household ON task_activity_log(household_id);
-CREATE INDEX IF NOT EXISTS idx_activity_timestamp ON task_activity_log(timestamp);
+---
 
--- 5. Add household_id to pet_profiles
-ALTER TABLE pet_profiles
-ADD COLUMN IF NOT EXISTS household_id UUID REFERENCES households(id);
-CREATE INDEX IF NOT EXISTS idx_pet_profiles_household ON pet_profiles(household_id);
+### 3. `medical_records`
+Metadata for health documents, prescriptions, and diagnostics uploaded by the user.
 
--- 6. Enable RLS
-ALTER TABLE households ENABLE ROW LEVEL SECURITY;
-ALTER TABLE household_members ENABLE ROW LEVEL SECURITY;
-ALTER TABLE invite_tokens ENABLE ROW LEVEL SECURITY;
-ALTER TABLE task_activity_log ENABLE ROW LEVEL SECURITY;
-```
+| Column Name | Datatype | Constraints | Notes |
+| :--- | :--- | :--- | :--- |
+| `id` | `uuid` | Primary Key | Generated automatically |
+| `pet_profile_id` | `uuid` | FK to `pet_profiles.id` (CASCADE) | Links record to the specific pet |
+| `user_id` | `uuid` | Nullable, FK to `user_profiles.id` | Owner authorization scoping |
+| `title` | `text` | Not Null | User-assigned or parsed title |
+| `category` | `text` | Not Null | e.g. Prescription, Lab Reports, Vaccination |
+| `file_url` | `text` | Not Null | Storage URL in `medical-docs` bucket |
+| `file_name` | `text` | Nullable | Original local filename |
+| `file_type` | `text` | Nullable | MIME-type (e.g. application/pdf, image/jpeg) |
+| `file_size` | `integer` | Nullable | Size in bytes |
+| `storage_path` | `text` | Not Null | Bucket location path |
+| `is_favorite` | `boolean` | Default `false` | Favorite filter flag |
+| `created_at` | `timestamptz` | Default `now()` | Upload time |
+
+---
+
+### 4. `pet_health_ids`
+Internal tracker for sequential Pet Health ID generation per city.
+
+| Column Name | Datatype | Constraints | Notes |
+| :--- | :--- | :--- | :--- |
+| `id` | `uuid` | Primary Key | Generated automatically |
+| `health_id` | `text` | Unique, Not Null | Full generated ID (e.g., `PET-CBE-DOG-000001`) |
+| `pet_profile_id` | `uuid` | FK to `pet_profiles.id` (CASCADE) | Backlink to owner profile |
+| `city_code` | `text` | Not Null | 3-letter city prefix (e.g. `CBE`) |
+| `pet_type_code` | `text` | Not Null | 3-letter type code (e.g. `DOG`) |
+| `sequence_number` | `integer` | Not Null | Counter sequence used for generation |
+| `pet_name` | `text` | Nullable | Copy of pet name |
+| `owner_phone` | `text` | Nullable | Copy of owner phone |
+| `created_at` | `timestamptz` | Default `now()` | ID generation time |
+
+---
+
+### 5. `pet_ids`
+Official registration details (e.g., Microchip number, KCI, etc.).
+
+| Column Name | Datatype | Constraints | Notes |
+| :--- | :--- | :--- | :--- |
+| `id` | `uuid` | Primary Key | Generated automatically |
+| `pet_profile_id` | `uuid` | FK to `pet_profiles.id` (CASCADE) | Linked pet profile |
+| `id_name` | `text` | Not Null | Type of registration (e.g. `Microchip`) |
+| `id_number` | `text` | Not Null | Identifier sequence |
+
+---
+
+### 6. `early_access_registrations`
+Submissions from the early-access interest landing page forms.
+
+| Column Name | Datatype | Constraints | Notes |
+| :--- | :--- | :--- | :--- |
+| `id` | `uuid` | Primary Key | Generated automatically |
+| `type` | `text` | Not Null | `pet_parent` or `veterinarian` |
+| `name` | `text` | Nullable | Full name of contact |
+| `clinic_name` | `text` | Nullable | Vet clinic name if applicable |
+| `mobile` | `text` | Nullable | Contact number |
+| `email` | `text` | Nullable | Contact email |
+| `city` | `text` | Nullable | User location city |
+| `pet_type` | `text` | Nullable | Specified pet interest |
+| `early_access` | `boolean` | Default `true` | Requesting early launch code |
+| `created_at` | `timestamptz` | Default `now()` | Interest submission time |
+
+---
+
+### 7. `task_activity_log`
+Audit trails of completed tasks and family activities.
+
+| Column Name | Datatype | Constraints | Notes |
+| :--- | :--- | :--- | :--- |
+| `id` | `uuid` | Primary Key | Generated automatically |
+| `household_id` | `uuid` | Not Null | Associated household ID |
+| `pet_id` | `uuid` | FK to `pet_profiles.id` (CASCADE) | Associated pet ID |
+| `task_id` | `text` | Not Null | Identifier of daily chore |
+| `task_title` | `text` | Not Null | Title of activity |
+| `member_id` | `uuid` | Not Null | Member user uuid |
+| `member_name` | `text` | Not Null | Member display name |
+| `action` | `text` | Not Null | Action type (e.g. `completed`) |
+| `timestamp` | `timestamptz` | Default `now()` | Execution log time |
+
+---
+
+### 8. `pet_parents`
+Marketing / early access registration records for pet owners.
+
+| Column Name | Datatype | Constraints | Notes |
+| :--- | :--- | :--- | :--- |
+| `id` | `uuid` | Primary Key | Generated automatically |
+| `name` | `text` | Nullable | Name of owner |
+| `mobile` | `text` | Nullable | Mobile number |
+| `email` | `text` | Nullable | Email address |
+| `city` | `text` | Nullable | Home city |
+| `pet_type` | `text` | Nullable | Type of pet owned |
+| `pet_name` | `text` | Nullable | Pet's name |
+| `has_pet` | `boolean` | Nullable | Flag indicating if currently owns pet |
+| `early_access` | `boolean` | Nullable | Requesting early access |
+| `created_at` | `timestamptz` | Default `now()` | Creation date |
+
+---
+
+### 9. `vets`
+Marketing / early access registration records for veterinarians.
+
+| Column Name | Datatype | Constraints | Notes |
+| :--- | :--- | :--- | :--- |
+| `id` | `uuid` | Primary Key | Generated automatically |
+| `doctor_name` | `text` | Nullable | Vet name |
+| `clinic_name` | `text` | Nullable | Clinic name |
+| `mobile` | `text` | Nullable | Contact number |
+| `email` | `text` | Nullable | Email |
+| `city` | `text` | Nullable | Practice city |
+| `early_access` | `boolean` | Nullable | Requesting early access |
+| `created_at` | `timestamptz` | Default `now()` | Registration date |
+
+---
+
+### 10. `event_registrations_coimbatore`
+Event registration details specific to the Coimbatore city launch campaign.
+
+| Column Name | Datatype | Constraints | Notes |
+| :--- | :--- | :--- | :--- |
+| `id` | `uuid` | Primary Key | Generated automatically |
+| `pet_name` | `text` | Not Null | Registered pet name |
+| `owner_name` | `text` | Nullable | Registered owner name |
+| `owner_phone` | `text` | Not Null | Registered owner mobile |
+| `pet_health_id` | `text` | Nullable | Coimbatore campaign health ID |
+| `linked` | `boolean` | Nullable | Indicates if linked to core profile |
+| `linked_user_id` | `uuid` | Nullable | Linked auth user |
+| `created_at` | `timestamptz` | Default `now()` | Registration date |
+

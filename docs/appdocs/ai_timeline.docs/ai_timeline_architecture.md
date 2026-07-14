@@ -1,3 +1,5 @@
+# @SAD_v0.3
+
 # AI Timeline Software Architecture Document (SAD)
 
 ## Phase 1 - Draft 3
@@ -61,7 +63,7 @@ Every AI output is informational and must contain appropriate medical disclaimer
 
 # Ch. 2 - HighLevel Architecture
 
-!image.png
+![image.png](image.png)
 
 ## Architectural Principles
 
@@ -87,7 +89,7 @@ Input
 - Images
 - Existing uploaded records
 
-M2 - OCR & Information Extraction
+M2 - Gemini Vision & Information Extraction
 
 Produces
 
@@ -173,9 +175,9 @@ Users simply select existing records or uploads one single record
 
 ---
 
-# Ch. 5 - OCR & Verification Layer
+# Ch. 5 - Gemini Vision & Verification Layer
 
-!image.png
+![image.png](image%201.png)
 
 # Ch. 6 - Standardized Medical JSON Schema
 
@@ -297,7 +299,7 @@ Category views will later be generated through indexing rather than storage arch
 
 # Ch. 8 - Medical Event Node Architecture
 
-!image.png
+![image.png](image%202.png)
 
 ---
 
@@ -305,7 +307,7 @@ Category views will later be generated through indexing rather than storage arch
 
 Every Medical Event Node is independently processed.
 
-Gemini receives - verified event data (never raw OCR) and structured metadata is updated and handled by backend
+Gemini receives - verified event data (never raw extracted text) and structured metadata is updated and handled by backend
 
 ---
 
@@ -408,7 +410,7 @@ Each POL Bot Analysis contains:
 Gemini does **not** receive:
 
 - previous prompts
-- previous OCR
+- previous extracted text
 - previous documents
 
 Gemini receives only:
@@ -428,13 +430,13 @@ Avoid rebuilding the AI Timeline from scratch whenever a new medical record is u
 
 Only the new information should be analyzed.
 
-!image.png
+![image.png](image%203.png)
 
 ## Processing Logic
 
 Only newly uploaded records undergo:
 
-- OCR
+- Gemini vision text extraction
 - Verification
 - Node Generation
 - Node Insight Generation
@@ -459,7 +461,7 @@ The existing timeline remains untouched until the mutation engine approves chang
 
 Gemini must never directly modify the timeline ||  AI proposes insights → Backend applies updates.
 
-!image.png
+![image.png](image%204.png)
 
 ---
 
@@ -531,7 +533,7 @@ Rules priority :
 
 1. Verified User Data
 2. Latest Verified Correction
-3. Higher OCR Confidence
+3. Higher Text identification Confidence
 4. Latest Document Upload
 5. Original Record (if unresolved)
 
@@ -618,7 +620,7 @@ Generated reminders support:
 
 Each AI Timeline progresses through defined lifecycle states.
 
-!image.png
+![image.png](image%205.png)
 
 ### Timeline Version History
 
@@ -645,13 +647,13 @@ The architecture is divided into modular backend services.
 
 ---
 
-## OCR Service
+## Text Extraction Service
 
 Responsibilities
 
 - Upload handling
 - File parsing
-- OCR
+- Text extraction using gemini vision
 - Schema generation
 
 ---
@@ -712,7 +714,7 @@ The AI Timeline is becoming one of the flagship features of PetOLife. It deserve
 
 I think the frontend should feel like an **AI workspace**, not an OCR utility.
 
-AiTimeline_wireframe 
+[AiTimeline_wireframe](https://app.notion.com/p/AiTimeline_wireframe-80fce9e3785d83c6ab2a81b3e20c5455?pvs=21) 
 
 ---
 
@@ -736,13 +738,13 @@ PetOLife’s AI Timeline becomes :
 
 The AI reasons about your pet, while the community provides context about *similar pets*.
 
-Architecture for Community + Ai Insights - CommXai_architecture 
+Architecture for Community + Ai Insights - [CommXai_architecture](https://app.notion.com/p/CommXai_architecture-839ce9e3785d82658fcc018a16b20af1?pvs=21) 
 
 ---
 
 # Ch. 19 - Compare & Analysis
 
-## 1. OCR Architecture
+## 1. Text Extraction Architecture
 
 ### Google File API + Gemini Vision (Rc)
 
@@ -884,7 +886,7 @@ If true : AI Pipeline () ;  Else : Fallback Pipeline () ;  // The frontend doesn
 
 # Fallback Data Sources
 
-Since OCR understanding is unavailable
+Since text extraction understanding is unavailable
 
 We collect → Already Known Pet Information (From Pet Profile)
 
@@ -1027,7 +1029,7 @@ This is a huge architectural advantage.
 
 ---
 
-# Ch. 20 - Think More
+# Ch. 21 - Think More
 
 These topics remain open for future architectural exploration:
 
@@ -1044,18 +1046,18 @@ These topics remain open for future architectural exploration:
 
 ---
 
-# Ch. 21 - Ans to smthg tht sounds Off
+# Ch. 22 - Ans to smthg tht sounds Off
 
 1. Timeline generation should be blocked or clearly marked as limited if fewer than five verified medical visits are available.
 2. Reminder generation should remain primarily rule-based; AI should only assist where deterministic rules are insufficient.
 3. Mutation logic must remain entirely deterministic. AI should never directly write to the timeline database.
 4. Every AI-generated suggestion must include a disclaimer that it is informational and not a substitute for veterinary advice.
-5. Entire OCR output must be verified before any AI reasoning to avoid propagating extraction errors.
-6. POL Bot Analysis should never store prompts or raw OCR text to prevent unnecessary token growth and vendor lock-in.
+5. Entire extracted text output must be verified before any AI reasoning to avoid propagating extraction errors.
+6. POL Bot Analysis should never store prompts or raw extracted text to prevent unnecessary token growth and vendor lock-in.
 
 ---
 
-# Ch. 22 - Divertions from Phase 1 Scope
+# Ch. 23 - Diversions from Phase 1 Scope
 
 Comparing this architecture with the current Phase 1 roadmap:
 
@@ -1067,7 +1069,7 @@ Comparing this architecture with the current Phase 1 roadmap:
 
 ---
 
-# Ch. 23 - Future Architecture & AI Abstraction Layer
+# Ch. 24 - Future Architecture & AI Abstraction Layer
 
 To avoid coupling the system to Gemini, all AI interactions should pass through an internal AI Adapter interface.
 
@@ -1111,14 +1113,14 @@ Future enhancements may include:
 
 ---
 
-# Ch. 24 - Final End-to-End Architecture Summary
+# Ch. 25 - Final End-to-End Architecture Summary
 
 ```
-Data Source
-(Pet Diary / Existing Records)
+           Data Source
+   (Pet Diary / Existing Records)
                 │
                 ▼
-      OCR & Vision Processing
+  Text Extraction & Vision Processing
                 │
                 ▼
    Standardized Medical JSON
@@ -1149,7 +1151,7 @@ Data Source
      Timeline Version Update
                 │
                 ▼
- Hybrid Reminder Engine
+     Hybrid Reminder Engine
  (Rule-Based + AI Assistance)
                 │
                 ▼
@@ -1160,7 +1162,7 @@ Data Source
 
 The Phase 1 AI Timeline is designed around five core principles:
 
-1. **Verified before intelligent** — no AI reasoning occurs until OCR data is reviewed and approved.
+1. **Verified before intelligent** — no AI reasoning occurs until extracted text data is reviewed and approved.
 2. **Medical Event Nodes as the canonical data model** — preserving chronological context for both users and veterinarians.
 3. **Persistent, version-controlled POL Bot Analysis** — storing structured intelligence rather than conversational history.
 4. **Deterministic backend control** — AI proposes insights while backend services govern mutations, conflicts, and timeline integrity.
