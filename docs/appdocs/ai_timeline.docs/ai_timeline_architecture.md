@@ -1,20 +1,22 @@
-# @SAD_v0.6
+# @SAD_v0.5
 
-# PetNoter-Style Medical Timeline — Software Architecture Document (SAD)
+# AI Timeline — Software Architecture Document (SAD)
 
-## Phase 1 Rebuild — Manual-First Foundation, AI as an Optional Layer
+## Phase 1 — Draft 5 (Manual-First, Logic-Driven Core / AI-Optional Overlay)
 
-**Version:** 0.6
-**Status:** Architectural Pivot — Superseded v0.4/v0.5 (2-Call AI-Centric Draft)
-**Previous Version:** 0.4 (2-Call Gemini Architecture)
+**Version:** 0.5
+**Status:** Architectural Design — Major Pivot
+**Previous Version:** 0.4 (2-Call AI-first Architecture)
 
-**Change Summary (v0.4/0.5 → v0.6):**
-This is a full architectural pivot, not an incremental patch, IR. The previous drafts treated Gemini extraction and insight generation as the spine of the product, with a rule-based path only as a *fallback*. That relationship is now inverted:
+**Change Summary (v0.4 → v0.5):**
+This is a foundational architectural pivot, not an incremental change.
 
-- **The core product is now 100% manual, logic-driven, and AI-free.** Pet profile, vet-visit logging, vaccination logging, medication logging, document storage, category-based timeline, and reminder scheduling all work without ever calling an LLM.
-- **AI (Gemini) becomes an additive Phase 2 layer**, bolted on top of the same data model, used only for (a) auto-extracting vet visits from an uploaded pet diary to pre-fill the manual pipeline, and (b) generating AI/community insight notes on top of already-existing medical events.
-- **Medical Event Nodes are now sorted primarily by category**, not strictly by date. Date remains the secondary sort key inside each category.
-- Scope has been trimmed to PetNoter's core medical workflow: pet profile → health record logging → reminders → shareable PDF report. Community insights, rollback-as-a-first-class-endpoint, and heavy AI infra are demoted to explicitly-optional Phase 2/3 add-ons.
+- The product is re-scoped to a **PetNoter-parity medical record app**: pet profiles, manual vet-visit/vaccination/medication logging, a documents vault, a deterministic reminder engine, and shareable PDF reports. This is now **Phase 1 — the entire functional product**, and it ships with **zero AI dependency**.
+- All data entry in Phase 1 is **manual**, via a structured **Vet Visit Form** filled by the human after every appointment. There is no OCR, no extraction, no "diary upload" in Phase 1.
+- The Timeline is now **category-first**, not date-first. Medical Event Nodes are grouped by category (Vet Visit, Vaccination, Medication, Deworming, Anti-tick, Weight, Lab/Test, Surgery, Custom); date ordering happens *within* each category, not across the whole timeline by default.
+- The Reminder Engine and Timeline Engine are pure logic — no Gemini involvement anywhere in Phase 1.
+- Everything AI-related from v0.4 (Gemini Vision extraction, per-node insights, collective insight, AI-interpreted reminders, the 2-call constraint, async task infra, fallback-mode framing) is **not removed** — it is **demoted to Phase 2**, an optional overlay bolted on top of the Phase 1 foundation. Phase 2 reuses the 2-call design from v0.4 almost unchanged, but re-framed: AI now *feeds into* the same manual form and the same medical_events table, instead of being a parallel pipeline with its own fallback story.
+- Because Phase 1 has no AI, there is no more "fallback mode" concept — Phase 1 *is* the baseline experience. Phase 2 simply adds an assistive layer on top when Gemini is configured and available.
 
 ---
 
@@ -22,245 +24,311 @@ This is a full architectural pivot, not an incremental patch, IR. The previous d
 
 ## Vision
 
-The Medical Timeline is the health-record backbone of the app. Its job, in the simplest possible terms, is this:
+The AI Timeline (internally still named for continuity) is PetOLife's medical record system. Its job, in order of priority, is to be a **complete, dependable, manual medical log first**, and an **AI-assisted convenience layer second**.
 
-> Enter a medical event → save it against the pet's profile → attach documents if any → schedule the right reminder → notify the owner → export a clean history when visiting the vet.
+A pet owner should be able to use the entire product — profile, visit logging, vaccination tracking, medication tracking, documents, reminders, PDF export — without ever touching an AI feature, without an API key configured, and without any degradation in reliability.
 
-That loop is the entire product. Everything else (AI extraction, AI insights, community layer) is decoration added *on top* of that loop later — never a prerequisite for it.
+## Goals — Phase 1 (Core, No AI)
 
-## Goals (Phase 1 — Manual Core)
+- A structured, per-pet medical record built entirely from human-entered data
+- A category-first timeline (Vaccinations, Medications, Vet Visits, Deworming/Anti-tick, Weight, Documents, Custom)
+- A deterministic reminder engine that never depends on an external service
+- A documents vault for certificates, reports, and lab results
+- A shareable PDF summary for vets, boarding facilities, or a new clinic
 
-- A pet profile that holds identity data and owns a completely separate medical history per pet.
-- A structured form-based entry point for every medical event type: vet visit, vaccination, medication, deworming/anti-tick, and general health note.
-- A category-first medical timeline (not a strictly chronological feed).
-- A document vault for certificates, lab reports, and health passports.
-- A fully rule-based reminder engine — no AI dependency at all.
-- A vet-ready PDF export.
+## Goals — Phase 2 (Optional AI Overlay)
 
-## Goals (Phase 2 — AI Layer, Optional)
+- Auto-extract vet visits from an uploaded Pet Diary (PDF/images) and pre-fill the *same* manual form for human confirmation — extraction never bypasses verification
+- Add AI-generated (and, later, community-informed) insight notes to individual medical events and to the pet's overall history
+- AI-interpreted reminders (e.g. an implied follow-up in doctor's notes) layered on top of the rule-based reminders — never replacing them
 
-- Auto-extract vet visits from an uploaded pet diary (PDF/images) using the Gemini API, pre-filling the same manual form fields for human confirmation.
-- Generate AI (and later, AI + community) insight notes attached to existing medical events — never replacing the human-entered data, only annotating it.
+## Non-Goals (both phases)
 
-## Non-Goals (Both Phases)
+- Diagnose diseases
+- Prescribe medicines
+- Replace veterinarians
+- Perform predictive healthcare or risk scoring
 
-- Diagnosing disease, prescribing medication, or replacing a veterinarian.
-- Predictive health analytics or risk scoring.
-- Making AI a required step anywhere in the core flow. If Gemini is disabled, deleted, or never configured, the app must work exactly the same — same forms, same timeline, same reminders, same PDF.
-
----
-
-# Ch. 2 — High-Level Architecture
-
-## Architectural Principles
-
-- **Manual-first, functional-first** — the entire medical workflow is built and fully usable with zero AI involvement.
-- **Human is the primary data source** — a vet-visit form filled by the owner is trusted data, not a "verification pending" AI output. It is saved as `verified` the moment it's submitted.
-- **Category as the primary organizing axis** — medical nodes are grouped and sorted by category first (vaccination, medication, vet visit, deworming/anti-tick, document, general note), and by date only within a category.
-- **Deterministic engines own the product** — the Timeline Engine and the Reminder Engine are pure logic: no LLM call anywhere in their execution path.
-- **AI is additive, never load-bearing** — Gemini extraction and Gemini insights write into the *same* tables a human would write into. Nothing downstream (timeline, reminders, PDF export) needs to know or care whether a row came from a form or from an AI extraction.
-- **Single unified schema** — `medical_events` has one shape for both manually-entered and AI-extracted rows, distinguished only by an `entry_source` field.
-- **Modular services** — Timeline Engine, Reminder Engine, Document Vault, and PDF Export Engine are independently replaceable and have no dependency on the AI adapter.
+Any AI output, wherever it appears, is informational only and must carry a medical disclaimer.
 
 ---
 
-# Ch. 3 — Functional Scope
+# Ch. 2 — Architectural Principles
 
-## Phase 1 — Manual Core (no AI, ships first)
-
-**M1 — Pet Profile**
-Name, species, breed, date of birth, sex, weight baseline. Each pet owns a fully isolated medical history.
-
-**M2 — Manual Entry Forms**
-One structured form per event category: Vet Visit, Vaccination, Medication, Deworming/Anti-tick, General Health Note. Each form maps directly onto the unified `medical_events` schema.
-
-**M3 — Medical Event Node Builder**
-Converts a submitted form directly into a `medical_events` row. No extraction step, no confidence scoring, no verification gate — the row is created as `verification_status = 'verified'` on submission because a human authored it.
-
-**M4 — Category-Based Timeline Engine**
-Groups Medical Event Nodes by `category`, sorted by date (descending) within each category. A secondary "All Events (chronological)" view remains available for users who want the classic date-ordered feed.
-
-**M5 — Reminder Engine (Rule-Based)**
-Generates every reminder deterministically from form data: vaccination boosters, deworming cycles, anti-tick schedules, medication end-dates, and explicit follow-up dates.
-
-**M6 — Document Vault**
-Stores certificates, lab reports, and health passports, attached to a specific medical event or to the pet profile generally.
-
-**M7 — PDF Export Engine**
-Produces a vet-ready summary PDF from selected (or all) medical events, grouped by category.
-
-## Phase 2 — AI Layer (optional, additive)
-
-**M8 — Gemini Unified Extraction (Call 1)**
-Given an uploaded pet diary, produces a set of *candidate* medical events — pre-filled versions of the same manual form, routed through the normal human-verification screen before they become real `medical_events` rows.
-
-**M9 — AI / Community Insight Layer (Call 2)**
-Given existing (already-verified) medical events, generates a human-readable insight note per node, a collective summary across the pet's history, and optionally cross-references anonymized community data. Purely additive — deleting all insight rows changes nothing about the timeline or reminders.
+- **Functional before intelligent** — the product must be 100% usable, valuable, and complete with AI turned off
+- **Human-entered is first-class, not a fallback** — manual data is the primary data source, not a degraded backup path
+- **Category-first data organisation** — the timeline's default grouping is category, not chronology; chronology is a secondary view
+- **Deterministic core** — the Timeline Engine and Reminder Engine are pure logic, testable without mocking any external API
+- **AI is additive, never load-bearing** — when Phase 2 is enabled, AI proposes data (extraction) or commentary (insights); it never becomes the only path to a working feature
+- **One data model, two entry paths** — manually entered and AI-extracted medical events live in the same table with the same shape; only a `source` flag differs
+- **AI abstraction layer** — when present, all Gemini calls pass through a provider-agnostic adapter (kept from v0.4, unchanged in spirit)
+- **Modular services** — each engine (timeline, reminders, documents, PDF export, extraction, insights) is independently replaceable
 
 ---
 
-# Ch. 4 — Manual Data Acquisition Layer (The Core of Phase 1)
+# Ch. 3 — Functional Scope (Phase 1 — What Actually Ships First)
 
-This is the actual foundation of the product, IR — everything else sits on top of it.
+Phase 1 is scoped directly against PetNoter's medical-only workflow: pet profiles, health record logging, reminders, and shareable reports.
 
-## Vet Visit Form
+| Module | Purpose |
+|---|---|
+| **F1 — Pet Profile** | Name, species, breed, date of birth, health conditions. Each pet has its own isolated medical space. |
+| **F2 — Manual Vet Visit Form** | The single data-entry surface for every medical event: vet visit, vaccination, medication, deworming, anti-tick, weight, lab test, surgery, or custom note. |
+| **F3 — Documents Vault** | Upload and store certificates, vet reports, lab results, health passports, invoices — attached to a pet or to a specific event. |
+| **F4 — Category Timeline Engine** | Groups Medical Event Nodes by category (not date) as the default view; chronological "all events" view available as a toggle. |
+| **F5 — Reminder Engine (Rule-Based)** | Deterministic scheduling: vaccination boosters, deworming, anti-tick, medication end-dates, explicit follow-up dates. Push/notification-ready. |
+| **F6 — PDF Export** | Generates a shareable, vet-ready summary from selected medical records. |
 
-The primary entry point. Fields:
-
-| Field | Type | Notes |
-|---|---|---|
-| `visit_date` | date | required |
-| `clinic_name` | text | optional |
-| `doctor_name` | text | optional |
-| `reason_for_visit` | text | required |
-| `diagnosis` | text / list | optional, free text or tag list |
-| `treatment_plan` | text | optional |
-| `tests_done` | text / list | optional |
-| `prescriptions` | list of {name, dosage, frequency, duration} | optional |
-| `weight_at_visit` | number (kg) | optional |
-| `follow_up_date` | date | optional |
-| `doctor_notes` | text | optional |
-| `attachments` | file[] | optional — routes to Document Vault |
-
-## Vaccination Form
-
-| Field | Type | Notes |
-|---|---|---|
-| `vaccine_name` | text (DHPP, Rabies, Bordetella, FVRCP, FeLV, custom) | required |
-| `date_given` | date | required |
-| `dose` | text | optional |
-| `vet_details` | text | optional |
-| `next_due_date` | date | auto-suggested from a booster interval table, editable |
-| `recurrence` | enum (weekly / monthly / yearly / custom) | drives the reminder |
-
-## Medication Form
-
-| Field | Type | Notes |
-|---|---|---|
-| `medication_name` | text | required |
-| `dosage` | text | required |
-| `frequency` | text | required |
-| `start_date` | date | required |
-| `end_date` | date | optional — drives the medication-end reminder |
-| `linked_visit_id` | uuid (optional FK) | links back to the originating vet visit, if any |
-
-## Deworming / Anti-tick Form
-
-| Field | Type | Notes |
-|---|---|---|
-| `treatment_type` | enum (deworming / anti_tick) | required |
-| `date_given` | date | required |
-| `next_due_date` | date | auto-suggested (deworming = +90 days by default), editable |
-
-## General Health Note
-
-Free-form entry for anything that doesn't fit the above — allergy info, spay/neuter record, ad-hoc weight log, custom note. Still becomes a first-class `medical_events` row with `category = 'general_note'`.
-
-**Design intent:** every one of these forms is a thin UI shell over the exact same backend contract. There is no "AI schema" and a separate "manual schema" — there's one schema, and the manual forms simply populate it directly, synchronously, with no background job in between.
+Everything else — Gemini extraction, AI insights, community insights — is **Phase 2** and is described starting at Ch. 11. None of it is required for F1–F6 to work.
 
 ---
 
-# Ch. 5 — Medical Event Node Architecture (Unified)
+# Ch. 4 — Category-First Data Model
 
-Every Medical Event Node — whether typed in by a human or later extracted by Gemini in Phase 2 — is the canonical unit of the timeline. It stores:
+## Why category-first
 
-- All structured fields for its category (see Ch. 4 tables)
-- `category` — the primary sort/group key: `vaccination | medication | vet_visit | deworming | anti_tick | document | general_note`
-- `entry_source` — `manual | ai_extracted`
-- `event_hash` (SHA-256) — still used for duplicate detection, computed the same way regardless of source
-- `verification_status` — `manual` rows are created as `verified` immediately; `ai_extracted` rows (Phase 2 only) start as `pending` until a human confirms them, at which point they become indistinguishable from a manually-entered row
-- `confidence` — `null`/`1.0` for manual rows (there is nothing to have low confidence about — a human typed it); per-field confidence scores only exist for `ai_extracted` rows pre-confirmation
+The previous design treated the Medical Event Node as a chronological unit first, with category views generated at read time as a secondary index. That is now inverted: **category is the primary lens** a pet owner uses ("show me all vaccinations", "show me current medications"), and date ordering happens inside that lens.
 
-Nodes are editable. An edit updates the row directly (no forced immutable versioning chain for the manual core — see Ch. 10 for what's kept from the old versioning model and what's simplified away).
-
----
-
-# Ch. 6 — Category-Based Timeline Engine
-
-## Why Category-First
-
-Chronological-only feeds are good for "what happened recently" but bad for "what's this pet's vaccination history" or "what medications has this pet been on." A category-first view answers the second question directly, which is what an owner or a new vet actually needs when reviewing a pet's file.
-
-## Sorting Logic
+## Categories
 
 ```
-1. Group all verified medical_events by category:
-     vaccination, medication, vet_visit, deworming, anti_tick, document, general_note
-2. Within each category group, sort by event date, descending (most recent first)
-3. Categories are displayed in a fixed, sensible order:
-     vet_visit → vaccination → medication → deworming/anti_tick → document → general_note
-4. A secondary "All Events" view is still available:
-     flattens all categories into one list, sorted purely by date, descending
+vet_visit     — general appointment: diagnosis, treatment plan, follow-up
+vaccination   — vaccine name, dose, next due date
+medication    — drug name, dosage, frequency, start/end
+deworming     — product, date, next due
+anti_tick     — product, date, next due
+weight        — weight value + unit, for trend tracking
+lab_test      — test type, result summary, report upload
+surgery       — procedure name, surgeon/clinic, recovery notes
+custom        — free-form title + notes for anything uncategorised
 ```
 
-This is pure backend query logic (grouped index + filter), not a separate storage structure — `medical_events(pet_id, category, event_date)` is simply indexed for both access patterns.
+## The Medical Event Node
 
-## Category View vs. Chronological View
+Every submission of the Vet Visit Form creates one Medical Event Node. It stores:
 
-| View | Primary sort | Use case |
-|---|---|---|
-| Category view (default) | category, then date | "Show me every vaccination this pet has had" |
-| Chronological view (secondary) | date only | "What happened to this pet in the last 6 months" |
+- `category` — the single category this node belongs to (drives which fields were shown/required in the form)
+- `visit_group_id` — an optional shared identifier linking multiple nodes created from the *same physical appointment* (e.g. a visit where the vet gave a vaccination **and** started a medication produces two nodes, both tagged with the same `visit_group_id`, so the UI can still show "everything from the March 4th visit" when needed)
+- All category-relevant structured fields (see Ch. 5)
+- `source` — `manual` or `ai_extracted` (Phase 2 only)
+- `verification_status` — `verified` (manual entries are verified on save) or `pending`/`rejected` (AI-extracted entries awaiting human confirmation, Phase 2 only)
+- `event_hash` — for duplicate detection
+- `created_at` / `updated_at`
+
+Manual entries are **directly editable** — Phase 1 does not need an immutable append-only versioning system, because there is no untrusted AI writer to guard against. A lightweight `edit_history` audit table (Ch. 8) is enough to answer "what changed and when," without the complexity of timeline version pointers and rollback endpoints. That machinery returns in Phase 2, scoped specifically to AI-originated data (Ch. 13).
 
 ---
 
-# Ch. 7 — Reminder Engine (Rule-Based, Always-On)
+# Ch. 5 — Manual Vet Visit Form (Core Phase 1 Deliverable)
 
-The Reminder Engine in Phase 1 has **no AI involvement whatsoever.** It runs synchronously the moment a form is submitted — there is no async task, no background worker, because there's no external API call to wait on.
+This is the single most important screen in Phase 1. It replaces AI extraction entirely as the way data enters the system.
+
+## Design principle: progressive disclosure by category
+
+The form is one screen, not a wizard. It always shows a **Category selector** at the top. Selecting a category reveals only the fields relevant to that category. This avoids presenting one giant form with mostly-irrelevant fields.
+
+## Fields shown for every category (common block)
+
+| Field | Type | Required |
+|---|---|---|
+| Event Date | date picker, defaults to today | Yes |
+| Clinic / Vet Name | text | No |
+| Attachments | file upload (image/PDF) | No |
+| Notes | free text | No |
+
+## Category-specific fields
+
+**Vet Visit / Diagnosis**
+- Reason for visit (required)
+- Diagnosis (tag input, multiple values)
+- Treatment plan (text)
+- Follow-up date (optional — feeds the reminder engine directly, no AI interpretation needed)
+- Treatment status (Ongoing / Completed)
+
+**Vaccination**
+- Vaccine name (autocomplete: Rabies, DHPP, Bordetella, FVRCP, FeLV, Custom)
+- Dose / batch number (optional)
+- Next due date — **auto-suggested** by the rule engine from the vaccine type's booster interval, editable by the user
+
+**Medication**
+- Medication name (required)
+- Dosage (required)
+- Frequency (dropdown: once daily, twice daily, custom)
+- Start date (required) + Duration (days) — auto-computes an end date, which feeds the `medication_end` reminder
+- Linked diagnosis (optional)
+
+**Deworming / Anti-tick**
+- Product name (required)
+- Date given (required)
+- Next due date — auto-suggested (default +90 days for deworming; editable), following the same pattern as vaccination
+
+**Weight**
+- Weight value + unit (kg/lb) — plotted automatically on a weight-trend view
+
+**Lab Test / Report**
+- Test type
+- Result summary
+- Report upload (encouraged, not strictly required)
+
+**Surgery / Procedure**
+- Procedure name
+- Surgeon / clinic
+- Recovery notes
+- Follow-up date
+
+**Custom / Other**
+- Free-form title + notes — the safety valve for anything that doesn't fit a defined category, so nothing is ever blocked from being logged
+
+## Multi-category visits
+
+A single real appointment often spans more than one category (e.g. an annual checkup that also includes a booster shot). The form supports **"Add another entry for this visit"**, which:
+1. Keeps the just-entered Date and Clinic pre-filled
+2. Lets the user pick a new category and fill only that category's fields
+3. Tags the new node with the same `visit_group_id` as the first
+
+This keeps category as the atomic sorting/storage unit while still letting the UI reconstruct "everything that happened on this visit" on demand.
+
+## How it's showcased
+
+- **Entry point:** a prominent "+ Log a Visit" action from the pet's profile screen
+- **Category chips** at the top of the form (icon + label), single-select, drives field visibility
+- **Inline auto-suggestions** for due dates (vaccination/deworming/anti-tick) shown as an editable pre-filled value, not a locked field — the user can always override the rule engine's suggestion
+- **Confirmation toast** on save: "Added to [Category] · Next reminder: [date]" — ties the form directly to the reminder it just created, reinforcing that reminders come from data the user just entered, not a black box
+
+---
+
+# Ch. 6 — Category Timeline Engine
+
+**Purpose:** Transform Medical Event Nodes into the views the user actually browses.
+
+## Default view — Category Grouped
+
+```
+Vet Visits        [newest → oldest]
+Vaccinations      [newest → oldest]
+Medications       [newest → oldest]
+Deworming / Anti-tick   [newest → oldest]
+Weight            [chart + list, newest → oldest]
+Lab Tests         [newest → oldest]
+Surgery           [newest → oldest]
+Custom            [newest → oldest]
+```
+
+Each category is its own scrollable/tabbed section. Within a category, sorting is strictly by `event_date` descending. This is the default landing view.
+
+## Secondary view — All (Chronological)
+
+A toggle merges every category into one date-sorted feed, for users who want a single narrative view or are preparing for a vet visit and want "everything in order." This is the *old* default view from v0.4 — it still exists, it's just no longer the primary one.
+
+## Implementation note
+
+Category grouping is a **read-time query**, not a separate storage structure — `SELECT ... WHERE pet_id = ? AND category = ? ORDER BY event_date DESC`, backed by a composite index on `(pet_id, category, event_date DESC)`. No duplication of data between views.
+
+---
+
+# Ch. 7 — Reminder Engine (Rule-Based, Phase 1)
+
+## Architecture
+
+Pure logic. No AI call of any kind is involved in Phase 1.
 
 ```python
-# reminder_engine.py — Phase 1 (manual-only)
+# app/timeline/services/reminder_engine.py
 
-REMINDER_RULES = {
-    "vaccination":  lambda event: event.next_due_date or (event.date_given + recurrence_offset(event.recurrence)),
-    "deworming":    lambda event: event.next_due_date or (event.date_given + timedelta(days=90)),
-    "anti_tick":    lambda event: event.next_due_date,
-    "medication":   lambda event: event.end_date,          # "medication ending" reminder
-    "vet_visit":    lambda event: event.follow_up_date,     # only if the user entered one
+RULE_ENGINE_OWNS = [
+    "vaccination",      # from vaccine type's booster interval (e.g. Rabies +365d)
+    "deworming",         # +90 days from date given
+    "anti_tick",         # per product schedule
+    "medication_end",    # start_date + duration
+    "follow_up",         # explicit follow_up_date entered in the form
+]
+```
+
+Because the Phase 1 form always captures an explicit date for anything reminder-worthy (booster interval, medication duration, or an explicit follow-up date field), there is no need for AI interpretation of ambiguous notes in Phase 1 — that class of problem (implied, undated follow-ups buried in doctor's notes) only exists once free-text diary extraction is introduced in Phase 2, which is exactly where `AI_REMINDER_INTERPRETS` (Ch. 14) picks up.
+
+## Reminder Object Schema
+
+```
+Reminder {
+  id UUID,
+  pet_id UUID,
+  source_event_id UUID,
+  type TEXT,               -- vaccination | deworming | anti_tick | medication_end | follow_up
+  title TEXT,
+  due_date DATE,
+  frequency TEXT,
+  priority TEXT,            -- high | medium | low
+  status TEXT,               -- pending | completed | missed
+  is_ai_generated BOOLEAN,   -- always false in Phase 1
+  created_at TIMESTAMPTZ
 }
 ```
 
-- Every reminder is generated the instant its source form is saved.
-- Priority: **High** = missed follow-up / medication ending soon, **Medium** = vaccination due, **Low** = routine/weight monitoring.
-- Calendar views: daily, weekly, monthly, yearly — same as before, unchanged.
-- `is_ai_generated` remains a column on `reminders` for forward-compatibility with Phase 2, but in Phase 1 it is always `false`.
+## Priority
+
+- **High:** missed follow-up, medication ending with an active condition
+- **Medium:** vaccination/deworming/anti-tick due
+- **Low:** routine weight check-in
+
+## Notification & Calendar
+
+Push notification when a due date approaches (configurable lead time). Calendar views: Daily, Weekly, Monthly, Quarterly, Yearly — unchanged from v0.4.
 
 ---
 
-# Ch. 8 — Document Vault
+# Ch. 8 — Documents Vault & Edit History
 
-Certificates, lab reports, health passports, and vet-visit attachments are stored in object storage and linked either to a specific `medical_events` row (via `source_event_id`) or generally to the pet profile. No processing happens on upload in Phase 1 — files are stored as-is and surfaced in the UI next to the event they belong to.
+## Documents Vault
 
----
+Any category can carry an attachment (vaccination certificate, lab report, invoice, health passport scan). Documents can be attached to a specific Medical Event Node or to the pet profile directly (e.g. a general health passport not tied to one visit).
 
-# Ch. 9 — PDF Export Engine
+## Edit History (replaces v0.4's immutable versioning for Phase 1 data)
 
-Generates a shareable summary for a new vet, boarding facility, or specialist. The export:
-
-- Groups events by category (matching the in-app category-first view)
-- Includes vaccination history, medication history, vet-visit notes, and any attached documents
-- Is generated entirely from `medical_events` + `documents` — no AI involvement, no dependency on `medical_event_insights` (those, if present, are optionally appended as a supplementary "AI Notes" section, clearly labeled as informational)
+Manual entries are directly editable. Every update to a `medical_events` row writes one row to `edit_history` (previous value snapshot, changed fields, timestamp, `changed_by = 'user'`). This gives an audit trail without the overhead of timeline version pointers, which Phase 1 does not need since there's no untrusted writer to protect against.
 
 ---
 
-# Ch. 10 — Versioning, Kept Simple
+# Ch. 9 — PDF Export
 
-The old draft's heavy immutable timeline-version-per-upload model existed because AI extraction needed a clear "what changed on this run" boundary. That boundary mostly disappears once entry is manual and synchronous. What's kept:
-
-- Every edit to a `medical_events` row is logged in an `event_edit_history` table (previous value, new value, timestamp) — enough for an audit trail without a full parallel version-number system.
-- `timeline_versions` and a dedicated `/rollback` endpoint are **demoted to Phase 2/3** — they become genuinely useful once AI-driven batch changes (Call 1 re-extraction) can affect many rows at once. For the manual core, a simple edit history is sufficient and much cheaper to build.
+Generates a shareable, vet-ready PDF from selected Medical Event Nodes — either a full history, a single category (e.g. "vaccination record only"), or a date range. Pure backend rendering; no AI involvement. Useful for boarding facilities, new vets, or travel documentation.
 
 ---
 
-# Ch. 11 — Phase 2: Gemini Unified Extraction Layer (Call 1)
+# Ch. 10 — Duplicate Detection (Simplified for Manual Entry)
 
-This is additive on top of Ch. 4–6, not a replacement. Nothing here is required for the app to function.
+Because data is human-entered and verified at the point of entry, duplicate risk is lower than in the old AI-extraction pipeline, but accidental double-submission still happens (e.g. resubmitting a form after a slow network response).
 
-**Trigger:** user uploads a Pet Diary (PDF/images) and opts into AI extraction.
+```
+event_hash = SHA256(pet_id + category + event_date + primary_field)
+```
 
-**What it does:** one Gemini call performs OCR + visit segmentation + structuring in a single pass, producing candidate events in the **same shape** as the manual forms in Ch. 4, with `category` auto-assigned and `entry_source = 'ai_extracted'`.
+Where `primary_field` is category-dependent (vaccine name for vaccination, medication name for medication, etc.). If an identical hash exists for the same pet within the same day, the UI warns "This looks like a duplicate of an entry from today — save anyway?" rather than silently blocking. The heavier near-duplicate scoring system from v0.4 (multi-field similarity thresholds) is deferred to Phase 2, where it becomes genuinely necessary again because AI-extracted diary entries are not human-typed and carry real ambiguity.
 
-**Output — `ExtractionBundle` JSON** (unchanged from the earlier draft, still per-field confidence, still `ocr_raw_text` preserved, still `source_page_range` for traceability):
+---
+
+# Ch. 11 — Phase 2 Overview: The AI-Optional Overlay
+
+Everything below this point is **optional**. It requires a configured Gemini API key and is entirely absent from the Phase 1 product experience if that key is not set — there is no "fallback mode" messaging needed, because Phase 1 is not a fallback, it's the product.
+
+Phase 2 adds exactly two capabilities, both reusing the 2-call design already proven out in v0.4:
+
+**(a) Diary Auto-Extraction (Call 1)** — upload a Pet Diary (PDF/images spanning multiple past visits) and have Gemini pre-fill the *same* Manual Vet Visit Form for each detected visit, instead of typing them all by hand. The user still reviews and confirms every field before anything is saved — extraction never writes directly to the medical record.
+
+**(b) AI & Community Insight Notes (Call 2)** — once events exist (manually entered or AI-extracted, it doesn't matter which), Gemini can generate a plain-language summary and suggested-actions note for each event, plus one overall summary for the pet, plus AI-interpreted reminders for the class of due-dates a form can't capture (implied follow-ups in free text). Community-sourced context is a further layer on top of this, described in Ch. 16.
+
+---
+
+# Ch. 12 — Call 1: Unified Diary Extraction (Phase 2)
+
+## Core constraint (unchanged from v0.4)
+
+> One diary upload = exactly one Gemini call, regardless of how many visits it contains.
+
+**Input:** Raw file via Gemini File API URI.
+
+**What Gemini does in one shot:** vision understanding of the whole document, visit segmentation, and structured JSON output per visit — including a **category classification per sub-entry**, so extraction output maps directly onto the Phase 1 category model instead of a separate schema.
+
+**Output — `ExtractionBundle` JSON** (per visit, may fan out into multiple category-tagged draft nodes sharing a `visit_group_id`, exactly like a multi-category manual entry):
 
 ```json
 {
@@ -269,118 +337,179 @@ This is additive on top of Ch. 4–6, not a replacement. Nothing here is require
     "confidence_overall": 0.91,
     "document_quality": "good"
   },
-  "medical_events": [
+  "draft_events": [
     {
-      "category": "vet_visit",
-      "entry_source": "ai_extracted",
+      "visit_group_id": "generated-uuid",
+      "category": "vaccination",
       "source_page_range": [1, 2],
       "ocr_raw_text": "...",
-      "visit": { "date": "", "doctor": "", "clinic": "", "reason": "" },
-      "diagnosis": [],
-      "medications": [],
-      "vaccinations": [],
-      "confidence": { "date": 0.95, "diagnosis": 0.88 },
+      "event_date": "",
+      "clinic": "",
+      "doctor": "",
+      "fields": { "vaccine_name": "", "dose": "", "next_due_date": "" },
+      "confidence": { "event_date": 0.95, "vaccine_name": 0.9 },
       "misc": []
     }
   ]
 }
 ```
 
-**Critical design point:** the extraction output lands the user on the **exact same verification screen used for manual editing** — it's the vet-visit / vaccination / medication forms from Ch. 4, just pre-filled. Confirming one is functionally identical to typing it in by hand: the row becomes `verification_status = 'verified'`, `entry_source` stays `'ai_extracted'` for provenance, and it now behaves identically to a manual row everywhere downstream (timeline, reminders, PDF export).
+## Where the draft lands
+
+Each `draft_events[]` entry is inserted as a `medical_events` row with `source = 'ai_extracted'`, `verification_status = 'pending'`. **It renders inside the exact same Vet Visit Form UI used for manual entry** — pre-filled instead of blank, with low-confidence fields (`confidence < 0.75`) highlighted for mandatory review. The user edits or confirms, and on save the row flips to `verification_status = 'verified'`. From that point on it is indistinguishable from a manually entered node except for the `source` flag — same table, same category engine, same reminder engine, same edit history.
+
+**Async processing:** Call 1 runs as a background task; the endpoint returns `202 Accepted` immediately and the frontend is notified when extraction completes.
 
 ---
 
-# Ch. 12 — Phase 2: AI + Community Insight Layer (Call 2)
+# Ch. 13 — Call 2: Unified Intelligence (Phase 2)
 
-Also additive. Given a set of already-verified medical events (manual or AI-extracted, no distinction at this point), one Gemini call produces:
+## Core constraint (unchanged from v0.4)
 
-- A per-node insight (human summary, "what happened," suggested actions, mandatory medical disclaimer) — stored in `medical_event_insights`, keyed by `event_id`
-- A collective summary across the pet's whole history — stored in `pol_analyses`
-- Optionally, anonymized community cross-referencing (Ch. 21 of the earlier draft) — explicitly Phase 3, not required for Phase 2 to ship
+> One insight generation run = exactly one Gemini call for the whole pet, regardless of event count.
 
-None of this can mutate `medical_events`, the timeline grouping, or the reminder set. It is read-only annotation layered on top.
+**Input:** All verified `medical_events` rows for the pet (manual and AI-extracted alike — the engine does not distinguish).
 
----
+**What Gemini does in one shot:** per-node insights for every verified event, one collective insight for the pet's whole history, and AI-interpreted reminders for the small set of cases a structured form cannot capture.
 
-# Ch. 13 — Unified Data Model Compatibility
+**Output — `IntelligenceBundle` JSON:** unchanged in shape from v0.4 (`node_insights[]`, `collective_insight`, `reminder_note.identified_reminders[]`) — see v0.4 Ch. 5 for the full schema; it is reused as-is here.
 
-The single most important invariant carried through this pivot:
+## Storage
 
-> `medical_events` has exactly one schema. A row created by a human filling in the Vet Visit form and a row created by Gemini Call 1 and then confirmed by a human are structurally identical, except for `entry_source`.
+- `node_insights[]` → `medical_event_insights` table (new in Phase 2), keyed by `event_id`
+- `collective_insight` → structured columns in `pol_analyses` (new in Phase 2)
+- `reminder_note.identified_reminders[]` → `reminders` rows with `is_ai_generated = true`
 
-This is what makes AI a true "layer" rather than a parallel system: the Timeline Engine, Reminder Engine, and PDF Export Engine never need an `if ai_extracted` branch anywhere in their logic.
-
----
-
-# Ch. 14 — Security & Privacy (Brief)
-
-- Row-Level Security (RLS) scoped to `pet_id` → `user_id` ownership on every medical table.
-- Document Vault files stored in a private bucket, signed URLs only.
-- Phase 3 community anonymization (one-way hash `anonymous_pet_id`, PII stripped) carried over unchanged from the earlier draft, but deferred until Phase 3.
+This is the only place AI writes anything reminder-shaped; it is strictly additive to the Phase 1 rule-based reminders, never a replacement.
 
 ---
 
-# Ch. 15 — Architecture Invariants
+# Ch. 14 — Reminder Boundary (Rule Engine vs AI, Phase 2)
 
-1. The app is fully functional — profile, forms, category timeline, reminders, PDF export — with the Gemini adapter never configured or entirely absent.
-2. Manual form submissions are saved as `verified` synchronously. There is no pending/verification gate for human-authored data.
-3. `medical_events.category` is the primary sort key everywhere the timeline is rendered by default; date is always the secondary key.
-4. AI-extracted rows only become real, reminder-generating, PDF-exportable data after passing through the same human confirmation screen used for manual entry.
-5. `medical_event_insights` and `pol_analyses` are strictly additive read-layers; deleting every row in both tables must not change the timeline, the reminders, or the PDF export in any way.
-6. The Reminder Engine's rule-based rules (Ch. 7) run identically regardless of whether AI is enabled for that pet.
+```python
+RULE_ENGINE_OWNS = [
+    "vaccination", "deworming", "anti_tick", "medication_end", "follow_up",
+]  # unchanged from Phase 1 — always active, AI or no AI
 
----
-
-# Ch. 16 — End-to-End Flow, Phase 1 (Manual Core)
-
-```
-User fills Vet Visit / Vaccination / Medication / Deworming form
-        │
-        ▼
-Medical Event Node Builder
-  → Insert medical_events row (category set, entry_source='manual',
-     verification_status='verified')
-        │
-        ▼
-Reminder Engine (synchronous, rule-based)
-  → Insert reminders row(s) tied to source_event_id
-        │
-        ▼
-Category-Based Timeline Engine
-  → Groups & serves events by category, date-desc within category
-        │
-        ▼
-Document Vault (if attachments present)
-        │
-        ▼
-PDF Export Engine (on demand)
-  → Vet-ready summary, grouped by category
+AI_REMINDER_INTERPRETS = [
+    "monitoring",    # doctor's note implies weight/condition monitoring, no explicit date
+    "conditional",   # "review if symptoms persist" style notes
+]  # only reachable through Call 2 output, only relevant to AI-extracted diary text
 ```
 
----
-
-# Ch. 17 — End-to-End Flow, Phase 2 (AI-Augmented, Optional)
-
-```
-User uploads Pet Diary (opt-in AI extraction)
-        │
-        ▼
-[GEMINI CALL 1] Unified Extraction
-  → Candidate medical_events (entry_source='ai_extracted', verification_status='pending')
-        │
-        ▼
-Human Verification Screen (same UI as manual forms, pre-filled)
-  → User edits/confirms → verification_status='verified'
-  → Row now behaves identically to a manual row
-        │
-        ▼
-[Same Phase 1 pipeline runs unchanged from here]
-Reminder Engine → Category Timeline → PDF Export
-        │
-        ▼
-[GEMINI CALL 2] Unified Intelligence (optional, on demand)
-  → medical_event_insights (per event) + pol_analyses (collective)
-  → Purely additive annotation layer, never mutates core data
-```
+`follow_up` moved fully into `RULE_ENGINE_OWNS` in Phase 1 because the manual form always asks for an explicit follow-up date — there is no ambiguity left for AI to resolve there. Only `monitoring` and `conditional` remain genuinely AI-only, because they only arise from free-text doctor's notes inside an uploaded diary, which the manual form doesn't produce.
 
 ---
+
+# Ch. 15 — Behaviour When AI Is Off or Unavailable
+
+There is no special "fallback pipeline" to design in Phase 2, because Phase 1 never assumed AI in the first place. If no Gemini key is configured, or Gemini is down:
+
+- The Manual Vet Visit Form, Category Timeline, Reminder Engine, Documents Vault, and PDF Export all work exactly as normal — nothing about them depends on AI.
+- The "Upload a Pet Diary" entry point is simply hidden or shown as disabled with an explanatory tooltip.
+- Existing `node_insights` / `collective_insight` content (if previously generated) remains visible and readable; it just stops updating until AI is available again.
+
+This is a strictly simpler story than v0.4's fallback design, because there is nothing to fail over *to* — the baseline already is the fully-functional product.
+
+---
+
+# Ch. 16 — Community-Powered Insights (Phase 3, Deferred)
+
+Unchanged in concept from v0.4 Ch. 21: Medical Records → AI → Community Knowledge → Personalised Insights, with one-way hashed `anonymous_pet_id`, PII stripped, and a minimum cohort size before any community data is surfaced. This remains out of scope until Phase 1 and Phase 2 are both stable in production.
+
+---
+
+# Ch. 17 — AI Abstraction Layer (Phase 2)
+
+Unchanged from v0.4 Ch. 23. All Gemini interactions pass through `ai_provider_base.py` → `gemini_adapter.py`, standardising request format, response schema, error handling, token accounting, and future provider switching. Token logging (`ai_token_logs`) is mandatory on every Phase 2 call.
+
+---
+
+# Ch. 18 — Architecture Invariants
+
+1. Phase 1 (F1–F6) has zero runtime dependency on Gemini or any external AI provider. It must pass all tests with the AI adapter entirely absent from the environment.
+2. Manual entries are `verified` on save; AI-extracted entries are `pending` until a human confirms them through the same form used for manual entry.
+3. Category is a required field on every `medical_events` row and is the default grouping key for the timeline; chronological view is secondary.
+4. The rule engine always runs for `RULE_ENGINE_OWNS` types, in both phases, with or without AI configured.
+5. AI never writes directly to `medical_events`, `reminders`, or any user-facing table — `mutation_engine.py` / `insight_engine.py` apply all writes, and AI-originated draft rows require human verification before they count as real records.
+6. Every AI-generated insight carries a mandatory `medical_disclaimer`, enforced at the schema level.
+7. `anonymous_pet_id` (Phase 3) is always a one-way hash, never a reversible reference.
+
+---
+
+# Ch. 19 — Open Questions
+
+1. Should `visit_group_id` be exposed as a first-class "Visit" entity in a future version, or remain a soft grouping key?
+2. What is the right lead time (days before due date) for reminder notifications, and should it be user-configurable per reminder type?
+3. Cold storage strategy for pets with years of history.
+4. Long-term AI abstraction for multiple LLM providers beyond Gemini.
+5. Minimum cohort threshold for Phase 3 community data sharing.
+6. Multi-pet household timeline views.
+7. Vet-facing collaborative editing (a vet directly logging into a client's pet record).
+
+---
+
+# Ch. 20 — Final End-to-End Summary
+
+## Flow A — Manual Entry (Phase 1, the only flow that has to exist)
+
+```
+User taps "+ Log a Visit"
+        │
+        ▼
+Category selector → category-specific fields revealed
+        │
+        ▼
+User fills form, optionally attaches a document,
+optionally adds another category entry for the same visit_group_id
+        │
+        ▼
+Save → medical_events row inserted
+        (source='manual', verification_status='verified')
+        │
+        ▼
+Rule Engine fires immediately → reminders created for
+vaccination / deworming / anti_tick / medication_end / follow_up
+        │
+        ▼
+Category Timeline Engine renders the new node
+in its category bucket, newest-first
+        │
+        ▼
+User can export a PDF summary at any time
+```
+
+## Flow B — AI-Assisted Entry (Phase 2, entirely optional)
+
+```
+User uploads a Pet Diary (PDF/images)
+        │
+        ▼
+[GEMINI CALL 1] Unified Extraction (async, one call)
+Output: draft_events[] — category-tagged, per visit
+        │
+        ▼
+Each draft renders inside the SAME Manual Vet Visit Form,
+pre-filled, low-confidence fields flagged
+        │
+        ▼
+User reviews and confirms → verification_status='verified'
+        (from here on, identical to Flow A)
+        │
+        ▼
+[GEMINI CALL 2] Unified Intelligence (async, one call,
+across all verified events for the pet — manual + AI alike)
+Output: node_insights[] + collective_insight + AI reminder_note
+        │
+        ▼
+Insight cards render alongside the timeline;
+AI reminders (monitoring/conditional) merge with rule-based ones
+```
+
+## Five Core Principles
+
+1. **Functional before intelligent** — the full product works with AI switched off
+2. **Category-first, chronology-second** — the timeline organises by what the data *is* before it organises by when it happened
+3. **One form, two entry paths** — manual typing and AI extraction both terminate in the same verified `medical_events` row shape
+4. **Deterministic reminders, AI-augmented (optionally)** — the rule engine owns every date-bearing field the form already captures; AI only interprets what free text can produce
+5. **2-Call Gemini constraint (Phase 2 only)** — when AI is enabled, extraction is one call and intelligence is one call, regardless of volume

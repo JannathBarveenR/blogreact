@@ -1,28 +1,27 @@
-# PetOLife AI Timeline — AI Incremental Build Plan
-## Version 5.0 (2-Call Architecture)
+# PetOLife AI Timeline — Incremental Build Plan
+## Version 6.0 (Manual-First Core / AI-Optional Overlay)
 
-**Previous Version:** 4.0
-**Change Summary:** Updated Milestone 4 to implement Call 1 (Unified Extraction) as a single async background task replacing the separate OCR + JSON steps. Updated Milestone 7 to implement Call 2 (Unified Intelligence) as a single async batched call replacing per-node + collective + reminder calls. Added `medical_event_insights` table to Milestone 1. Added async task infrastructure to Milestone 3. Added token logging requirement to Milestone 4. Added rollback endpoint to Milestone 6. Added reminder boundary enforcement to Milestone 9.
+**Previous Version:** 5.0 (2-Call AI-first Architecture)
+
+**Change Summary (v5.0 → v6.0):** The build is re-sequenced into two independent tracks. **Phase 1 (Milestones 1–9)** builds the complete, functional, no-AI product — pet profiles, manual vet-visit logging via a category-driven form, a category-first timeline, a deterministic reminder engine, a documents vault, and PDF export. Phase 1 ships and is fully usable on its own. **Phase 2 (Milestones 10–15)** adds the optional Gemini overlay — diary auto-extraction that feeds the same manual form, and AI insight generation — reusing the 2-call design from v5.0 but bolted onto the Phase 1 foundation instead of being the foundation itself. Async task infrastructure, the Gemini adapter, token logging, and community insights all move from "core" to "Phase 2 only."
 
 ---
 
 ## 1. Build Overview
 
-This document defines the implementation phases for the AI Timeline.
-
-The AI Timeline is integrated into the existing PetOLife MVP V2 React-FastAPI application. The build is structured into **12 milestones**. Each milestone must compile, pass tests, and satisfy integration criteria before proceeding to the next phase.
+The product is integrated into the existing PetOLife MVP V2 React-FastAPI application. Phase 1 is **9 milestones** and is a complete deliverable on its own — it should be demoed, tested, and considered shippable before Phase 2 work begins. Phase 2 is **6 further milestones**, additive and independently revertible.
 
 ---
 
 ## 2. Global Build Rules
 
 - **Backward Compatibility First:** Never modify existing V1 routes or tables without ensuring absolute backward compatibility.
-- **Shared Service Layer:** Move core CRUD and storage operations into `app/services/` to prevent duplication between V1 and V2 controllers.
-- **Isolated V2 Routing Namespace:** All new timeline features live under `/api/v2/` and AI logic lives in `app/timeline/`.
-- **2-Call Gemini Constraint:** The system makes exactly two Gemini calls per upload — Call 1 (Unified Extraction) and Call 2 (Unified Intelligence). No per-node loops. No separate OCR and JSON steps.
-- **Async Gemini Calls:** Both Gemini calls are executed in background tasks. They must never block HTTP request threads.
-- **Vanilla CSS:** Frontend UI components must use strict Vanilla CSS (imported `.css` files adjacent to components). Tailwind is not allowed.
-- **Token Logging:** Every Gemini call must log input tokens, output tokens, model version, operation name, and pet_id to `ai_token_logs`. This is not optional.
+- **Shared Service Layer:** Move core CRUD and storage operations into `app/services/` to avoid duplication between V1 and V2.
+- **Isolated V2 Routing Namespace:** All new features live under `/api/v2/`.
+- **Phase 1 has zero AI dependency:** No code under `app/timeline/services/` may import anything from `app/timeline/ai/`. This is a lint/CI rule, not just a convention, enforced from Milestone 1 onward.
+- **Category is a first-class field:** Every `medical_events` row carries a required `category`; the timeline's default query groups by it.
+- **Vanilla CSS:** Frontend UI components use strict Vanilla CSS (imported `.css` files adjacent to components). Tailwind is not allowed.
+- **Phase 2 Token Logging:** Every Gemini call must log input tokens, output tokens, model version, operation name, and pet_id to `ai_token_logs`. Not optional, but also not relevant until Phase 2 begins.
 
 ---
 
@@ -30,360 +29,350 @@ The AI Timeline is integrated into the existing PetOLife MVP V2 React-FastAPI ap
 
 ```mermaid
 graph TD
-    M1[Milestone 1: DB Migrations] --> M2[Milestone 2: Shared Services]
-    M2 --> M3[Milestone 3: V2 API Routing + Async Infrastructure]
-    M3 --> M4[Milestone 4: Call 1 — Unified Extraction Pipeline]
-    M4 --> M5[Milestone 5: Verification & Event Creation Layer]
-    M5 --> M6[Milestone 6: Timeline Mutation & Versioning + Rollback]
-    M6 --> M7[Milestone 7: Call 2 — Unified Intelligence Engine]
-    M7 --> M8[Milestone 8: Fallback Mode]
-    M8 --> M9[Milestone 9: Hybrid Reminder Engine]
-    M9 --> M10[Milestone 10: Community Engine]
-    M10 --> M11[Milestone 11: Frontend UI]
-    M11 --> M12[Milestone 12: E2E Testing]
+    M1[M1: DB Migration — Phase 1 Schema] --> M2[M2: Shared Services]
+    M2 --> M3[M3: V2 Routing Skeleton]
+    M3 --> M4[M4: Manual Vet Visit Form — Backend]
+    M4 --> M5[M5: Category Timeline Engine]
+    M5 --> M6[M6: Deterministic Reminder Engine]
+    M6 --> M7[M7: Documents Vault]
+    M7 --> M8[M8: PDF Export]
+    M8 --> M9[M9: Frontend UI + E2E — Phase 1 Ships]
+    M9 --> M10[M10: Async Infra + Gemini Adapter — Phase 2 begins]
+    M10 --> M11[M11: Call 1 — Diary Extraction]
+    M11 --> M12[M12: Call 2 — Unified Intelligence]
+    M12 --> M13[M13: AI Reminder Merge]
+    M13 --> M14[M14: Community Consent Stub]
+    M14 --> M15[M15: Phase 2 E2E Testing]
 ```
 
 ---
 
-### Milestone 1: Database Migration & Schema Versioning
+# PHASE 1 — Core Product, No AI
 
-**Objective:** Prepare the database schema for V2 tables and additive V1 columns using backwards-compatible migrations.
+### Milestone 1: Database Migration (Phase 1 Schema)
+
+**Objective:** Stand up the category-first schema with zero AI-related tables.
 
 **Tasks:**
-- Create Supabase SQL migration file: `backend/supabase/migrations/20260714120000_add_v2_timeline_tables.sql`
-- Write `ALTER TABLE medical_records` statements to add: `ocr_status`, `ocr_extracted_at`, `ocr_error`, `extracted_json` (stores ExtractionBundle from Call 1)
-- Write `ALTER TABLE pet_profiles` to add: `active_timeline_version INTEGER` (used by rollback endpoint)
-- Write `CREATE TABLE` for: `timeline_versions`, `medical_events` (with `source_page_range`, `field_confidence`, `superseded` status), `medical_event_insights` (new — stores per-node Call 2 output), `pol_analyses` (with typed columns: `overall_summary`, `hierarchical_summary`, `active_conditions`, `vaccination_status`, `insight_version`, `token_count`), `reminders` (with `frequency`, `priority`, extended `type` enum), `community_consent`, `experience_cards`, `ai_token_logs` (new — stores per-call token usage)
-- Define all indexes: foreign key indexes on `pet_id`, GIN indexes on all JSONB fields, composite indexes on `(pet_id, verification_status)` and `(pet_id, due_date)`
+- Create migration `backend/supabase/migrations/<timestamp>_add_v2_core_tables.sql`
+- `ALTER TABLE pet_profiles` to add `species`, `breed`, `date_of_birth`, `health_conditions`
+- `CREATE TABLE medical_events` with `category`, `visit_group_id`, `source`, `verification_status`, and all category-specific columns (see API/DB Spec §5.2)
+- `CREATE TABLE medical_documents`, `CREATE TABLE edit_history`, `CREATE TABLE reminders` (simplified `type` enum, no AI types active yet)
+- Indexes: `(pet_id, category, event_date DESC)`, `(pet_id, event_date DESC)`, `(visit_group_id)`, `(pet_id, event_hash)`
 
-**Deliverable:** Version-controlled SQL migration scripts applied to local and staging Supabase instances.
+**Deliverable:** Version-controlled SQL migration applied to local and staging Supabase.
 
 **Tests:**
-- Verify all existing V1 endpoints continue to function correctly post-migration
-- Verify schema constraints, foreign key cascades, unique conditions, and check constraints in Supabase SQL Editor
-- Confirm `medical_records.extracted_json` accepts JSONB null (V1 rows unaffected)
+- Verify all existing V1 endpoints continue to function post-migration
+- Verify all check constraints (category enum, verification_status enum, weight_unit enum)
+- Confirm no table in this milestone references anything AI-related
 
-**Exit Criteria:** Additive schema is applied to live database. V1 app runs without errors on the updated schema.
+**Exit Criteria:** Phase 1 schema is live. V1 app is unaffected.
 
 ---
 
 ### Milestone 2: Refactor V1 Routers for Shared Service Layer
 
-**Objective:** Eliminate code redundancy by extracting database queries and storage actions into a shared services layer.
+**Objective:** Eliminate duplication between V1 and the new V2 pet/document logic.
 
 **Tasks:**
-- Create `backend/app/services/pet_service.py` with pet profile query and manipulation actions
-- Create `backend/app/services/medical_record_service.py` with document upload, file storage, and retrieval logic
-- Refactor `backend/app/routers/pet_profile.py` to call `PetService`
-- Refactor `backend/app/routers/medical_records.py` to call `MedicalRecordService`
+- Create `backend/app/services/pet_service.py` and `medical_record_service.py`
+- Refactor `backend/app/routers/pet_profile.py` and `medical_records.py` to use these services
 
-**Deliverable:** New services layer files and clean V1 routers.
+**Deliverable:** Shared services layer; unchanged V1 behaviour.
 
 **Tests:**
-- Run V1 user signup, login, pet list, and document upload flows
-- Confirm refactored routers behave identically to original implementations
+- Run V1 signup, login, pet list, and document upload flows; confirm identical behaviour pre/post refactor
 
-**Exit Criteria:** All pet and medical record database transactions are successfully channelled through the shared services layer with no V1 regressions.
+**Exit Criteria:** All pet/medical-record DB access flows through the shared layer with no V1 regressions.
 
 ---
 
-### Milestone 3: V2 API Routing, Isolation Skeleton & Async Infrastructure
+### Milestone 3: V2 API Routing Skeleton
 
-**Objective:** Mount the V2 routing namespace, set up the timeline sub-package, and establish the async background task infrastructure that both Gemini calls will use.
+**Objective:** Mount the V2 namespace and the `app/timeline/` package — Phase 1 only, no async task infra yet (none is needed).
 
 **Tasks:**
-- Create `backend/app/routers/v2/` and add sub-routers: `pet_profile.py`, `medical_records.py`, `ocr.py`, `timeline.py` (includes rollback endpoint stub), `insights.py`, `reminders.py`, `community.py`
-- Mount all V2 routers in `backend/app/main.py` under `/api/v2` prefix
-- Create `backend/app/timeline/` sub-package with `schemas/`, `services/`, and `adapters/` directories
-- Define Pydantic models: `ExtractionBundle`, `IntelligenceBundle`, `MedicalEventNode`, `NodeInsight`, `CollectiveInsight`, `ReminderNote`, `ReminderObject`
-- Set up `FastAPI BackgroundTasks` pattern that will be used by both OCR (Call 1) and intelligence (Call 2) endpoints — stub tasks returning `202 Accepted` with task status tracking
-- Create `app/timeline/adapters/ai_provider_base.py` abstract interface
-- Create `app/timeline/adapters/gemini_adapter.py` skeleton with `call_extraction()`, `call_intelligence()`, and `_log_token_usage()` method stubs
+- Create `backend/app/routers/v2/`: `pet_profile.py`, `medical_events.py`, `timeline.py`, `reminders.py`, `documents.py`, `export.py`
+- Mount under `/api/v2` in `main.py`
+- Create `backend/app/timeline/schemas/medical_event.py` and `reminder.py` (Pydantic models matching the Milestone 1 schema)
+- Create `backend/app/timeline/services/` package (empty service stubs: `event_service.py`, `category_engine.py`, `reminder_engine.py`, `document_service.py`, `export_service.py`, `dedupe_service.py`)
+- **Do not** create `app/timeline/ai/` yet — it doesn't exist until Milestone 10
 
-**Deliverable:** Active `/api/v2/...` routing namespace returning mock responses. Background task infrastructure stubbed and testable.
+**Deliverable:** Active `/api/v2/...` routing namespace with mocked/stubbed responses.
 
 **Tests:**
-- Verify all V2 routing URLs return expected responses (even if mocked)
-- Confirm JWT authentication middleware blocks unauthorised access on all V2 endpoints
-- Confirm `202 Accepted` is returned immediately from async endpoints (not blocking)
+- Verify all V2 routes return expected mock responses
+- Confirm JWT auth blocks unauthorised access
+- Confirm none of these endpoints are async/backgrounded (Phase 1 is synchronous by design)
 
-**Exit Criteria:** V2 router controllers are mounted. Background task pattern is operational. Gemini adapter interface is defined.
+**Exit Criteria:** V2 routers mounted; all Phase 1 service stubs exist and are wired to routers.
 
 ---
 
-### Milestone 4: Call 1 — Unified Extraction Pipeline
+### Milestone 4: Manual Vet Visit Form — Backend
 
-**Objective:** Implement Call 1 as a single async Gemini call that simultaneously performs OCR and medical JSON structuring for all visits in one document.
+**Objective:** Implement the core data-entry path: category-driven creation, edit, and delete of Medical Event Nodes.
 
 **Tasks:**
-- Complete `gemini_adapter.py` — implement `call_extraction(file_uri, pet_id)`:
-  - Upload file to Google File API, get URI
-  - Send unified extraction prompt with full `ExtractionBundle` JSON schema
-  - Parse and validate response against `ExtractionBundle` Pydantic model
-  - Call `_log_token_usage()` with `operation='call_1_extraction'` on every call — no exceptions
-- Implement `ocr_service.py`:
-  - Accept PDF or image files
-  - Upload to Google File API
-  - Call `gemini_adapter.call_extraction()`
-  - Store full `ExtractionBundle` in `medical_records.extracted_json`
-  - Insert one `medical_events` row per visit in `ExtractionBundle.medical_events[]` with `verification_status = 'pending'` and `field_confidence` populated from extraction metadata
-  - Update `medical_records.ocr_status = 'extracted'`
-  - Dispatch WebSocket/SSE notification on completion
-- Wire up `POST /api/v2/pets/{pet_id}/documents/{doc_id}/ocr`:
-  - Set `ocr_status = 'processing'` synchronously
-  - Enqueue `ocr_service` as background task
-  - Return `202 Accepted` immediately
-- Wire up `GET /api/v2/pets/{pet_id}/documents/{doc_id}/ocr` to return current `ExtractionBundle` and `ocr_status`
+- Implement `event_service.py`:
+  - `create_event()` — validates category-specific required fields, computes `event_hash`, runs `dedupe_service` same-day check, inserts row with `source='manual'`, `verification_status='verified'`
+  - `update_event()` — writes an `edit_history` row per change, re-triggers reminder recomputation if a due-date-relevant field changed
+  - `delete_event()` — cascades to `reminders` and `medical_documents`
+  - `link_to_visit_group()` — attaches a new category entry to an existing `visit_group_id`
+- Implement `dedupe_service.py`: `event_hash = SHA256(pet_id + category + event_date + primary_field)`; same-day collision → `409` with candidate
+- Wire up `POST /medical-events`, `GET /medical-events`, `GET /medical-events/{id}`, `PUT /medical-events/{id}`, `DELETE /medical-events/{id}`, `POST /medical-events/{id}/link`
 
-**Deliverable:** Integrated Call 1 pipeline — one Gemini call produces OCR text and all structured medical events for the entire document.
+**Deliverable:** Full CRUD for manually entered medical events, category-validated.
 
 **Tests:**
-- Test extraction accuracy using sample veterinary PDFs and JPG images with multiple visits
-- Verify `ExtractionBundle` schema validation rejects malformed Gemini responses at the Pydantic level
-- Verify `ocr_raw_text` is populated per visit (nothing discarded)
-- Verify `field_confidence` is populated per field (not just a global score)
-- Verify `ocr_status` transitions: `pending → processing → extracted` (or `failed`)
-- Verify `202 Accepted` is returned before Gemini responds — not after
-- Verify `ai_token_logs` row is inserted after every call
-- Test graceful failure: unreadable file sets `ocr_status = 'failed'`, writes `ocr_error`, does not crash
+- Verify each category enforces its own required fields (e.g. vaccination requires `vaccine_name`)
+- Verify duplicate same-day submissions return `409` with a candidate event
+- Verify `edit_history` gets a row on every update, with correct `previous_value` snapshot
+- Verify `visit_group_id` correctly links multiple category entries from one visit
+- Verify deleting an event cascades reminders and documents correctly
 
-**Exit Criteria:** A single `POST /ocr` request triggers one Gemini call, produces a complete `ExtractionBundle` for all visits, stores it, and returns asynchronously. Token usage is logged.
+**Exit Criteria:** A user can create, edit, link, and delete medical events of every category through the API, with no AI code path touched.
 
 ---
 
-### Milestone 5: Verification & Event Creation Layer
+### Milestone 5: Category Timeline Engine
 
-**Objective:** Implement human verification workflows and generate immutable Medical Event Nodes.
+**Objective:** Implement the category-first read model.
 
 **Tasks:**
-- Implement `PUT /api/v2/pets/{pet_id}/documents/{doc_id}/verify`:
-  - Accept user-edited JSON (one or all events from the `ExtractionBundle`)
-  - Validate all fields (date ranges, non-negative weights, required visit date)
-  - Compute `SHA-256 event_hash` from `visit_date + doctor + diagnosis_list + medication_list + source_doc_id`
-  - Run near-duplicate check using `NEAR_DUPLICATE_CONFIG` thresholds
-  - Update `medical_events` rows to `verification_status = 'verified'` (or flag for review)
-  - Update `medical_records.ocr_status = 'verified'`
-- Implement `event_builder.py` to map verified JSON to `MedicalEventNode` schema
-- Implement near-duplicate logic in `mutation_engine.py` using the four defined thresholds
+- Implement `category_engine.py`:
+  - `get_category_grouped(pet_id)` — one query per category (or one grouped query, grouped in application code), sorted `event_date DESC`
+  - `get_chronological(pet_id)` — flat, all-category, date-sorted
+  - `get_visit_group(pet_id, visit_group_id)` — reconstructs all nodes sharing a `visit_group_id`
+- Wire up `GET /timeline` (default: category-grouped), `GET /timeline?view=chronological`, `GET /timeline/visit/{visit_group_id}`
 
-**Deliverable:** Verification API endpoint, event mapper, and duplicate/near-duplicate filtering.
+**Deliverable:** Category-grouped and chronological timeline endpoints.
 
 **Tests:**
-- Verify edit validation rejects invalid date ranges and negative weights
-- Verify SHA-256 hash produces identical output for identical event data
-- Verify exact duplicates are caught by hash match and rejected
-- Verify near-duplicates trigger the correct resolution path (auto-merge vs. flag) based on threshold counts
-- Verify verified events appear in subsequent timeline queries; pending events do not
+- Verify category grouping returns each category correctly bucketed and internally sorted
+- Verify chronological view merges all categories correctly by date
+- Verify visit-group reconstruction returns all linked entries regardless of category
+- Performance: verify the composite index `(pet_id, category, event_date DESC)` is used (query plan check) for pets with 100+ events
 
-**Exit Criteria:** User-verified data successfully creates immutable `medical_events` rows. Duplicates and near-duplicates are handled deterministically.
+**Exit Criteria:** Category view is the default; chronological view works as a toggle; both are backed by indexed queries.
 
 ---
 
-### Milestone 6: Timeline Mutation, Immutable Versioning & Rollback
+### Milestone 6: Deterministic Reminder Engine
 
-**Objective:** Handle immutable versioned updates and implement the rollback endpoint.
+**Objective:** Implement rule-based reminder generation with zero AI.
 
 **Tasks:**
-- Complete `mutation_engine.py`:
-  - On new verified event: insert row in `timeline_versions`, increment version number, map event to new version
-  - Enforce append-only rule: no DELETE or UPDATE on existing verified events (corrections create new `superseded` versions)
-  - Update `pet_profiles.active_timeline_version` on each successful mutation
-- Implement `POST /api/v2/pets/{pet_id}/timeline/rollback`:
-  - Validate `target_version` exists in `timeline_versions` for this pet
-  - Set `pet_profiles.active_timeline_version = target_version`
-  - Return the timeline filtered to `timeline_version <= target_version` and `verification_status = 'verified'`
-  - No data is deleted — `active_timeline_version` is a pointer
+- Implement `reminder_engine.py`:
+  - `RULE_ENGINE_OWNS` handling for `vaccination` (via `BOOSTER_INTERVALS` lookup), `deworming` (+90 days), `anti_tick` (per-product or default), `medication_end` (`start_date + duration_days`), `follow_up` (explicit `follow_up_date` from the form)
+  - Called synchronously from `event_service.create_event()` / `update_event()`
+  - Priority assignment: high (missed follow-up, critical medication ending), medium (vaccination/deworming/anti-tick due), low (weight check-in)
+- Wire up `GET /reminders` with `?type=&status=&range=`, `PUT /reminders/{id}/complete`, `PUT /reminders/{id}/snooze`
 
-**Deliverable:** Version tracking module, immutable timeline constructor, and rollback endpoint.
+**Deliverable:** Fully rule-based reminder engine, wired into the event creation/edit flow.
 
 **Tests:**
-- Verify adding a new event increments `timeline_versions` correctly
-- Verify that reading the timeline at version N excludes events added after version N
-- Verify rollback sets `active_timeline_version` and returns the correct historical state
-- Verify rollback does not delete any rows from any table
-- Verify historic versions remain independently readable after subsequent updates
+- Verify Rabies vaccination produces a reminder exactly 365 days out; DHPP 365; Bordetella 180
+- Verify deworming produces a reminder exactly 90 days out
+- Verify medication end-date reminder matches `start_date + duration_days`
+- Verify follow-up reminder uses the exact `follow_up_date` entered
+- Verify editing an event's due-date-relevant field recomputes/updates the correct reminder, not a duplicate
+- Verify `complete` and `snooze` transitions behave correctly
 
-**Exit Criteria:** The medical timeline is append-only and versioned. Rollback is a non-destructive pointer operation.
+**Exit Criteria:** Every category that should produce a reminder does so automatically and correctly on save, with no external dependency.
 
 ---
 
-### Milestone 7: Call 2 — Unified Intelligence Engine
+### Milestone 7: Documents Vault
 
-**Objective:** Implement Call 2 as a single async Gemini call that generates all node insights, the collective insight, and AI-interpreted reminders in one batched request.
+**Objective:** Attachment upload/storage for both event-linked and pet-level documents.
 
 **Tasks:**
-- Complete `gemini_adapter.py` — implement `call_intelligence(verified_events, pol_context, pet_id)`:
-  - Build payload: verified `medical_events` array + current `pol_analyses` structured columns (incremental context)
-  - Send unified intelligence prompt with full `IntelligenceBundle` JSON schema
-  - Enforce in prompt: every `node_insight` must include `medical_disclaimer`; `overall_summary` must be under 200 words; `reminder_note` only covers `AI_REMINDER_INTERPRETS` types
-  - Parse and validate response against `IntelligenceBundle` Pydantic model
-  - Call `_log_token_usage()` with `operation='call_2_intelligence'` on every call
-- Implement `insight_engine.py`:
-  - Fetch all verified `medical_events` for the pet
-  - Fetch current `pol_analyses` record as incremental context (not raw historical records)
-  - Call `gemini_adapter.call_intelligence()`
-  - Upsert each item in `IntelligenceBundle.node_insights[]` into `medical_event_insights` (keyed by `event_id`)
-  - Insert new `pol_analyses` version with structured columns populated from `IntelligenceBundle.collective_insight`
-  - Store `token_count` in `pol_analyses` from token log
-  - Insert AI reminders from `IntelligenceBundle.reminder_note.identified_reminders[]` into `reminders` with `is_ai_generated = true`
-- Wire up `POST /api/v2/pets/{pet_id}/timeline/generate-insights`:
-  - Enqueue `insight_engine` as background task
-  - Return `202 Accepted` immediately
-- Wire up `GET /api/v2/pets/{pet_id}/timeline/insights-status` to poll completion
-- Wire up `GET /api/v2/pets/{pet_id}/insights/node/{event_id}` to return single `medical_event_insights` row
-- Wire up `GET /api/v2/pets/{pet_id}/insights/collective` to return current `pol_analyses` structured columns
+- Implement `document_service.py`: upload to Supabase Storage, insert `medical_documents` row, optional `event_id` link
+- Wire up `POST /documents/upload`, `GET /documents?event_id=`, `DELETE /documents/{id}`
 
-**Deliverable:** Integrated Call 2 pipeline — one Gemini call produces all node insights, the collective insight, and AI reminder data for the entire verified history.
+**Deliverable:** Working documents vault.
 
 **Tests:**
-- Verify `IntelligenceBundle.node_insights[]` contains one entry per verified `event_id` — no missing events, no extra events
-- Verify each `node_insight.medical_disclaimer` is non-empty — reject `IntelligenceBundle` at Pydantic level if any disclaimer is missing
-- Verify `medical_event_insights` upsert: existing rows are updated, new rows are inserted, `UNIQUE(event_id)` constraint holds
-- Verify `pol_analyses` structured columns are populated correctly from `collective_insight`
-- Verify `token_count` is stored in `pol_analyses`
-- Verify AI reminder rows have `is_ai_generated = true` and only cover `AI_REMINDER_INTERPRETS` types
-- Verify `202 Accepted` is returned before Gemini responds
-- Verify `ai_token_logs` row is inserted for every Call 2 execution
-- Profile: verify total time for Call 2 is lower than the equivalent per-node loop would have been
+- Verify upload without `event_id` attaches at the pet level
+- Verify upload with `event_id` attaches to that specific event
+- Verify deletion removes both the storage file and the DB row
 
-**Exit Criteria:** A single background task executes one Gemini call, populates `medical_event_insights`, `pol_analyses`, and AI `reminders` for all events. Token usage is logged.
+**Exit Criteria:** Certificates, reports, and lab results can be attached and retrieved reliably.
 
 ---
 
-### Milestone 8: Fallback Mechanism & Manual Form Router
+### Milestone 8: PDF Export
 
-**Objective:** Maintain core system functionality using rule-based processing when Gemini is unavailable.
+**Objective:** Shareable summary generation, no AI.
 
 **Tasks:**
-- Implement health monitor in `fallback_router.py` to check Gemini API status and quota
-- Wrap both `ocr_service.py` and `insight_engine.py` with the fallback check — if Gemini is unavailable, route to fallback path
-- Implement `POST /api/v2/pets/{pet_id}/timeline/fallback-form` for manual Vet Visit entry (Visit Date, Clinic optional, Reason, Diagnosis, Medication, Vaccination, Weight, Follow-up Date, Doctor Notes, Treatment Status)
-- Build rule-based timeline compiler in `fallback_router.py`: sort `medical_events` by date, return cards with raw field data (no AI summary), set `X-Timeline-Mode: Fallback` header
-- On Gemini recovery: existing `medical_events` rows (from fallback form) are automatically picked up by the next Call 2 execution — no user re-entry required
+- Implement `export_service.py`: template-based PDF rendering from selected `medical_events` rows (full history, single category, or date range)
+- Wire up `POST /export/pdf`
 
-**Deliverable:** Rule-based backup pipeline and manual form endpoint.
+**Deliverable:** Downloadable/shareable PDF summary endpoint.
 
 **Tests:**
-- Mock Gemini quota exceeded and API timeout — verify automatic fallback activation
-- Verify fallback form creates valid `medical_events` rows with the same schema as AI-path rows
-- Verify `X-Timeline-Mode: Fallback` header is set in fallback mode; `X-Timeline-Mode: AI` in normal mode
-- Verify that after Gemini recovers, a subsequent `generate-insights` call processes fallback-form events correctly
+- Verify full-history export includes every verified event grouped by category
+- Verify category-filtered export includes only that category
+- Verify date-range export respects the bounds
 
-**Exit Criteria:** Timeline remains operational and renders chronological history without Gemini access.
+**Exit Criteria:** A vet-ready PDF can be generated and shared for any pet.
 
 ---
 
-### Milestone 9: Hybrid Reminder Engine
+### Milestone 9: Frontend UI + Phase 1 End-to-End — **Phase 1 Ships**
 
-**Objective:** Generate reminder dates combining rule-based and AI-interpreted logic with explicit boundary enforcement.
+**Objective:** Build the complete manual-first UI and verify the entire no-AI product end-to-end.
 
 **Tasks:**
-- Implement `reminder_engine.py` with the boundary enforced:
-  - `RULE_ENGINE_OWNS = ['vaccination', 'deworming', 'anti_tick', 'medication_end']` — generated deterministically, always, regardless of Gemini availability
-  - `AI_REMINDER_INTERPRETS = ['follow_up', 'monitoring', 'conditional']` — inserted from `IntelligenceBundle.reminder_note` output by `insight_engine.py`
-- Implement rule calculations: Rabies → +365 days, Deworming → +90 days, Anti-tick → per schedule, Medication → end-date from duration, Follow-up → explicit date from `event_data.follow_up`
-- Implement deduplication: merge rule-based and AI reminder sets before writing to `reminders` table; do not create duplicate rows for the same event + type combination
-- Implement `GET /api/v2/pets/{pet_id}/reminders` with query params: `?type=`, `?status=`, `?range=monthly`
-- Ensure reminders are cascaded correctly: when a `medical_events` row is rejected or superseded, its linked `reminders` rows are updated or deleted
+- Build the **Manual Vet Visit Form**: category chip selector at top, progressive disclosure of category-specific fields, inline editable auto-suggested due dates, "Add another entry for this visit," confirmation toast showing the reminder just created
+- Build the **Category Timeline** screen: tabbed/sectioned by category (default), toggle to chronological "All" view
+- Build the **Reminders** calendar widget (daily/weekly/monthly/quarterly/yearly views)
+- Build the **Documents Vault** screen
+- Build the **PDF Export** flow (category/date-range picker → download/share)
+- All components under `src/components/Timeline/` using Vanilla CSS
 
-**Deliverable:** Hybrid reminder engine with enforced rule/AI boundary and merged output.
+**Deliverable:** A fully usable, AI-free medical record app.
 
 **Tests:**
-- Verify rule-based reminder dates match expected intervals (e.g., Rabies → exactly +365 days from vaccination date)
-- Verify rule-based reminders are generated even when Gemini is unavailable (fallback mode)
-- Verify AI reminder rows have `is_ai_generated = true`; rule reminder rows have `is_ai_generated = false`
-- Verify no duplicate reminder exists for the same `(source_event_id, type)` combination
-- Verify reminders are correctly deleted or rescheduled when parent events are rejected
+- E2E: create pet → log a vet visit + vaccination via "Add another entry" → confirm both appear under their categories, sharing a `visit_group_id` → confirm a vaccination reminder was created → export a PDF → confirm it includes both entries
+- Verify duplicate same-day submission surfaces the "save anyway?" prompt correctly in the UI
+- Verify editing an event updates the timeline and, where relevant, its reminder
+- Cross-browser responsiveness check
 
-**Exit Criteria:** A dynamic merged reminder list is computed and stored for every timeline version. Rule/AI boundary is enforced at the code level.
+**Exit Criteria:** Phase 1 (F1–F6) is demoable and shippable as a complete product with `GEMINI_API_KEY` entirely unset.
 
 ---
 
-### Milestone 10: Community Consent & Shared Insights
+# PHASE 2 — Optional AI Overlay
 
-**Objective:** Enable anonymous sharing of medical cards and similarity matching with strict consent enforcement.
+*Everything below is additive. It must be possible to skip Phase 2 entirely and still have a complete product from Milestone 9.*
+
+### Milestone 10: Async Infrastructure + Gemini Adapter
+
+**Objective:** Stand up the background task pattern and AI abstraction layer, isolated from Phase 1 code.
 
 **Tasks:**
-- Implement `PUT /api/v2/pets/{pet_id}/community/consent` to store opt-in/opt-out in `community_consent`
-- Implement consent revocation: when mode switches to `private`, permanently delete associated rows from `experience_cards`
-- Implement `community_engine.py`:
-  - Map verified `medical_events` to `experience_cards` rows
-  - Strip all PII: pet name, owner name, clinic, doctor name, source document references
-  - Set `anonymous_pet_id` as one-way SHA-256 hash of real `pet_id` — never a foreign key
-  - Only share if `community_consent.mode = 'anonymous'`
-- Implement `GET /api/v2/community/insights` with similarity queries on `(species, breed, diagnosis, age_range)`
+- Create `app/timeline/ai/` package: `schemas/`, `services/`, `adapters/`
+- Create `app/timeline/ai/adapters/ai_provider_base.py` and `gemini_adapter.py` with `call_extraction()`, `call_intelligence()`, `_log_token_usage()` stubs
+- Set up `FastAPI BackgroundTasks` pattern for the two AI endpoints
+- Migration: `ALTER TABLE medical_records ADD ocr_status, extracted_json`; `CREATE TABLE medical_event_insights, pol_analyses, ai_token_logs`
+- CI rule: fail the build if anything under `app/timeline/services/` imports from `app/timeline/ai/`
 
-**Deliverable:** Data anonymiser, consent controller, and similarity matching engine.
+**Deliverable:** Isolated, mountable AI package with async infra and its own schema.
 
 **Tests:**
-- Verify `experience_cards` rows contain no PII fields
-- Verify `anonymous_pet_id` is not reversible to the real `pet_id`
-- Verify `experience_cards` rows are deleted when consent is revoked
-- Verify similarity queries return no data for `private` mode pets
+- Verify Phase 1 test suite still passes unmodified with `app/timeline/ai/` present but unused
+- Verify Phase 1 test suite still passes with `app/timeline/ai/` **entirely deleted** from the checkout (proves true isolation)
+- Verify the import-boundary CI check catches a deliberately introduced violation
 
-**Exit Criteria:** Anonymised community experience sharing is strictly enforced by user consent and revocation is immediate.
+**Exit Criteria:** Phase 2 schema and package exist without touching Phase 1 behaviour.
 
 ---
 
-### Milestone 11: Frontend UI Integration
+### Milestone 11: Call 1 — Diary Extraction
 
-**Objective:** Replace the timeline placeholder screen in React with the active V2 dashboard.
+**Objective:** Implement diary upload → single Gemini call → drafts that pre-fill the Phase 1 form.
 
 **Tasks:**
-- Create component subfolders under `src/components/Timeline/` using Vanilla CSS (no Tailwind)
-- Implement upload dashboard and Call 1 progress indicator:
-  - Show `ocr_status` polling or WebSocket/SSE listener
-  - Render "Extracting your diary..." state during background Call 1
-- Implement OCR verification interface:
-  - Render each `medical_events` row from `ExtractionBundle` for review
-  - Highlight fields with `field_confidence < 0.75` for mandatory user attention
-  - Allow per-field editing before submission
-- Implement Call 2 progress indicator:
-  - Show "Generating insights..." state during background Call 2
-  - Render insight cards once `insights_ready` notification arrives
-- Render chronological timeline cards showing Medical Event Nodes with their `medical_event_insights`
-- Render per-node insight cards: human summary, visit understanding, suggested actions, disclaimer
-- Render collective insight panel from `pol_analyses` structured columns
-- Build manual Vet Visit form for Fallback Mode submissions
-- Build reminders calendar widget from `GET /api/v2/pets/{pet_id}/reminders`
-- Display `X-Timeline-Mode: Fallback` warning banner when header indicates fallback mode
-- Add community consent toggle in settings
+- Implement `gemini_adapter.call_extraction(file_uri, pet_id)`: upload to Google File API, send unified extraction prompt (schema includes `category` per sub-entry), parse into `ExtractionBundle`, log tokens
+- Implement `extraction_service.py`: store `ExtractionBundle` in `medical_records.extracted_json`; insert one `medical_events` row per `draft_events[]` entry with `source='ai_extracted'`, `verification_status='pending'`, `visit_group_id` shared across same-visit entries
+- Wire up `POST /ai/documents/upload`, `POST /ai/documents/{doc_id}/extract` (`202 Accepted`, background), `GET /ai/documents/{doc_id}/status`
+- **No new verification endpoint** — confirm that draft rows are editable and verifiable through the existing Phase 1 `PUT /medical-events/{event_id}`
 
-**Deliverable:** Responsive, fully featured frontend interface using Vanilla CSS.
+**Deliverable:** One-call diary extraction that feeds directly into the Manual Vet Visit Form as pre-filled drafts.
 
 **Tests:**
-- Verify upload → extraction → verification → insights flow end-to-end in the UI
-- Verify fields flagged as low-confidence are visually highlighted
-- Verify "Basic Timeline Mode" banner appears in fallback mode
-- Test cross-browser responsiveness and all loading states
-- Verify `medical_disclaimer` is visible on every insight card
+- Verify exactly one Gemini call per diary upload regardless of visit count
+- Verify each `draft_events[]` entry lands as a correctly categorised `medical_events` row
+- Verify `visit_group_id` correctly links multi-category entries from the same detected visit
+- Verify low-confidence fields (`confidence < 0.75`) are flagged for the frontend
+- Verify editing/confirming a draft through `PUT /medical-events/{id}` flips it to `verified` and it then behaves identically to a manual entry (appears in category timeline, triggers reminder engine, etc.)
+- Verify `ai_token_logs` gets exactly one row per extraction call
 
-**Exit Criteria:** The frontend timeline dashboard is fully integrated and interacts exclusively with V2 backend endpoints.
+**Exit Criteria:** A diary upload produces reviewable drafts inside the same form used for manual entry, with zero divergence in downstream behaviour once verified.
 
 ---
 
-### Milestone 12: End-to-End Verification & Automated Testing
+### Milestone 12: Call 2 — Unified Intelligence
 
-**Objective:** Run automated integration tests, profile performance, and verify the complete 2-call constraint.
+**Objective:** Implement one-call insight generation across all verified events (manual + AI-extracted alike).
 
 **Tasks:**
-- Write `pytest` integration tests covering the complete sequence:
-  `Upload Document → POST /ocr (202) → Poll ocr_status → Verify Events → POST /generate-insights (202) → Poll insights-status → GET /timeline → GET /insights/node/{id} → GET /reminders`
-- Write test asserting Call 1 produces exactly one Gemini call per upload (mock adapter, count invocations)
-- Write test asserting Call 2 produces exactly one Gemini call per intelligence generation (mock adapter, count invocations)
-- Write test asserting `ai_token_logs` has exactly two rows after a complete upload-to-insights cycle
-- Perform load test: concurrent PDF uploads to verify async task queue handles parallel processing without blocking
-- Verify `medical_disclaimer` is present on every `medical_event_insights` row in the database
-- Verify no `medical_events` row with `verification_status = 'pending'` appears in any timeline response
-- Run full rollback test: generate 3 timeline versions, rollback to version 1, verify version 2 and 3 events do not appear
+- Implement `gemini_adapter.call_intelligence(verified_events, pol_context, pet_id)`: batched prompt, parse into `IntelligenceBundle`, log tokens
+- Implement `insight_engine.py`: fetch all `verification_status='verified'` events (regardless of `source`), fetch current `pol_analyses`, call Gemini, upsert `medical_event_insights`, insert new `pol_analyses` version
+- Wire up `POST /ai/insights/generate` (`202`, background), `GET /ai/insights/status`, `GET /ai/insights/node/{event_id}`, `GET /ai/insights/collective`
 
-**Deliverable:** Verified, production-ready V2 build with 2-call constraint enforced by automated tests.
+**Deliverable:** One-call intelligence generation covering the pet's whole verified history.
 
 **Tests:**
-- E2E integration test suite execution (all milestones covered)
-- 2-call count assertion tests
-- Token logging assertion tests
-- Rollback correctness tests
-- Fallback mode activation tests
+- Verify exactly one Gemini call per intelligence run regardless of event count
+- Verify `node_insights[]` covers every verified event — manual and AI-extracted both
+- Verify every `node_insight` carries a non-empty `medical_disclaimer` — reject at the Pydantic level otherwise
+- Verify `pol_analyses` structured columns populate correctly
+- Verify `ai_token_logs` gets exactly one row per Call 2 run
 
-**Exit Criteria:** All automated integration test assertions pass. The 2-call Gemini constraint is enforced and verified by tests. Build meets all constraints defined in the Global Build Rules.
+**Exit Criteria:** Insight cards can be generated and retrieved for any pet with verified history, independent of how that history was entered.
+
+---
+
+### Milestone 13: AI Reminder Merge
+
+**Objective:** Layer AI-interpreted reminders (`monitoring`, `conditional`) on top of the Phase 1 rule-based set, without disturbing it.
+
+**Tasks:**
+- Implement `ai_reminder_merge.py`: insert `IntelligenceBundle.reminder_note.identified_reminders[]` into `reminders` with `is_ai_generated=true`, restricted to `monitoring`/`conditional` types only
+- Deduplicate against existing reminders for the same `(source_event_id, type)`
+- Confirm `GET /reminders` merges both sets transparently for the frontend
+
+**Deliverable:** AI reminders appear alongside rule-based ones, clearly flagged.
+
+**Tests:**
+- Verify AI reminder rows always have `is_ai_generated=true` and type in `{monitoring, conditional}` only — reject anything else at the service layer
+- Verify no duplicate reminder is created for the same event+type
+- Verify Phase 1 rule-based reminders are unaffected in count or content when Phase 2 runs
+
+**Exit Criteria:** The reminder list is a correct, deduplicated merge of rule-based and AI-interpreted entries.
+
+---
+
+### Milestone 14: Community Consent Stub
+
+**Objective:** Reserve the schema and a minimal consent toggle for Phase 3, without building the matching engine yet.
+
+**Tasks:**
+- Migration: `CREATE TABLE community_consent, experience_cards`
+- Wire up `PUT /ai/community/consent` (toggle only; no anonymisation pipeline yet)
+
+**Deliverable:** Consent toggle persists; no data is shared anywhere yet.
+
+**Tests:**
+- Verify toggle persists and defaults to `private`
+- Verify no `experience_cards` rows are ever created by this milestone (matching engine is future work)
+
+**Exit Criteria:** Schema is ready for Phase 3 without any premature data sharing.
+
+---
+
+### Milestone 15: Phase 2 End-to-End Testing
+
+**Objective:** Verify the complete optional overlay, and — critically — that it remains fully optional.
+
+**Tasks:**
+- `pytest` integration test: `Upload diary → POST /extract (202) → poll status → verify drafts via PUT /medical-events → POST /ai/insights/generate (202) → poll status → GET timeline → GET insights/node → GET reminders`
+- Test asserting Call 1 produces exactly one Gemini call per upload
+- Test asserting Call 2 produces exactly one Gemini call per run
+- Test asserting `ai_token_logs` has exactly two rows after a full upload-to-insights cycle
+- **Isolation test:** run the full Phase 1 test suite with `GEMINI_API_KEY` unset and `app/routers/v2/ai/` un-mounted — confirm zero failures and zero references to AI tables
+
+**Deliverable:** Verified Phase 2 build, with proof that Phase 1 remains independently shippable.
+
+**Tests:**
+- E2E integration suite (Milestones 10–14 covered)
+- 2-call count assertions
+- Token logging assertions
+- Phase 1 isolation assertion (the most important test in this milestone)
+
+**Exit Criteria:** Phase 2 works correctly when enabled, and Phase 1 is provably unaffected when it isn't.
