@@ -9,6 +9,8 @@ import { supabase } from "../../utils/supabaseClient";
  * automatically stores the code_verifier and exchanges the ?code= on this page.
  * We just need to call getSession() after the redirect and save tokens to localStorage.
  */
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
+
 export default function AuthCallback() {
   const navigate = useNavigate();
   const [status, setStatus] = useState("Completing sign in…");
@@ -35,8 +37,28 @@ export default function AuthCallback() {
           if (refresh_token) localStorage.setItem("refresh_token", refresh_token);
           if (user) localStorage.setItem("user", JSON.stringify(user));
 
-          setStatus("Sign in successful! Redirecting…");
-          navigate("/home", { replace: true });
+          setStatus("Checking onboarding status…");
+          try {
+            const profileRes = await fetch(`${API_BASE}/api/user-profile/${user.id}`, {
+              headers: { Authorization: `Bearer ${access_token}` },
+            });
+            if (profileRes.ok) {
+              const profileData = await profileRes.json();
+              // If they have completed onboarding (must have phone and city at minimum)
+              if (profileData && profileData.phone && profileData.city) {
+                setStatus("Sign in successful! Redirecting…");
+                navigate("/home", { replace: true });
+              } else {
+                navigate("/parent-profile", { replace: true });
+              }
+            } else {
+              // 404 or other errors mean no user_profile exists, so we onboard
+              navigate("/parent-profile", { replace: true });
+            }
+          } catch (e) {
+            console.error("[AuthCallback] Failed to fetch profile:", e);
+            navigate("/parent-profile", { replace: true });
+          }
         } else {
           setStatus("No session found. Redirecting to login…");
           setTimeout(() => navigate("/login", { replace: true }), 1500);

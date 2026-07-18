@@ -11,6 +11,7 @@ const ProfileCreate = lazy(() => import("./components/ProfileCreation/ProfileCre
 const PetCard = lazy(() => import("./components/petcard/petcard"));
 const ResetPassword = lazy(() => import("./components/Login/ResetPassword"));
 const AuthCallback = lazy(() => import("./components/AuthCallback/AuthCallback"));
+const ParentProfile = lazy(() => import("./components/ParentProfile/ParentProfile"));
 
 function LoadingFallback() {
   return (
@@ -52,10 +53,10 @@ function App() {
           <Route path="/pet/:id" element={<PetCard />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
           
-          {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>
             <Route path="/home" element={<MainLayout />} />
             <Route path="/create-pet-profile" element={<ProfileCreate />} />
+            <Route path="/parent-profile" element={<ParentProfile />} />
           </Route>
           
           {/* Fallback */}

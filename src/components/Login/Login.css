@@ -27,8 +27,7 @@ body {
     system-ui,
     -apple-system,
     sans-serif;
-  height: 100%;
-  overscroll-behavior: none;
+  min-height: 100vh;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -53,8 +52,7 @@ body {
   background: #def3e1;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  overflow: hidden;
 }
 
 .screen {
@@ -62,7 +60,8 @@ body {
   padding: 18px 18px 24px;
   display: flex;
   flex-direction: column;
-  min-height: min-content;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .logo-wrap {

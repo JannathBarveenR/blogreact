@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { FiEdit2, FiCheck, FiX, FiCamera } from "react-icons/fi";
+import { FiEdit2, FiCamera } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
 import fetchWithAuth from "../../utils/fetchWithAuth";
 import DEFAULT_AVATAR from "../../assets/owner-avatar.svg";
 import "./EditableUserCard.css";
@@ -8,6 +9,8 @@ const EditableUserCard = ({
     user,
     onProfileLoaded,
 }) => {
+  const navigate = useNavigate();
+  const fileInputRef = useRef(null);
   const [profile, setProfile] = useState({
     full_name: "",
     phone: "",
@@ -18,11 +21,7 @@ const EditableUserCard = ({
     avatar_url: ""
   });
 
-  const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState(null);
-  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (user?.id) {
@@ -53,19 +52,13 @@ const EditableUserCard = ({
     }
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setProfile(prev => ({ ...prev, [name]: value }));
-  };
-
   const handleAvatarChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     const prevUrl = profile.avatar_url;
     const objectUrl = URL.createObjectURL(file);
-    setProfile(prev => ({ ...prev, avatar_url: objectUrl }));
-    setError(null);
+    setProfile((prev) => ({ ...prev, avatar_url: objectUrl }));
 
     const formData = new FormData();
     formData.append("file", file);
@@ -74,67 +67,32 @@ const EditableUserCard = ({
       const res = await fetchWithAuth(`/api/user-profile/${user.id}/avatar`, {
         method: "POST",
         body: formData,
-        headers: {}
       });
       if (res.ok) {
         const data = await res.json();
-        setProfile(prev => ({ ...prev, avatar_url: data.avatar_url }));
+        setProfile((prev) => ({ ...prev, avatar_url: data.avatar_url }));
+        
+        // Notify parent profile tab about the updated photo
+        onProfileLoaded?.({ ...profile, avatar_url: data.avatar_url });
       } else {
-        setProfile(prev => ({ ...prev, avatar_url: prevUrl }));
-        setError("Failed to upload photo. Please try again.");
-        setTimeout(() => setError(null), 3000);
+        setProfile((prev) => ({ ...prev, avatar_url: prevUrl }));
       }
     } catch (err) {
       console.error("Error uploading avatar:", err);
-      setProfile(prev => ({ ...prev, avatar_url: prevUrl }));
-      setError("Something went wrong uploading the photo.");
-      setTimeout(() => setError(null), 3000);
+      setProfile((prev) => ({ ...prev, avatar_url: prevUrl }));
     }
   };
 
-  const handleSave = async () => {
-    setSaving(true);
-    setError(null);
-    try {
-      const updatePayload = {
-        full_name: profile.full_name,
-        phone: profile.phone,
-        email: profile.email,
-        city: profile.city,
-        state: profile.state,
-        pincode: profile.pincode
-      };
-
-      const res = await fetchWithAuth(`/api/user-profile/${user.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatePayload)
-      });
-
-      if (res.ok) {
-        setIsEditing(false);
-      } else {
-        setError("Failed to update profile.");
-      }
-    } catch (err) {
-      console.error("Error updating profile:", err);
-      setError("An error occurred while saving.");
-    } finally {
-      setSaving(false);
+  const handleCardClick = (e) => {
+    // If they click the avatar uploader or the file input, do not navigate
+    if (e.target.closest(".avatar-wrapper") || e.target.closest("input")) {
+      return;
     }
+    navigate("/parent-profile");
   };
-
-  const cancelEdit = () => {
-    fetchProfile();
-    setIsEditing(false);
-    setError(null);
-  };
-
-  useEffect(() => {
-    if (!isEditing) setError(null);
-  }, [isEditing]);
 
   const locationLabel = [profile.city, profile.state].filter(Boolean).join(", ");
+  const isProfileIncomplete = !profile.full_name || !profile.phone || !profile.city;
 
   if (loading) {
     return (
@@ -148,103 +106,35 @@ const EditableUserCard = ({
       </div>
     );
   }
-return (
-  <div className="user-card">
-    {isEditing && (
-      <div className="edit-actions">
-        <button
-          className="cancel-btn"
-          onClick={cancelEdit}
-          disabled={saving}
-          title="Discard changes"
-        >
-          <FiX size={16} />
-        </button>
 
-        <button
-          className="save-btn"
-          onClick={handleSave}
-          disabled={saving}
-        >
-          {saving ? "Saving..." : (
-            <>
-              <FiCheck size={15} /> Save
-            </>
-          )}
-        </button>
-      </div>
-    )}
-
-    {error && (
-      <div className="error-banner">
-        ⚠️ {error}
-      </div>
-    )}
-
-    <div className="user-view">
-
-      {/* Avatar */}
-      <div className="avatar-wrapper">
-        <img
-          src={profile.avatar_url || DEFAULT_AVATAR}
-          alt="Profile"
-          className="avatar-img"
-        />
-
-        <button
-          className="edit-avatar-btn"
-          type="button"
-          title={isEditing ? "Change photo" : "Edit profile"}
-          onClick={() => {
-            if (isEditing) {
-              fileInputRef.current?.click();
-            } else {
-              setIsEditing(true);
-            }
-          }}
-        >
-          {isEditing ? (
+  return (
+    <div className="user-card clickable-card" onClick={handleCardClick} role="button" tabIndex={0}>
+      <div className="user-view">
+        {/* Avatar */}
+        <div className="avatar-wrapper">
+          <img
+            src={profile.avatar_url || DEFAULT_AVATAR}
+            alt="Profile"
+            className="avatar-img"
+          />
+          <button
+            className="edit-avatar-btn"
+            type="button"
+            title="Change photo"
+            onClick={() => fileInputRef.current?.click()}
+          >
             <FiCamera size={14} />
-          ) : (
-            <FiEdit2 size={14} />
-          )}
-        </button>
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden-input"
-          onChange={handleAvatarChange}
-        />
-      </div>
-
-      {/* Right Side */}
-      {isEditing ? (
-        <div className="user-info editing">
-          {[
-            { label: "Name", name: "full_name", type: "text" },
-            { label: "Phone", name: "phone", type: "tel" },
-            { label: "Email", name: "email", type: "email" },
-            { label: "City", name: "city", type: "text" },
-            { label: "State", name: "state", type: "text" },
-            { label: "Pincode", name: "pincode", type: "text" },
-          ].map(({ label, name, type }) => (
-            <div className="detail-row" key={name}>
-              <span className="detail-label">{label}</span>
-
-              <input
-                type={type}
-                name={name}
-                value={profile[name]}
-                onChange={handleChange}
-                placeholder={`Enter ${label.toLowerCase()}`}
-                className="detail-input"
-              />
-            </div>
-          ))}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden-input"
+            onChange={handleAvatarChange}
+          />
         </div>
-      ) : (
+
+        {/* Right Side */}
         <div className="user-info">
           <h2 className="user-name">
             {profile.full_name || "Pet Parent"}
@@ -260,20 +150,22 @@ return (
 
           <p className="user-location">
             <span className="location-pin">📍</span>
-
             {locationLabel || (
               <span className="detail-empty">
                 Location not set
               </span>
             )}
           </p>
+
+          {isProfileIncomplete && (
+            <p className="complete-profile-warning">
+              Complete your profile
+            </p>
+          )}
         </div>
-      )}
-
+      </div>
     </div>
-  </div>
-);
-
+  );
 };
 
 export default EditableUserCard;

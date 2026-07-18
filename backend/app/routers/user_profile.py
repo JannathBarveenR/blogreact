@@ -23,6 +23,7 @@ class UserProfileUpdate(BaseModel):
     city: Optional[str] = None
     state: Optional[str] = None
     pincode: Optional[str] = None
+    address: Optional[str] = None
 
 def ensure_avatars_bucket_exists():
     try:
@@ -45,9 +46,21 @@ async def get_user_profile(
     if user_id != auth_user_id:
         raise HTTPException(status_code=403, detail="You can only view your own profile")
     try:
-        response = supabase.table("user_profiles").select("id, full_name, phone, email, city, state, pincode, avatar_url").eq("id", user_id).execute()
+        response = supabase.table("user_profiles").select("id, full_name, phone, email, city, state, pincode, address, avatar_url").eq("id", user_id).execute()
         if not response.data:
-            raise HTTPException(status_code=404, detail="User profile not found")
+            # Google OAuth users may not have a row in user_profiles yet.
+            # Return an empty shell so the frontend can render the completion form.
+            return {
+                "id": user_id,
+                "full_name": None,
+                "phone": None,
+                "email": None,
+                "city": None,
+                "state": None,
+                "pincode": None,
+                "address": None,
+                "avatar_url": None,
+            }
         return response.data[0]
     except HTTPException:
         raise
@@ -69,43 +82,45 @@ async def update_user_profile(
         update_data = {k: v for k, v in profile.dict().items() if v is not None}
         if not update_data:
             return {"message": "No data to update"}
-            
-        # Sync email/phone and metadata changes to Supabase Auth (auth.users) so they can login with them and metadata matches
-        auth_updates = {}
-        user_metadata = {}
         
-        if "email" in update_data and update_data["email"].strip():
-            auth_updates["email"] = update_data["email"].strip()
-            auth_updates["email_confirm"] = True
-        if "phone" in update_data and update_data["phone"].strip():
-            auth_updates["phone"] = update_data["phone"].strip()
-            auth_updates["phone_confirm"] = True
-            
-        if "full_name" in update_data:
-            user_metadata["full_name"] = update_data["full_name"]
-        if "city" in update_data:
-            user_metadata["city"] = update_data["city"]
-        if "state" in update_data:
-            user_metadata["state"] = update_data["state"]
-        if "pincode" in update_data:
-            user_metadata["pincode"] = update_data["pincode"]
-            
-        if user_metadata:
-            auth_updates["user_metadata"] = user_metadata
-            
-        if auth_updates:
-            try:
-                supabase_admin.auth.admin.update_user_by_id(user_id, auth_updates)
-            except Exception as auth_err:
-                print(f"Failed to update auth.users credentials: {auth_err}")
-                raise HTTPException(
-                    status_code=400, 
-                    detail="Failed to update login credentials. This email or phone may already be taken."
-                )
-            
-        response = supabase.table("user_profiles").update(update_data).eq("id", user_id).execute()
+        update_data["id"] = user_id
+
+        # If phone is being set, check it isn't already owned by a DIFFERENT user row.
+        # This prevents the user_profiles_phone_key unique constraint from firing.
+        if "phone" in update_data and update_data["phone"]:
+            phone_conflict = supabase_admin.table("user_profiles") \
+                .select("id") \
+                .eq("phone", update_data["phone"]) \
+                .neq("id", user_id) \
+                .execute()
+            if phone_conflict.data:
+                # Another row already has this phone — skip updating the phone field.
+                update_data.pop("phone", None)
+
+        # Check if a row already exists for this user
+        existing = supabase_admin.table("user_profiles").select("id").eq("id", user_id).execute()
+
+        if not existing.data:
+            # No row exists yet (Google OAuth user first-time profile completion).
+            # Use admin client to INSERT, bypassing RLS that blocks inserts from user tokens.
+            response = supabase_admin.table("user_profiles").insert(update_data).execute()
+        else:
+            # Row exists — UPDATE only (no risk of touching phone UNIQUE on another row).
+            response = supabase_admin.table("user_profiles").update(update_data).eq("id", user_id).execute()
+
         if not response.data:
-            raise HTTPException(status_code=404, detail="User profile not found or update failed")
+            raise HTTPException(status_code=500, detail="Profile update failed — no data returned")
+
+        # Optionally sync full_name to auth.users metadata (best-effort, non-blocking)
+        if "full_name" in update_data:
+            try:
+                supabase_admin.auth.admin.update_user_by_id(
+                    user_id,
+                    {"user_metadata": {"full_name": update_data["full_name"]}}
+                )
+            except Exception as auth_sync_err:
+                print(f"Failed to sync user_metadata to auth.users: {auth_sync_err}")
+
         return response.data[0]
     except HTTPException:
         raise

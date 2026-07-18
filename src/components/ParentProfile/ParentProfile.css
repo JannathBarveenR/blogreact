@@ -1,0 +1,39 @@
+/* Parent Profile Custom Component Styles */
+
+.onboarding-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  color: #06402b;
+  cursor: pointer;
+  padding: 8px 0;
+  align-self: flex-start;
+  margin-bottom: 12px;
+  transition: color 0.2s;
+}
+
+.onboarding-back-btn:hover {
+  color: #84b662;
+}
+
+.onboarding-pincode-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid #c0e8d0;
+  border-top-color: #06402b;
+  border-radius: 50%;
+  animation: onboarding-spin 0.6s linear infinite;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+@keyframes onboarding-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
