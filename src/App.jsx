@@ -10,6 +10,7 @@ const MainLayout = lazy(() => import("./components/MainLayout/MainLayout"));
 const ProfileCreate = lazy(() => import("./components/ProfileCreation/ProfileCreation/ProfileCreation"));
 const PetCard = lazy(() => import("./components/petcard/petcard"));
 const ResetPassword = lazy(() => import("./components/Login/ResetPassword"));
+const AuthCallback = lazy(() => import("./components/AuthCallback/AuthCallback"));
 
 function LoadingFallback() {
   return (
@@ -19,7 +20,26 @@ function LoadingFallback() {
   );
 }
 
+import { useEffect } from "react";
+
 function App() {
+  useEffect(() => {
+    // Parse OAuth hash fragment globally to catch redirects to / or /landing
+    const hash = window.location.hash;
+    if (hash && hash.includes("access_token=")) {
+      const params = new URLSearchParams(hash.replace("#", "?"));
+      const accessToken = params.get("access_token");
+      const refreshToken = params.get("refresh_token");
+      if (accessToken) {
+        localStorage.setItem("access_token", accessToken);
+        if (refreshToken) localStorage.setItem("refresh_token", refreshToken);
+        // Clean up URL and redirect to home
+        window.history.replaceState(null, "", "/home");
+        window.location.href = "/home"; // Force navigation so ProtectedRoute picks it up
+      }
+    }
+  }, []);
+
   return (
     <Router>
       <Suspense fallback={<LoadingFallback />}>
@@ -30,6 +50,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/pet/:id" element={<PetCard />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
           
           {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>

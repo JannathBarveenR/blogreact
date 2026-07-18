@@ -90,6 +90,20 @@ export default function useAuth() {
 
   // Validate session on mount
   useEffect(() => {
+    // Parse OAuth hash fragment if present (e.g., from Google Login)
+    const hash = window.location.hash;
+    if (hash && hash.includes("access_token=")) {
+      const params = new URLSearchParams(hash.replace("#", "?"));
+      const accessToken = params.get("access_token");
+      const refreshToken = params.get("refresh_token");
+      if (accessToken) {
+        localStorage.setItem("access_token", accessToken);
+        if (refreshToken) localStorage.setItem("refresh_token", refreshToken);
+        // Clean up URL
+        window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      }
+    }
+    
     validateSession();
   }, [validateSession]);
 

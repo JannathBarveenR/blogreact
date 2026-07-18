@@ -173,7 +173,7 @@ async def google_oauth():
             {
                 "provider": "google",
                 "options": {
-                    "redirect_to": f"{FRONTEND_URL}/home",
+                    "redirect_to": f"{FRONTEND_URL}/auth/callback",
                 },
             }
         )
