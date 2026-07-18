@@ -7,7 +7,7 @@ import "./Step2.css";
 function Step2({ goNext, goBack, petData }) {
   const [selectedPet, setSelectedPet] = useState(petData.petType || "");
   const [selectedPetCard, setSelectedPetCard] = useState(
-    petData.petType && ["Dog", "Cat", "Bird", "Rabbit"].includes(petData.petType)
+    petData.petType && ["Dog", "Cat", "Bird", "Rabbit", "Parrot"].includes(petData.petType)
       ? petData.petType
       : petData.petType
       ? "Other"
@@ -32,10 +32,12 @@ function Step2({ goNext, goBack, petData }) {
 
   const progress = 50;
 
-  const filteredBreeds =
+  const rawFiltered =
     breedData[selectedPet]?.filter((breed) =>
-      breed.toLowerCase().includes(breedSearch.toLowerCase())
+      breed.toLowerCase().includes(breedSearch.toLowerCase()) &&
+      breed !== "Other"
     ) || [];
+  const filteredBreeds = [...rawFiltered, "Other"];
 
   React.useEffect(() => {
     const handleClickOutside = (e) => {
@@ -87,7 +89,7 @@ function Step2({ goNext, goBack, petData }) {
                 <span>
                   {pet.name === "Other" &&
                   selectedPet &&
-                  !["Dog", "Cat", "Bird", "Rabbit"].includes(selectedPet)
+                  !["Dog", "Cat", "Bird", "Rabbit", "Parrot"].includes(selectedPet)
                     ? selectedPet
                     : pet.name}
                 </span>
@@ -125,77 +127,6 @@ function Step2({ goNext, goBack, petData }) {
   </button>
 </div>
 
-{/* BREED POPUP */}
-{showBreedDropdown && (
-  <div className="other-popup-overlay" onClick={() => setShowBreedDropdown(false)}>
-    <div className="breed-popup" onClick={(e) => e.stopPropagation()}>
-      <div className="breed-popup-header">
-        <h3>Select breed</h3>
-        <button
-          type="button"
-          className="breed-popup-close"
-          onClick={() => setShowBreedDropdown(false)}
-        >
-          ×
-        </button>
-      </div>
-
-      <div className="breed-popup-search">
-        <input
-          type="text"
-          autoFocus
-          placeholder="Type to search breed..."
-          value={breedSearch}
-          onChange={(e) => setBreedSearch(e.target.value)}
-        />
-      </div>
-
-      {breedData[selectedPet] ? (
-        <div className="breed-popup-list">
-          {filteredBreeds.length > 0 ? (
-            filteredBreeds.map((breed) => (
-              <button
-                type="button"
-                key={breed}
-                className={`breed-dropdown-item ${selectedBreed === breed ? "active" : ""}`}
-                onClick={() => {
-                  if (breed === "Other") {
-                    setShowBreedDropdown(false);
-                    setShowOtherBreedPopup(true);
-                  } else {
-                    setSelectedBreed(breed);
-                    setShowBreedDropdown(false);
-                    setBreedSearch("");
-                  }
-                }}
-              >
-                {breed}
-              </button>
-            ))
-          ) : (
-            <div className="breed-dropdown-empty">No breeds found</div>
-          )}
-        </div>
-      ) : (
-        <div className="custom-breed-box">
-          <input
-            type="text"
-            placeholder="Enter breed..."
-            value={selectedBreed}
-            onChange={(e) => setSelectedBreed(e.target.value)}
-          />
-          <button
-            type="button"
-            className="save-breed-btn"
-            onClick={() => setShowBreedDropdown(false)}
-          >
-            Save Breed
-          </button>
-        </div>
-      )}
-    </div>
-  </div>
-)}
 
         {/* GENDER */}
         <div className="form-group">
@@ -221,6 +152,78 @@ function Step2({ goNext, goBack, petData }) {
           <button className="next-btn" onClick={handleNext}>Next</button>
         </div>
       </div>
+
+      {/* BREED POPUP */}
+      {showBreedDropdown && (
+        <div className="other-popup-overlay" onClick={() => setShowBreedDropdown(false)}>
+          <div className="breed-popup" onClick={(e) => e.stopPropagation()}>
+            <div className="breed-popup-header">
+              <h3>Select breed</h3>
+              <button
+                type="button"
+                className="breed-popup-close"
+                onClick={() => setShowBreedDropdown(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="breed-popup-search">
+              <input
+                type="text"
+                autoFocus
+                placeholder="Type to search breed..."
+                value={breedSearch}
+                onChange={(e) => setBreedSearch(e.target.value)}
+              />
+            </div>
+
+            {breedData[selectedPet] ? (
+              <div className="breed-popup-list">
+                {filteredBreeds.length > 0 ? (
+                  filteredBreeds.map((breed) => (
+                    <button
+                      type="button"
+                      key={breed}
+                      className={`breed-dropdown-item ${selectedBreed === breed ? "active" : ""}`}
+                      onClick={() => {
+                        if (breed === "Other") {
+                          setShowBreedDropdown(false);
+                          setShowOtherBreedPopup(true);
+                        } else {
+                          setSelectedBreed(breed);
+                          setShowBreedDropdown(false);
+                          setBreedSearch("");
+                        }
+                      }}
+                    >
+                      {breed}
+                    </button>
+                  ))
+                ) : (
+                  <div className="breed-dropdown-empty">No breeds found</div>
+                )}
+              </div>
+            ) : (
+              <div className="custom-breed-box">
+                <input
+                  type="text"
+                  placeholder="Enter breed..."
+                  value={selectedBreed}
+                  onChange={(e) => setSelectedBreed(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className="save-breed-btn"
+                  onClick={() => setShowBreedDropdown(false)}
+                >
+                  Save Breed
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* OTHER PET TYPE POPUP */}
       {showOtherPopup && (

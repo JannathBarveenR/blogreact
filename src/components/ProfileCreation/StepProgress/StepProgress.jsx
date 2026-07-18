@@ -116,11 +116,11 @@ function StepProgress({ stepNumber }) {
         <div className="absolute -left-10 bottom-0 h-20 w-20 rounded-full bg-[#84B662]/10 blur-2xl" />
         <div className="absolute -right-10 top-0 h-20 w-20 rounded-full bg-[#004B49]/5 blur-2xl" />
 
-        <div className="relative h-[150px]">
+        <div className="relative h-[110px]">
 
           {/* Base Line */}
           <div
-            className="absolute top-[72px] h-[5px] rounded-full bg-[#D9DDD6]"
+            className="absolute top-[56px] h-[5px] rounded-full bg-[#D9DDD6]"
             style={{
               left: `${TRACK_START}%`,
               width: `${TRACK_END - TRACK_START}%`,
@@ -131,7 +131,7 @@ function StepProgress({ stepNumber }) {
           <div
             className="
               absolute
-              top-[72px]
+              top-[56px]
               h-[5px]
               rounded-full
               bg-gradient-to-r
@@ -158,7 +158,7 @@ function StepProgress({ stepNumber }) {
             return (
               <div
                 key={step}
-                className="absolute top-[63px] -translate-x-1/2"
+                className="absolute top-[47px] -translate-x-1/2"
                 style={{
                   left: `${position}%`,
                 }}
@@ -205,8 +205,8 @@ function StepProgress({ stepNumber }) {
           <div
             className="absolute transition-all duration-700 ease-in-out"
             style={{
-              left: `calc(${currentPosition}% - 35px)`,
-              top: "5px",
+              left: `calc(${currentPosition}% - 24px)`,
+              top: "10px",
               zIndex: 20,
             }}
           >
@@ -214,7 +214,7 @@ function StepProgress({ stepNumber }) {
               src={dogParent}
               alt="Pet Parent"
               className="
-                h-[70px]
+                h-[48px]
                 w-auto
                 object-contain
                 drop-shadow-lg
@@ -227,7 +227,7 @@ function StepProgress({ stepNumber }) {
             className="absolute"
             style={{
               right: "-5px",
-              top: "-5px",
+              top: "-4px",
               zIndex: 10,
             }}
           >
@@ -257,17 +257,14 @@ function StepProgress({ stepNumber }) {
               src={homeCard}
               alt="Home"
               className="
-                h-[90px]
+                h-[64px]
                 w-auto
                 object-contain
               "
             />
           </div>
 
-          {/* Decorative Trees */}
-          <div className="absolute left-[1px] top-[9px] text-5xl opacity-30">
-            🌳
-          </div>
+
 
         </div>
 

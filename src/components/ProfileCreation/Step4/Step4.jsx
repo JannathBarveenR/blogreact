@@ -44,6 +44,26 @@ function Step4({ goBack, petData, setStep, isSubmitting, setIsSubmitting, submit
 
   const [isEditing, setIsEditing] = useState(false);
 
+  const [showBreedDropdown, setShowBreedDropdown] = useState(false);
+  const [breedSearch, setBreedSearch] = useState("");
+  const [showOtherBreedPopup, setShowOtherBreedPopup] = useState(false);
+  const [customBreed, setCustomBreed] = useState("");
+
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [calendarYear, setCalendarYear] = useState(
+    localPetData.birthDate ? new Date(localPetData.birthDate).getFullYear() : new Date().getFullYear()
+  );
+  const [calendarMonth, setCalendarMonth] = useState(
+    localPetData.birthDate ? new Date(localPetData.birthDate).getMonth() : new Date().getMonth()
+  );
+
+  const rawFiltered =
+    breedData[localPetData.petType]?.filter((breed) =>
+      breed.toLowerCase().includes(breedSearch.toLowerCase()) &&
+      breed !== "Other"
+    ) || [];
+  const filteredBreeds = [...rawFiltered, "Other"];
+
   React.useEffect(() => {
     if (localPetData.birthDate) {
       const computed = calculateAgeString(localPetData.birthDate);
@@ -170,12 +190,18 @@ function Step4({ goBack, petData, setStep, isSubmitting, setIsSubmitting, submit
 
       <div className="confirm-header">
         <h2 className="confirm-title">Review Pet Profile</h2>
-        <p className="confirm-subtitle">
-          Please review your pet's details before generating their Pet Health ID.
-        </p>
       </div>
 
       <div className="confirm-card">
+        <button
+          type="button"
+          className="confirm-card-edit-btn"
+          onClick={() => setIsEditing(!isEditing)}
+          title={isEditing ? "Save details" : "Edit details"}
+        >
+          {isEditing ? <FiCheck size={18} /> : <FiEdit2 size={16} />}
+        </button>
+
         <div className="pet-summary-top">
           <div className="pet-avatar-wrap">
             <PetAvatar
@@ -190,7 +216,6 @@ function Step4({ goBack, petData, setStep, isSubmitting, setIsSubmitting, submit
             <h3>{localPetData.petName || "Your Pet"}</h3>
             <p>{localPetData.breed || "Breed not added"}</p>
             <div className="pet-summary-badge">
-              <span className="pet-summary-badge-icon">🐾</span>
               <span>{localPetData.petType || "Pet"}</span>
             </div>
           </div>
@@ -198,18 +223,30 @@ function Step4({ goBack, petData, setStep, isSubmitting, setIsSubmitting, submit
 
         <div className="confirm-details">
           {[
-            { icon: "👤", label: "Pet Name",  name: "petName", type: "text" },
-            { icon: "🐕", label: "Pet Type",  name: "petType", type: "select", options: petTypes.map(p => p.name) },
-            { icon: "🐾", label: "Breed",     name: "breed", type: "select", options: breedData[localPetData.petType] || [] },
-            { icon: "♂",  label: "Gender",    name: "gender", type: "select", options: ["Male", "Female"] },
-          ].map(({ icon, label, name, type, options }) => (
+            { label: "Pet Name",  name: "petName", type: "text" },
+            { label: "Pet Type",  name: "petType", type: "select", options: petTypes.map(p => p.name) },
+            { label: "Breed",     name: "breed", type: "breed-popup" },
+            { label: "Gender",    name: "gender", type: "select", options: ["Male", "Female"] },
+          ].map(({ label, name, type, options }) => (
             <div className="confirm-row" key={label}>
               <div className="confirm-row-left">
-                <span className="confirm-row-icon">{icon}</span>
                 <span className="label">{label}</span>
               </div>
               {isEditing ? (
-                 type === "select" && options?.length > 0 ? (
+                 type === "breed-popup" ? (
+                   <button
+                     type="button"
+                     className="confirm-breed-selector-btn"
+                     onClick={() => {
+                       if (!localPetData.petType) { alert("Please select a pet type first"); return; }
+                       setBreedSearch("");
+                       setShowBreedDropdown(true);
+                     }}
+                     style={inputStyle}
+                   >
+                     <span>{localPetData.breed || "Select Breed"}</span>
+                   </button>
+                 ) : type === "select" && options?.length > 0 ? (
                    <select 
                      value={localPetData[name]} 
                      onChange={e => {
@@ -243,19 +280,17 @@ function Step4({ goBack, petData, setStep, isSubmitting, setIsSubmitting, submit
           {/* Age / DOB Row */}
           <div className="confirm-row" key="Age">
             <div className="confirm-row-left">
-              <span className="confirm-row-icon">📅</span>
               <span className="label">Age / DOB</span>
             </div>
             {isEditing ? (
               <div style={{ display: 'flex', gap: '8px', flexDirection: 'column', alignItems: 'flex-start', width: '150px' }}>
-                <input 
-                  type="date" 
-                  value={localPetData.birthDate} 
-                  max={new Date().toISOString().split("T")[0]}
-                  onChange={e => setLocalPetData({...localPetData, birthDate: e.target.value})} 
+                <button
+                  type="button"
+                  onClick={() => setShowCalendar(true)}
                   style={inputStyle}
-                  title="Date of Birth"
-                />
+                >
+                  {localPetData.birthDate || "Select DOB"}
+                </button>
                 <span style={{ fontSize: '11px', color: '#8a938a', marginLeft: '4px' }}>Approx Age (if no DOB)</span>
                 <div style={{ display: 'flex', gap: '6px', width: '100%' }}>
                   <input 
@@ -291,18 +326,6 @@ function Step4({ goBack, petData, setStep, isSubmitting, setIsSubmitting, submit
         </div>
       </div>
 
-      {isEditing ? (
-        <button type="button" className="edit-profile-btn edit-profile-btn--save" onClick={() => setIsEditing(false)}>
-          <FiCheck />
-          <span>Save Details</span>
-        </button>
-      ) : (
-        <button type="button" className="edit-profile-btn" onClick={() => setIsEditing(true)}>
-          <FiEdit2 />
-          <span>Edit Details</span>
-        </button>
-      )}
-
       {submitError && <div className="submit-error">{submitError}</div>}
 
       <button
@@ -319,6 +342,194 @@ function Step4({ goBack, petData, setStep, isSubmitting, setIsSubmitting, submit
           <span>Generate Pet Health ID</span>
         )}
       </button>
+
+      {/* BREED POPUP */}
+      {showBreedDropdown && (
+        <div className="other-popup-overlay" onClick={() => setShowBreedDropdown(false)}>
+          <div className="breed-popup" onClick={(e) => e.stopPropagation()}>
+            <div className="breed-popup-header">
+              <h3>Select breed</h3>
+              <button
+                type="button"
+                className="breed-popup-close"
+                onClick={() => setShowBreedDropdown(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="breed-popup-search">
+              <input
+                type="text"
+                autoFocus
+                placeholder="Type to search breed..."
+                value={breedSearch}
+                onChange={(e) => setBreedSearch(e.target.value)}
+              />
+            </div>
+
+            {breedData[localPetData.petType] ? (
+              <div className="breed-popup-list">
+                {filteredBreeds.length > 0 ? (
+                  filteredBreeds.map((breed) => (
+                    <button
+                      type="button"
+                      key={breed}
+                      className={`breed-dropdown-item ${localPetData.breed === breed ? "active" : ""}`}
+                      onClick={() => {
+                        if (breed === "Other") {
+                          setShowBreedDropdown(false);
+                          setShowOtherBreedPopup(true);
+                        } else {
+                          setLocalPetData({ ...localPetData, breed });
+                          setShowBreedDropdown(false);
+                          setBreedSearch("");
+                        }
+                      }}
+                    >
+                      {breed}
+                    </button>
+                  ))
+                ) : (
+                  <div className="breed-dropdown-empty">No breeds found</div>
+                )}
+              </div>
+            ) : (
+              <div className="custom-breed-box">
+                <input
+                  type="text"
+                  placeholder="Enter breed..."
+                  value={localPetData.breed}
+                  onChange={(e) => setLocalPetData({ ...localPetData, breed: e.target.value })}
+                />
+                <button
+                  type="button"
+                  className="save-breed-btn"
+                  onClick={() => setShowBreedDropdown(false)}
+                >
+                  Save Breed
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* OTHER BREED POPUP */}
+      {showOtherBreedPopup && (
+        <div className="other-popup-overlay" onClick={() => setShowOtherBreedPopup(false)}>
+          <div className="other-popup" onClick={(e) => e.stopPropagation()}>
+            <div className="popup-icon">🧬</div>
+            <h3>Enter Breed</h3>
+            <p>Type your breed name</p>
+            <input
+              type="text"
+              placeholder="Eg. Indie, Rajapalayam..."
+              value={customBreed}
+              onChange={(e) => setCustomBreed(e.target.value)}
+            />
+            <div className="popup-buttons">
+              <button className="cancel-btn" onClick={() => { setShowOtherBreedPopup(false); setCustomBreed(""); }}>Cancel</button>
+              <button
+                className="save-btn"
+                onClick={() => {
+                  if (!customBreed.trim()) return;
+                  setLocalPetData({ ...localPetData, breed: customBreed });
+                  setShowOtherBreedPopup(false);
+                  setCustomBreed("");
+                }}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CALENDAR POPUP */}
+      {showCalendar && (
+        <div className="other-popup-overlay" onClick={() => setShowCalendar(false)}>
+          <div className="calendar-popup" onClick={(e) => e.stopPropagation()}>
+            <div className="calendar-popup-header">
+              <h3>Select Birth Date</h3>
+              <button
+                type="button"
+                className="breed-popup-close"
+                onClick={() => setShowCalendar(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="calendar-selectors">
+              <select
+                value={calendarMonth}
+                onChange={(e) => setCalendarMonth(parseInt(e.target.value))}
+                className="calendar-select"
+              >
+                {[
+                  "January", "February", "March", "April", "May", "June",
+                  "July", "August", "September", "October", "November", "December"
+                ].map((m, idx) => (
+                  <option key={m} value={idx}>{m}</option>
+                ))}
+              </select>
+
+              <select
+                value={calendarYear}
+                onChange={(e) => setCalendarYear(parseInt(e.target.value))}
+                className="calendar-select"
+              >
+                {Array.from({ length: 40 }, (_, i) => new Date().getFullYear() - i).map((yr) => (
+                  <option key={yr} value={yr}>{yr}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="calendar-grid">
+              {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => (
+                <div key={d} className="calendar-weekday-header">{d}</div>
+              ))}
+              {(() => {
+                const firstDayIdx = new Date(calendarYear, calendarMonth, 1).getDay();
+                const totalDays = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+                const cells = [];
+                
+                for (let i = 0; i < firstDayIdx; i++) {
+                  cells.push(<div key={`empty-${i}`} className="calendar-day-empty" />);
+                }
+                
+                for (let day = 1; day <= totalDays; day++) {
+                  const dateStr = `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                  const isSelected = localPetData.birthDate === dateStr;
+                  const isToday = new Date().toISOString().split("T")[0] === dateStr;
+                  const isFuture = new Date(calendarYear, calendarMonth, day) > new Date();
+
+                  cells.push(
+                    <button
+                      key={`day-${day}`}
+                      type="button"
+                      disabled={isFuture}
+                      className={`calendar-day-btn${isSelected ? " active" : ""}${isToday ? " today" : ""}`}
+                      onClick={() => {
+                        setLocalPetData({
+                          ...localPetData,
+                          birthDate: dateStr,
+                          approxAge: calculateAgeString(dateStr)
+                        });
+                        setShowCalendar(false);
+                      }}
+                    >
+                      {day}
+                    </button>
+                  );
+                }
+                return cells;
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
