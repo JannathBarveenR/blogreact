@@ -178,7 +178,7 @@ export default function ParentProfile() {
       // Re-validate session so our useAuth gets updated info
       await validateSession();
 
-      navigate("/home", { replace: true, state: { tab: "profile" } });
+      navigate("/home", { replace: true, state: { tab: "home" } });
     } catch (err) {
       setError(err.message || "Failed to save profile.");
     } finally {
@@ -187,7 +187,7 @@ export default function ParentProfile() {
   };
 
   const handleBack = () => {
-    navigate("/home", { state: { tab: "profile" } });
+    navigate("/home", { state: { tab: "home" } });
   };
 
   return (

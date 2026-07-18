@@ -30,6 +30,7 @@ export default function ProfileCard({
   handlePetSelect: propHandlePetSelect,
   dropdownRef: propDropdownRef,
   onAddPet,
+  isStatic = false,
 }) {
   const [internalShowDropdown, setInternalShowDropdown] = useState(false);
   const internalRef = useRef(null);
@@ -80,32 +81,32 @@ export default function ProfileCard({
   };
 
   const normalizedPets = (pets || []).map(normalizePet).filter(Boolean);
-function getPetAge(birthDate) {
-  if (!birthDate) return "Age not added";
+  function getPetAge(birthDate) {
+    if (!birthDate) return "Age not added";
 
-  const birth = new Date(birthDate);
-  const today = new Date();
+    const birth = new Date(birthDate);
+    const today = new Date();
 
-  let years = today.getFullYear() - birth.getFullYear();
-  let months = today.getMonth() - birth.getMonth();
+    let years = today.getFullYear() - birth.getFullYear();
+    let months = today.getMonth() - birth.getMonth();
 
-  if (today.getDate() < birth.getDate()) {
-    months--;
+    if (today.getDate() < birth.getDate()) {
+      months--;
+    }
+
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+
+    if (years > 0) {
+      return `${years} ${years === 1 ? "Year" : "Years"}${
+        months > 0 ? ` ${months} ${months === 1 ? "Month" : "Months"}` : ""
+      }`;
+    }
+
+    return `${months} ${months === 1 ? "Month" : "Months"}`;
   }
-
-  if (months < 0) {
-    years--;
-    months += 12;
-  }
-
-  if (years > 0) {
-    return `${years} ${years === 1 ? "Year" : "Years"}${
-      months > 0 ? ` ${months} ${months === 1 ? "Month" : "Months"}` : ""
-    }`;
-  }
-
-  return `${months} ${months === 1 ? "Month" : "Months"}`;
-}
   const genderIcon =
     selectedPet.gender?.toLowerCase() === "female"
       ? femaleIcon
@@ -114,8 +115,8 @@ function getPetAge(birthDate) {
   return (
     <div className="profile-wrapper" ref={activeRef}>
       <div
-        className="profile-card clickable"
-        onClick={toggleDropdown}
+        className={`profile-card${isStatic ? "" : " clickable"}`}
+        onClick={isStatic ? undefined : toggleDropdown}
       >
         <div className="profile-avatar">
           <PetAvatar src={selectedPet.image} petType={selectedPet.petType} className="avatar-img" size={48} />
@@ -124,13 +125,15 @@ function getPetAge(birthDate) {
         <div className="profile-info">
           <div className="profile-name-row">
             <h2 className="profile-name">{selectedPet.name}</h2>
-            <span
-              className={`profile-chevron ${
-                isDropdownOpen ? "rotate" : ""
-              }`}
-            >
-              &#8964;
-            </span>
+            {!isStatic && (
+              <span
+                className={`profile-chevron ${
+                  isDropdownOpen ? "rotate" : ""
+                }`}
+              >
+                &#8964;
+              </span>
+            )}
           </div>
 
           <p className="profile-breed">{selectedPet.breed}</p>
@@ -150,52 +153,54 @@ function getPetAge(birthDate) {
       </div>
 
       {/* Floating Pet Switcher */}
-      <div className={`pet-switcher ${isDropdownOpen ? "open" : ""}`}>
-        {normalizedPets.map((pet, idx) => {
-          const originalPet = pets[idx] || pet;
-          const petGenderIcon =
-            pet.gender?.toLowerCase() === "female"
-              ? femaleIcon
-              : maleIcon;
+      {!isStatic && (
+        <div className={`pet-switcher ${isDropdownOpen ? "open" : ""}`}>
+          {normalizedPets.map((pet, idx) => {
+            const originalPet = pets[idx] || pet;
+            const petGenderIcon =
+              pet.gender?.toLowerCase() === "female"
+                ? femaleIcon
+                : maleIcon;
 
-          return (
-            <div
-              key={pet.id}
-              className={`pet-switcher__item ${
-                selectedPet.id === pet.id ? "active" : ""
-              }`}
-              onClick={() => onSelect(originalPet)}
-            >
-              <PetAvatar src={pet.image} petType={pet.petType} className="pet-switcher__avatar" size={40} />
+            return (
+              <div
+                key={pet.id}
+                className={`pet-switcher__item ${
+                  selectedPet.id === pet.id ? "active" : ""
+                }`}
+                onClick={() => onSelect(originalPet)}
+              >
+                <PetAvatar src={pet.image} petType={pet.petType} className="pet-switcher__avatar" size={40} />
 
-              <div className="pet-switcher__info">
-                <h4>{pet.name}</h4>
-                <p>{pet.breed}</p>
+                <div className="pet-switcher__info">
+                  <h4>{pet.name}</h4>
+                  <p>{pet.breed}</p>
 
-                <div className="pet-switcher__meta">
-                  <span>
-                    <img src={pawIcon} alt="" className="meta-icon" />
-                    {getPetAge(pet.birthDate)}
-                  </span>
+                  <div className="pet-switcher__meta">
+                    <span>
+                      <img src={pawIcon} alt="" className="meta-icon" />
+                      {getPetAge(pet.birthDate)}
+                    </span>
 
-                  <span>
-                    <img src={petGenderIcon} alt="" className="meta-icon" />
-                    {pet.gender}
-                  </span>
+                    <span>
+                      <img src={petGenderIcon} alt="" className="meta-icon" />
+                      {pet.gender}
+                    </span>
+                  </div>
                 </div>
+
+                {selectedPet.id === pet.id && (
+                  <div className="pet-switcher__tick">✓</div>
+                )}
               </div>
+            );
+          })}
 
-              {selectedPet.id === pet.id && (
-                <div className="pet-switcher__tick">✓</div>
-              )}
-            </div>
-          );
-        })}
-
-        <button className="pet-switcher__add-btn" onClick={onAddPet}>
-          + Add Pet
-        </button>
-      </div>
+          <button className="pet-switcher__add-btn" onClick={onAddPet}>
+            + Add Pet
+          </button>
+        </div>
+      )}
     </div>
   );
 }

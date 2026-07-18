@@ -46,7 +46,7 @@ async def get_user_profile(
     if user_id != auth_user_id:
         raise HTTPException(status_code=403, detail="You can only view your own profile")
     try:
-        response = supabase.table("user_profiles").select("id, full_name, phone, email, city, state, pincode, address, avatar_url").eq("id", user_id).execute()
+        response = supabase.table("user_profiles").select("id, full_name, phone, email, city, state, pincode, address, avatar_url, auth_provider").eq("id", user_id).execute()
         if not response.data:
             # Google OAuth users may not have a row in user_profiles yet.
             # Return an empty shell so the frontend can render the completion form.
@@ -60,6 +60,7 @@ async def get_user_profile(
                 "pincode": None,
                 "address": None,
                 "avatar_url": None,
+                "auth_provider": None,
             }
         return response.data[0]
     except HTTPException:
@@ -84,6 +85,15 @@ async def update_user_profile(
             return {"message": "No data to update"}
         
         update_data["id"] = user_id
+
+        # Determine auth provider from auth.users and save to public.user_profiles
+        try:
+            auth_user = supabase_admin.auth.admin.get_user_by_id(user_id)
+            if auth_user:
+                provider = auth_user.app_metadata.get("provider") or auth_user.app_metadata.get("providers", ["phone"])[0]
+                update_data["auth_provider"] = provider
+        except Exception as auth_provider_err:
+            print(f"Failed to fetch auth user provider: {auth_provider_err}")
 
         # If phone is being set, check it isn't already owned by a DIFFERENT user row.
         # This prevents the user_profiles_phone_key unique constraint from firing.

@@ -1,35 +1,49 @@
 import React from "react";
-import heroBg from "../../../assets/pet-parent.webp";
+import useAuth from "../../../hooks/useAuth";
 import "./HeroSection.css";
 
-export default function HeroSection() {
+export default function HeroSection({ pets = [] }) {
+  const { user } = useAuth();
+  
+  const userName = user?.user_metadata?.full_name || user?.name || "Pet Parent";
+  
+  const hours = new Date().getHours();
+  let greeting = "Good evening";
+  let themeClass = "evening-theme";
+  
+  if (hours >= 5 && hours < 12) {
+    greeting = "Good morning";
+    themeClass = "morning-theme";
+  } else if (hours >= 12 && hours < 17) {
+    greeting = "Happy afternoon";
+    themeClass = "afternoon-theme";
+  } else if (hours >= 17 && hours < 21) {
+    greeting = "Good evening";
+    themeClass = "evening-theme";
+  } else {
+    greeting = "Good night";
+    themeClass = "night-theme";
+  }
+
+  const hasPets = pets && pets.length > 0;
+  const quote = "Until one has loved an animal, a part of one's soul remains unawakened.";
+
   return (
-    <section
-      className="hero"
-      style={{ backgroundImage: `url(${heroBg})` }}
-    >
-      <div className="hero-inner">
-        <div className="hero-left">
+    <section className={`dashboard-hero ${themeClass}`}>
 
+      <h1 className="dashboard-hero-title">
+        {greeting}, <span className="dashboard-hero-username">{userName}</span>!
+      </h1>
 
-          <div className="hero-badge">
-            <span className="hero-badge-icon"><PawIcon filled /></span>
-            <div className="hero-text">Welcome to PetOLife</div>
-          </div>
-
-          <h1 className="hero-title">
-            <span className="hero-title-dark">Your Pet's Journey,</span>
-            <span className="hero-title-green">Our Priority.</span>
-          </h1>
-
-          <p className="hero-subtitle">
-            Your all-in-one platform for pet care, health, community and
-            everything your pet deserves.
-          </p>
-
-          
-        </div>
-      </div>
+      {!hasPets ? (
+        <p className="dashboard-hero-subtitle quote-style">
+          "{quote}"
+        </p>
+      ) : (
+        <p className="dashboard-hero-subtitle">
+          Your all-in-one personalized pet health dashboard is ready.
+        </p>
+      )}
     </section>
   );
 }

@@ -177,6 +177,12 @@ const getPetIcon = (pet) => {
   // ====== Settings menu rows ======
   // Each entry maps to a route; wire these to real screens/handlers as
   // they become available. Delete Account is flagged `danger` for styling.
+  const isGoogleUser = 
+    user?.app_metadata?.provider === "google" ||
+    user?.app_metadata?.providers?.includes("google") ||
+    user?.identities?.some(id => id.provider === "google") ||
+    userProfile?.auth_provider === "google";
+
   const settingsRows = [
     {
       icon: FiBell,
@@ -190,12 +196,12 @@ const getPetIcon = (pet) => {
       subtitle: "Manage your privacy settings",
       path: "/settings/privacy",
     },
-    {
+    ...(!isGoogleUser ? [{
       icon: FiLock,
       title: "Change Password",
       subtitle: "Update your account password",
       path: "/settings/change-password",
-    },
+    }] : []),
     {
       icon: FiTrash2,
       title: "Delete Account",

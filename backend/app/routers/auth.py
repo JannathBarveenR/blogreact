@@ -214,6 +214,7 @@ async def get_current_user(authorization: Optional[str] = Header(None)):
             "id": result.user.id,
             "email": result.user.email,
             "user_metadata": result.user.user_metadata,
+            "app_metadata": getattr(result.user, "app_metadata", {}),
         }
 
     except HTTPException:
