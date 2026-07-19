@@ -17,15 +17,7 @@ from supabase import Client
 
 router = APIRouter()
 
-def ensure_bucket_exists():
-    try:
-        buckets = supabase_admin.storage.list_buckets()
-        bucket_names = [b.name for b in buckets] if buckets else []
-        if "medical-docs" not in bucket_names:
-            supabase_admin.storage.create_bucket("medical-docs", options={"public": True})
-            print("[Storage] Created public bucket 'medical-docs'")
-    except Exception as e:
-        print(f"[Storage] Note during bucket check: {e}")
+from app.services.medical_record_service import MedicalRecordService
 
 @router.post("/upload")
 async def upload_medical_record(
@@ -48,30 +40,15 @@ async def upload_medical_record(
         if pet_res.data[0].get("user_id") != user_id:
             raise HTTPException(status_code=403, detail="You do not have permission to upload records for this pet")
 
-        ensure_bucket_exists()
-
-        # 1) Upload to Storage Bucket 'medical-docs'
-        timestamp = int(time.time() * 1000)
+        # 1) Upload to Storage Bucket using MedicalRecordService
         safe_filename = file.filename.replace(" ", "_") if file.filename else "document"
-        
-        # Clean path: {category}/{pet_profile_id}/{timestamp}-{filename}
-        safe_category = category.strip().replace(" ", "_")
-        storage_path = f"{safe_category}/{pet_profile_id}/{timestamp}-{safe_filename}"
-        
         file_bytes = await file.read()
         file_size = len(file_bytes)
         
         if file_size > 10 * 1024 * 1024: # 10MB limit
              raise HTTPException(status_code=400, detail="File too large. Maximum size is 10MB.")
 
-        res = supabase.storage.from_("medical-docs").upload(
-            storage_path,
-            file_bytes,
-            {"content-type": file.content_type}
-        )
-
-        # Get the public URL for the file
-        public_url = supabase.storage.from_("medical-docs").get_public_url(storage_path)
+        public_url, storage_path = MedicalRecordService.upload_file(file_bytes, safe_filename, file.content_type)
 
         # Insert record into DB
         db_record = {
@@ -98,10 +75,7 @@ async def upload_medical_record(
         
         if not db_res.data:
             # If DB insert fails, try to clean up the uploaded file
-            try:
-                supabase.storage.from_("medical-docs").remove([storage_path])
-            except:
-                pass
+            MedicalRecordService.delete_file(storage_path)
             raise HTTPException(status_code=500, detail="Failed to save record metadata to database")
             
         return {
@@ -169,11 +143,7 @@ async def delete_medical_record(
         storage_path = record["storage_path"]
         
         # 2) Delete from Storage
-        try:
-             supabase.storage.from_("medical-docs").remove([storage_path])
-        except Exception as storage_err:
-             print(f"Warning: Failed to delete file from storage: {storage_err}")
-             # Continue to delete from DB even if storage delete fails
+        MedicalRecordService.delete_file(storage_path)
         
         # 3) Delete from DB
         db_res = supabase.table("medical_records").delete().eq("id", record_id).execute()
