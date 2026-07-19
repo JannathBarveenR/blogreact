@@ -140,6 +140,7 @@ const MainLayout = () => {
           activePetId={activePetId}
           onPetSelect={handlePetSelect}
           onAddPet={handleAddPet}
+          onNavigate={setActiveTab}
         />
       </div>
     );

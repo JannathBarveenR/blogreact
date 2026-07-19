@@ -30,7 +30,7 @@
   font-size: 12px;
   line-height: 1.6;
   font-weight: 500;
-  text-align: justify;
+  text-align: left;
   color: #4a5568; /* Soft grey text */
   white-space: normal;
   word-wrap: break-word;
@@ -39,4 +39,67 @@
 .quote-style {
   font-style: italic;
   opacity: 0.9;
+}
+
+/* Checklist inside the Good morning card */
+.hero-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.hero-checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #f7fafc;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.18s ease;
+  user-select: none;
+}
+
+.hero-checklist-item:hover {
+  background: #edf2f7;
+}
+
+.hero-checklist-item.checked {
+  background: rgba(134, 197, 64, 0.09);
+}
+
+.hero-checklist-checkbox {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e0;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s ease;
+}
+
+.hero-checklist-item.checked .hero-checklist-checkbox {
+  background: #86c540;
+  border-color: #86c540;
+}
+
+.hero-check-mark {
+  font-size: 10px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.hero-checklist-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: #4a5568;
+  transition: all 0.18s ease;
+}
+
+.hero-checklist-item.checked .hero-checklist-text {
+  color: #a0aec0;
+  text-decoration: line-through;
 }

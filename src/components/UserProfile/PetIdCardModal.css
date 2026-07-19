@@ -26,19 +26,20 @@
    that grows/shrinks to absorb extra/short vertical space. */
 .pid-card{
     position:relative;
-    width:min(92vw, 380px);
+    width:min(92vw, 360px);
     height:auto;
-    max-height:calc(100vh - 16px);
+    max-height:calc(100vh - 24px);
     background:linear-gradient(180deg, #F5FAF3 0%, #ffffff 22%);
-    border-radius:clamp(18px, 4vw, 30px);
-    padding:clamp(14px, 2.6vh, 26px) clamp(16px, 4vw, 24px);
+    border-radius:20px;
+    padding:16px 20px;
     font-family:"Manrope",sans-serif;
-    overflow:hidden;
+    overflow-y:auto;
     box-shadow:0 20px 60px rgba(0,0,0,.18);
     border:1px solid #E6EDDF;
     margin:auto;
     display:flex;
     flex-direction:column;
+    gap: 8px;
 }
 
 /* close */
@@ -138,18 +139,18 @@
     justify-content:center;
     position:relative;
     z-index:1;
-    margin-top:clamp(-20px, -1vh, -6px);
-    padding:clamp(4px, 1vh, 10px) 0;
+    margin-top:-4px;
+    padding:4px 0;
 }
 
 .pid-photo-ring{
-    width: 120px !important;
-    height: 120px !important;
+    width: 90px !important;
+    height: 90px !important;
     border-radius:50%;
     overflow:hidden;
-    border:4px solid #ffffff;
-    outline:3px solid #DCEBD5;
-    box-shadow:0 12px 30px rgba(30,90,45,.18);
+    border:3px solid #ffffff;
+    outline:2px solid #DCEBD5;
+    box-shadow:0 8px 20px rgba(30,90,45,.14);
     background:#F4F8F2;
     flex-shrink:0;
 }
@@ -270,7 +271,7 @@
     margin:clamp(4px, 1vh, 8px) 0;
 }
 .pid-logo{
-    height:54px;
+    height:40px;
     width:auto;
     object-fit:contain;
 }
@@ -278,15 +279,13 @@
 .pid-grid{
     flex-shrink:0;
     display:grid;
-    margin-left:-6px;   /* adjust as needed */
     grid-template-columns:1fr 1fr;
-    gap:clamp(6px, 1.4vh, 12px) clamp(2px, 1vw, 8px);
+    gap:8px 12px;
     position:relative;
     z-index:1;
 }
 .pid-grid > .pid-grid-item:nth-child(even){
-    justify-self:start;
-    margin-left:-26px;   /* adjust as needed */
+    justify-self:stretch;
 }
 
 .pid-grid-item{
@@ -317,16 +316,16 @@
 }
 
 .pid-grid-label{
-    font-size:clamp(10px, 1.5vh, 12px);
+    font-size:10px;
     color:#7C8B7E;
     font-weight:600;
 }
 
 .pid-grid-value{
-    font-size:clamp(12px, 1.9vh, 15px);
+    font-size:12px;
     font-weight:800;
     color:#202020;
-    word-break:break-word;
+    word-break:break-all;
     margin-top:1px;
 }
 
@@ -405,6 +404,10 @@
     color:#2E7D32;
     font-size:clamp(10px, 1.6vh, 12px);
     flex-shrink:0;
+}
+
+.pid-grid-item--full {
+  grid-column: span 2;
 }
 
 /* ---------- Small-width tweaks ---------- */

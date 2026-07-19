@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import PetDashboard from "./PetDashboard";
 
-export default function Home({ pets: propPets, activePetId: propActivePetId, onPetSelect, onAddPet }) {
+export default function Home({ pets: propPets, activePetId: propActivePetId, onPetSelect, onAddPet, onNavigate }) {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -35,6 +35,9 @@ export default function Home({ pets: propPets, activePetId: propActivePetId, onP
     setSelectedPet(pet);
     if (typeof onPetSelect === "function") {
       onPetSelect(pet);
+    }
+    if (typeof onNavigate === "function") {
+      onNavigate("timeline");
     }
   };
 

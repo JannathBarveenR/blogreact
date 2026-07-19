@@ -2,8 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./PetDashboard.css";
 
-import ProfileCard from "./ProfileCard/ProfileCard";
-import "./ProfileCard/ProfileCard.css";
 import HealthBanner from "./HealthBanner/HealthBanner";
 import QuickActions from "./QuickActions/QuickActions";
 import "./QuickActions/QuickActions.css";
@@ -139,41 +137,16 @@ export default function PetHome({
       document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const renderChecklist = () => {
-    if (pets.length === 0 || !selectedPet) return null;
-
-    const heading = pets.length === 1
-      ? `Have you checked this for ${selectedPet.pet_name || selectedPet.name}?`
-      : "Have you checked this for your pets?";
-
-    return (
-      <div className="checklist-card">
-        <h4 className="checklist-header">{heading}</h4>
-        <div className="checklist-items">
-          {currentTasks.map((task) => {
-            const isChecked = !!checkedTasks[task.id];
-            return (
-              <div
-                key={task.id}
-                className={`checklist-item ${isChecked ? "checked" : ""}`}
-                onClick={() => toggleTask(task.id)}
-              >
-                <div className="checklist-checkbox">
-                  {isChecked && <span className="check-mark">✓</span>}
-                </div>
-                <span className="checklist-text">{task.label}</span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
 
   if (!selectedPet || pets.length === 0) {
     return (
       <main className="pet-home">
-        <HeroSection pets={pets} />
+        <HeroSection
+          pets={pets}
+          checklistTasks={[]}
+          checkedTasks={{}}
+          onToggleTask={null}
+        />
 
         <div className="dashboard-section-header" style={{ padding: '0 4px', margin: '10px 0 4px 0' }}>
           <h3 className="dashboard-section-title">Add your first pet</h3>
@@ -216,7 +189,14 @@ export default function PetHome({
 
   return (
     <div className="pet-home">
-      <HeroSection pets={pets} />
+      <HeroSection
+        pets={pets}
+        checklistTasks={currentTasks}
+        checkedTasks={checkedTasks}
+        onToggleTask={toggleTask}
+      />
+
+      {hasReminders && <ReminderCard />}
 
       <div className="dashboard-section-header" style={{ padding: '0 4px', margin: '20px 0 4px 0' }}>
         <h3 className="dashboard-section-title">
@@ -230,19 +210,6 @@ export default function PetHome({
         onPetSelect={handlePetSelect}
         onAddPet={onAddPet}
       />
-
-      {/* Conditional Reminder/Checklist Ordering */}
-      {hasReminders ? (
-        <>
-          <ReminderCard />
-          {renderChecklist()}
-        </>
-      ) : (
-        <>
-          {renderChecklist()}
-          {/* Hide ReminderCard completely when there are no reminders */}
-        </>
-      )}
 
       <div className="education-section" style={{ marginTop: '8px', marginBottom: '16px' }}>
         <h3 className="education-title">Be the Best Pet Parent</h3>
@@ -260,12 +227,6 @@ export default function PetHome({
           </div>
         </div>
       </div>
-
-      <ProfileCard
-        pets={pets}
-        selectedPet={selectedPet}
-        isStatic={true}
-      />
 
       <div style={{ marginTop: '16px' }}>
         <Banner />

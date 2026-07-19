@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FiEdit2, FiCamera } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import fetchWithAuth from "../../utils/fetchWithAuth";
@@ -23,12 +23,6 @@ const EditableUserCard = ({
 
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (user?.id) {
-      fetchProfile();
-    }
-  }, [user]);
-
   const fetchProfile = async () => {
     try {
       const res = await fetchWithAuth(`/api/user-profile/${user.id}`);
@@ -51,6 +45,12 @@ const EditableUserCard = ({
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (user?.id) {
+      fetchProfile();
+    }
+  }, [user]);
 
   const handleAvatarChange = async (e) => {
     const file = e.target.files[0];
@@ -157,10 +157,16 @@ const EditableUserCard = ({
             )}
           </p>
 
-          {isProfileIncomplete && (
-            <p className="complete-profile-warning">
+          {isProfileIncomplete ? (
+            <p className="complete-profile-warning" style={{ textDecoration: "underline" }}>
               Complete your profile
             </p>
+          ) : (
+            <div className="edit-actions">
+              <span className="edit-profile-btn" style={{ color: "#2e7d32", fontSize: "12px", fontWeight: "700", display: "flex", alignItems: "center", gap: "4px", textDecoration: "underline" }}>
+                <FiEdit2 size={12} /> Edit profile
+              </span>
+            </div>
           )}
         </div>
       </div>

@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import {
-  FaPaw,
   FaShieldAlt,
   FaDog,
   FaMars,
@@ -23,14 +22,13 @@ const PetIdCardModal = ({
   pet,
   owner,
   avatarSrc,
-  isPhoto = true,
   FallbackIcon,
   onClose,
 }) => {
-  if (!pet) return null;
-
   const [copied, setCopied] = useState(false);
   const [phoneVisible, setPhoneVisible] = useState(false);
+
+  if (!pet) return null;
 
   const petolifeId =
     pet.petolife_id ||
@@ -85,8 +83,6 @@ const PetIdCardModal = ({
 
   const ownerName = owner?.full_name || owner?.name || "";
   const ownerPhone = owner?.phone || "";
-  const ownerEmail = owner?.email || "";
-  const ownerLocation = [owner?.city, owner?.state].filter(Boolean).join(", ");
 const getMaskedPhone = (phone) => {
   if (!phone) return "";
 
@@ -238,7 +234,7 @@ const getMaskedPhone = (phone) => {
           </div>
 
           {/* Phone: masked by default, eye icon toggles visibility */}
-          <div className="pid-grid-item">
+          <div className="pid-grid-item pid-grid-item--full">
             <div className="pid-grid-icon"><FaPhoneAlt /></div>
             <div className="pid-grid-text">
               <span className="pid-grid-label">Phone:</span>
@@ -273,10 +269,6 @@ const getMaskedPhone = (phone) => {
               bgColor="#ffffff"
               fgColor="#1d5d35"
             />
-          </div>
-          <div className="pid-qr-caption">
-            <FaShieldAlt />
-            <span>Scan to View Verified Pet Profile</span>
           </div>
         </div>
       </div>

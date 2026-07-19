@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
 import "../Login/Login.css";
@@ -22,6 +22,8 @@ export default function ParentProfile() {
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
+  
+  const [isAlreadyCompleted, setIsAlreadyCompleted] = useState(false);
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -38,15 +40,26 @@ export default function ParentProfile() {
         });
         if (res.ok) {
           const data = await res.json();
-          if (data.full_name) setName(data.full_name);
-          if (data.phone) {
-            const rawPhone = data.phone.replace("+91", "");
-            setMobile(rawPhone);
+          const rawName = data.full_name || "";
+          const rawPhone = data.phone || "";
+          const rawPincode = data.pincode || "";
+          const rawAddress = data.address || "";
+          const rawCity = data.city || "";
+          const rawState = data.state || "";
+
+          if (rawName) setName(rawName);
+          if (rawPhone) {
+            const rawPhoneClean = rawPhone.replace("+91", "");
+            setMobile(rawPhoneClean);
           }
-          if (data.pincode) setPincode(data.pincode);
-          if (data.address) setAddress(data.address);
-          if (data.city) setCity(data.city);
-          if (data.state) setState(data.state);
+          if (rawPincode) setPincode(rawPincode);
+          if (rawAddress) setAddress(rawAddress);
+          if (rawCity) setCity(rawCity);
+          if (rawState) setState(rawState);
+
+          if (rawName && rawPhone && rawPincode && rawAddress && rawCity && rawState) {
+            setIsAlreadyCompleted(true);
+          }
         } else {
           // pre-populate name from email
           if (user?.email) {
@@ -203,7 +216,9 @@ export default function ParentProfile() {
           </div>
 
           <div style={{ textAlign: "center", marginBottom: 24 }}>
-            <h2 className="title" style={{ fontSize: 20, margin: "0" }}>Let's complete your profile</h2>
+            <h2 className="title" style={{ fontSize: 20, margin: "0" }}>
+              {isAlreadyCompleted ? "Edit Profile" : "Let's complete your profile"}
+            </h2>
           </div>
 
           {error && <p className="field-error" style={{ color: "#d64545", textAlign: "center", marginBottom: 16 }}>{error}</p>}
@@ -303,7 +318,7 @@ export default function ParentProfile() {
             </div>
 
             <button type="submit" className="btn-primary" disabled={loading} style={{ marginTop: 12 }}>
-              {loading ? "Saving Profile…" : "Complete Profile"}
+              {loading ? "Saving Profile…" : (isAlreadyCompleted ? "Save Profile" : "Complete Profile")}
             </button>
           </form>
         </div>
