@@ -113,3 +113,31 @@ class EventService:
                    .update({"category_entries": entries}).eq("id", event_id).execute().data[0])
         reminder_engine.recompute_for_event(updated)
         return updated
+
+    @staticmethod
+    def add_event_link(pet_id: str, event_id: str, linked_event_id: str, link_type: str):
+        current = EventService.get_event(pet_id, event_id)
+        if not current:
+            return None
+        links = current.get("linked_events", []) or []
+        # avoid duplicate links to the same target
+        links = [l for l in links if l.get("linked_event_id") != linked_event_id]
+        links.append({
+            "linked_event_id": linked_event_id,
+            "link_type": link_type,
+            "created_at": str(date.today()),
+        })
+        updated = (supabase.table("medical_events")
+                   .update({"linked_events": links}).eq("id", event_id).eq("pet_id", pet_id).execute().data[0])
+        return updated
+
+    @staticmethod
+    def remove_event_link(pet_id: str, event_id: str, linked_event_id: str):
+        current = EventService.get_event(pet_id, event_id)
+        if not current:
+            return None
+        links = [l for l in current.get("linked_events", []) or []
+                 if l.get("linked_event_id") != linked_event_id]
+        updated = (supabase.table("medical_events")
+                   .update({"linked_events": links}).eq("id", event_id).eq("pet_id", pet_id).execute().data[0])
+        return updated

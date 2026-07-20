@@ -7,17 +7,25 @@ from pydantic import BaseModel, Field
 Category = Literal[
     "diagnosis","medication","vaccination","deworming",
     "anti_tick_flea","grooming","other",
+    "change_in_pet","treatment_operation","routine_care","vet_visit",
 ]
-FormType = Literal["consultation_vitals","treatment_medication","procedure_diagnostics"]
+FormType = Literal[
+    "consultation_vitals","treatment_medication","procedure_diagnostics",
+    "change_in_pet","treatment_operation","routine_care",
+]
 
 CATEGORY_TO_FORM_TYPE: Dict[str, str] = {
-    "diagnosis":      "consultation_vitals",
-    "medication":     "treatment_medication",
-    "vaccination":    "treatment_medication",
-    "deworming":      "treatment_medication",
-    "anti_tick_flea": "treatment_medication",
-    "grooming":       "procedure_diagnostics",
-    "other":          "procedure_diagnostics",
+    "diagnosis":           "consultation_vitals",
+    "medication":          "treatment_medication",
+    "vaccination":         "treatment_medication",
+    "deworming":           "treatment_medication",
+    "anti_tick_flea":      "treatment_medication",
+    "grooming":            "routine_care",
+    "other":               "procedure_diagnostics",
+    "change_in_pet":       "change_in_pet",
+    "treatment_operation": "treatment_operation",
+    "routine_care":        "routine_care",
+    "vet_visit":           "consultation_vitals",
 }
 
 class DiagnosisSubEntry(BaseModel):
@@ -58,11 +66,11 @@ class VaccineDetails(BaseModel):
     vaccine_name: Optional[str] = None
     batch_number: Optional[str] = None
     site: Optional[str] = None
-    animal_type: Optional[Literal["dog","cat"]] = None   # optional; disambiguates same-named vaccines only
+    animal_type: Optional[Literal["dog","cat"]] = None
     auto_next_due_days: Optional[int] = None
 
 class TreatmentMedicationFields(BaseModel):
-    medicine_type: Optional[str] = None            # tablet|syrup|injection|eye_drop|ointment|shampoo|vaccine|dewormer|anti_tick
+    medicine_type: Optional[str] = None
     dose: Optional[str] = None
     dose_unit: Optional[str] = None
     frequency: Optional[List[str]] = None
@@ -72,6 +80,8 @@ class TreatmentMedicationFields(BaseModel):
     route: Optional[str] = None
     composition: Optional[str] = None
     strength: Optional[str] = None
+    # NEW: medication lifecycle tracking (spec §3.4 / §6.5)
+    medication_status: Optional[Literal["active","completed","paused"]] = "active"
     injection_details: Optional[InjectionDetails] = None
     eye_drop_details: Optional[EyeDropDetails] = None
     shampoo_details: Optional[ShampooDetails] = None
@@ -81,14 +91,33 @@ class ProcedureDiagnosticsFields(BaseModel):
     procedure_type: Optional[str] = None
     detailed_findings: Optional[str] = None
 
+# NEW: "Change in Pet" — spec §3.3
+class ChangeInPetFields(BaseModel):
+    change_status: Literal["just_noticed","still_happening","improving","resolved"] = "just_noticed"
+    observed_behaviour: Optional[str] = Field(None, max_length=500)
+    suggested_action: Optional[Literal["check_again","visit_vet"]] = None
+    check_again_date: Optional[date] = None
+
+# NEW: "Treatment / Operation" — spec §3
+class TreatmentOperationFields(BaseModel):
+    treatment_name: Optional[str] = None
+    treatment_status: Literal["scheduled","in_progress","recovering","completed"] = "scheduled"
+    recovery_instructions: Optional[str] = Field(None, max_length=1000)
+    follow_up_required: bool = False
+
+# NEW: "Routine Care" — spec §3, expands beyond grooming-only
+class RoutineCareFields(BaseModel):
+    care_type: Literal["bath","nail_trim","ear_cleaning","dental_care","tick_flea_care","other"] = "other"
+    performed_by: Optional[Literal["owner","groomer","vet"]] = None
+
 class CategoryEntryBase(BaseModel):
-    entry_id: Optional[str] = None                 # server-generated if absent
+    entry_id: Optional[str] = None
     category: Category
-    form_type: Optional[FormType] = None           # auto-derived if absent
+    form_type: Optional[FormType] = None
     item_name: str
     date_logged: date
     status: Optional[str] = None
     next_due_date: Optional[date] = None
     notes: Optional[str] = Field(None, max_length=1000)
     attachments: List[str] = []
-    category_fields: Dict[str, Any] = {}           # validated per form_type in service
+    category_fields: Dict[str, Any] = {}
