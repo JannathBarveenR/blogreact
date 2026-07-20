@@ -2,23 +2,14 @@ import React, { useState, useRef, useEffect } from "react";
 import "./TopNav.css";
 import polLogo from "../../../assets/POL_logo_tagline.webp";
 
+import { useNavigate } from "react-router-dom";
+
 /**
  * Shared TopNav — used by HomeScreen, ChecklistPage, and other in-app pages.
  * Displays the official PetOLife logo asset and a notification icon.
  */
 const TopNav = () => {
-  const [showNotifications, setShowNotifications] = useState(false);
-  const notifRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (notifRef.current && !notifRef.current.contains(e.target)) {
-        setShowNotifications(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  const navigate = useNavigate();
 
   return (
     <nav className="topnav">
@@ -28,17 +19,14 @@ const TopNav = () => {
         </div>
       </div>
       <div className="topnav__right">
-        <div ref={notifRef} style={{ position: "relative", display: "inline-block" }}>
+        <div style={{ position: "relative", display: "inline-block" }}>
           <button
             className="topnav__icon-btn"
             aria-label="Notifications"
-            onClick={() => setShowNotifications((prev) => !prev)}
+            onClick={() => navigate('/profile', { state: { tab: 'notifications' } })}
           >
             <PawIcon size={35} color="#004b23" />
           </button>
-
-          
-
         </div>
       </div>
     </nav>

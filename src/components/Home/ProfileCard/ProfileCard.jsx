@@ -18,6 +18,7 @@ function normalizePet(pet) {
     breed: pet.breed || "Breed not added",
     gender: pet.gender || "Male",
     birthDate: pet.birth_date || "",
+    approxAge: pet.approx_age || pet.age || "",
     petIds: pet.pet_ids || pet.petIds || [],
   };
 }
@@ -81,10 +82,12 @@ export default function ProfileCard({
   };
 
   const normalizedPets = (pets || []).map(normalizePet).filter(Boolean);
-  function getPetAge(birthDate) {
-    if (!birthDate) return "Age not added";
+  function getPetAge(petInfo) {
+    if (!petInfo.birthDate) {
+      return petInfo.approxAge || "Age not added";
+    }
 
-    const birth = new Date(birthDate);
+    const birth = new Date(petInfo.birthDate);
     const today = new Date();
 
     let years = today.getFullYear() - birth.getFullYear();
@@ -141,7 +144,7 @@ export default function ProfileCard({
           <div className="profile-meta">
             <span className="meta-item">
               <img src={pawIcon} alt="" className="meta-icon" />
-              {getPetAge(selectedPet.birthDate)}
+              {getPetAge(selectedPet)}
             </span>
 
             <span className="meta-item">
@@ -179,7 +182,7 @@ export default function ProfileCard({
                   <div className="pet-switcher__meta">
                     <span>
                       <img src={pawIcon} alt="" className="meta-icon" />
-                      {getPetAge(pet.birthDate)}
+                      {getPetAge(pet)}
                     </span>
 
                     <span>
