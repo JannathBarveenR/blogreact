@@ -141,13 +141,6 @@ export default function PetHome({
   if (!selectedPet || pets.length === 0) {
     return (
       <main className="pet-home">
-        <HeroSection
-          pets={pets}
-          checklistTasks={[]}
-          checkedTasks={{}}
-          onToggleTask={null}
-        />
-
         <div className="dashboard-section-header" style={{ padding: '0 4px', margin: '10px 0 4px 0' }}>
           <h3 className="dashboard-section-title">Add your first pet</h3>
         </div>
@@ -160,6 +153,13 @@ export default function PetHome({
             onAddPet={onAddPet}
           />
         </div>
+
+        <HeroSection
+          pets={pets}
+          checklistTasks={[]}
+          checkedTasks={{}}
+          onToggleTask={null}
+        />
 
         <div className="education-section" style={{ marginTop: '8px' }}>
           <h3 className="education-title">Be the Best Pet Parent</h3>
@@ -178,10 +178,6 @@ export default function PetHome({
           </div>
         </div>
 
-        {/* <div style={{ marginTop: '24px' }}>
-          <HealthBanner />
-        </div> */}
-
         <div style={{ height: 'var(--bottom-nav-height, 64px)' }} />
       </main>
     );
@@ -189,15 +185,6 @@ export default function PetHome({
 
   return (
     <div className="pet-home">
-      <HeroSection
-        pets={pets}
-        checklistTasks={currentTasks}
-        checkedTasks={checkedTasks}
-        onToggleTask={toggleTask}
-      />
-
-      {hasReminders && <ReminderCard />}
-
       <div className="dashboard-section-header" style={{ padding: '0 4px', margin: '20px 0 4px 0' }}>
         <h3 className="dashboard-section-title">
           {pets.length === 1 ? "Your Pet" : "Your Pets"}
@@ -210,6 +197,15 @@ export default function PetHome({
         onPetSelect={handlePetSelect}
         onAddPet={onAddPet}
       />
+
+      <HeroSection
+        pets={pets}
+        checklistTasks={currentTasks}
+        checkedTasks={checkedTasks}
+        onToggleTask={toggleTask}
+      />
+
+      {hasReminders && <ReminderCard />}
 
       <div className="education-section" style={{ marginTop: '8px', marginBottom: '16px' }}>
         <h3 className="education-title">Be the Best Pet Parent</h3>
