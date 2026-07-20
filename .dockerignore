@@ -30,7 +30,6 @@ Thumbs.db
 *.md
 README*
 docs/
-*.html
 
 # Deployment artifacts (not needed in build context)
 .env

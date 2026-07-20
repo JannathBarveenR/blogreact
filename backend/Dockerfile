@@ -8,7 +8,7 @@ WORKDIR /build
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip wheel --no-cache-dir --no-deps --wheel-dir /build/wheels -r requirements.txt
+    pip wheel --no-cache-dir --wheel-dir /build/wheels -r requirements.txt
 
 # ─── Stage: Production ──────────────────────────────────────────────────────────
 FROM python:3.11-slim AS production
