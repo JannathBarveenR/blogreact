@@ -150,16 +150,4 @@ function formatTaskLabel(label, pets = []) {
   // Capitalize first letter
   return result.charAt(0).toUpperCase() + result.slice(1);
 }
-
-// eslint-disable-next-line no-unused-vars
-function PawIcon({ className = "", filled = false }) {
-  return (
-    <svg viewBox="0 0 64 64" className={className} fill={filled ? "currentColor" : "none"} stroke={filled ? "none" : "currentColor"} strokeWidth={filled ? 0 : 3}>
-      <ellipse cx="32" cy="42" rx="14" ry="11" />
-      <ellipse cx="14" cy="26" rx="6" ry="8" />
-      <ellipse cx="50" cy="26" rx="6" ry="8" />
-      <ellipse cx="23" cy="14" rx="5.5" ry="7" />
-      <ellipse cx="41" cy="14" rx="5.5" ry="7" />
-    </svg>
-  );
-}
+

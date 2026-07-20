@@ -1,5 +1,7 @@
 import React, { useMemo, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import html2canvas from 'html2canvas';
+import PetCard from '../petcard/petcard';
 import './postidscreen.css';
 import { QRCodeSVG } from 'qrcode.react';
 import { PetAvatar } from '../common/PetAvatar';
@@ -55,215 +57,32 @@ export default function PostIdScreen({ inlineData }) {
     return ownerName;
   };
 
-  const handleDownloadQR = () => {
-    const svg = document.getElementById("qr-code-svg");
-    if (!svg) return;
+  const hiddenCardRef = useRef(null);
 
-    const ownerName = getOwnerName();
+  const dataToUseForCard = {
+    ...dataToUse,
+    petolife_id: dataToUse.petolifeId || dataToUse.petolife_id,
+  };
 
-    // Use high DPI scale for crisp output
-    const SCALE = 3;
-    const W = 400 * SCALE;
-    const H = 640 * SCALE;
-
-    const canvas = document.createElement("canvas");
-    canvas.width = W;
-    canvas.height = H;
-    const ctx = canvas.getContext("2d");
-    ctx.scale(SCALE, SCALE);
-
-    const drawCard = (qrImg, logoImg, petImg) => {
-      const cw = 400;
-      const ch = 640;
-
-      // White background
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, cw, ch);
-
-      // Card rounded border (draw manually)
-      ctx.strokeStyle = "#cfe9d6";
-      ctx.lineWidth = 3;
-      roundRect(ctx, 4, 4, cw - 8, ch - 8, 20, false, true);
-
-      // ─── Header banner ───
-      ctx.fillStyle = "#004b49";
-      roundRectTop(ctx, 4, 4, cw - 8, 82, 20);
-
-      // Logo in header (logo with tagline webp image)
-      if (logoImg) {
-        // Centre the logo image inside the dark header banner
-        const lH = 44;
-        const lW = logoImg.naturalWidth * (lH / logoImg.naturalHeight);
-        const lX = (cw - lW) / 2;
-        ctx.drawImage(logoImg, lX, 4 + (82 - lH) / 2, lW, lH);
-      } else {
-        // Fallback text
-        ctx.textAlign = "center";
-        ctx.fillStyle = "#ffffff";
-        ctx.font = `bold ${20}px sans-serif`;
-        ctx.fillText("PetoLife", cw / 2, 4 + 82 / 2 + 7);
+  const handleDownloadQR = async () => {
+    if (hiddenCardRef.current) {
+      try {
+        // Find the actual card inside the wrapper to avoid capturing empty space
+        const cardElement = hiddenCardRef.current.querySelector('.petcard-id-outer') || hiddenCardRef.current;
+        const canvas = await html2canvas(cardElement, {
+          scale: 3, // high dpi
+          useCORS: true,
+          backgroundColor: null,
+          logging: false
+        });
+        const pngFile = canvas.toDataURL("image/png");
+        const downloadLink = document.createElement("a");
+        downloadLink.download = `${petName}_PetoLife_ID.png`;
+        downloadLink.href = pngFile;
+        downloadLink.click();
+      } catch (err) {
+        console.error("Failed to download card:", err);
       }
-
-      // ─── Pet photo circle ───
-      const photoSize = 72;
-      const photoX = (cw - photoSize) / 2;
-      const photoY = 98;
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(photoX + photoSize / 2, photoY + photoSize / 2, photoSize / 2, 0, Math.PI * 2);
-      ctx.clip();
-      ctx.fillStyle = "#eef5ea";
-      ctx.fill();
-      if (petImg) {
-        ctx.drawImage(petImg, photoX, photoY, photoSize, photoSize);
-      } else {
-        // simple paw placeholder
-        ctx.fillStyle = "#aacba0";
-        ctx.font = `${36}px sans-serif`;
-        ctx.textAlign = "center";
-        ctx.fillText("🐾", photoX + photoSize / 2, photoY + photoSize / 2 + 12);
-      }
-      ctx.restore();
-
-      // Circle border ring
-      ctx.beginPath();
-      ctx.arc(photoX + photoSize / 2, photoY + photoSize / 2, photoSize / 2 + 2, 0, Math.PI * 2);
-      ctx.strokeStyle = "#84b662";
-      ctx.lineWidth = 3;
-      ctx.stroke();
-
-      // ─── Pet name (display name) ───
-      ctx.textAlign = "center";
-      ctx.fillStyle = "#004b49";
-      ctx.font = `bold ${22}px Inter, sans-serif`;
-      ctx.fillText(petName, cw / 2, photoY + photoSize + 26);
-
-      ctx.fillStyle = "#84b662";
-      ctx.font = `${11}px sans-serif`;
-      ctx.fillText("✓  Verified by PetoLife", cw / 2, photoY + photoSize + 44);
-
-      // ─── Divider ───
-      ctx.strokeStyle = "#e5ede1";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(30, photoY + photoSize + 58);
-      ctx.lineTo(cw - 30, photoY + photoSize + 58);
-      ctx.stroke();
-
-      // ─── QR Code ───
-      const qrSize = 160;
-      const qrX = (cw - qrSize) / 2;
-      const qrY = photoY + photoSize + 70;
-
-      // QR background rounded box
-      ctx.fillStyle = "#f4f8f1";
-      roundRect(ctx, qrX - 12, qrY - 12, qrSize + 24, qrSize + 24, 14, true, false);
-      ctx.strokeStyle = "#84b662";
-      ctx.lineWidth = 2;
-      roundRect(ctx, qrX - 12, qrY - 12, qrSize + 24, qrSize + 24, 14, false, true);
-
-      ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
-
-      // ─── Pet ID ───
-      const idY = qrY + qrSize + 36;
-      ctx.fillStyle = "#84b662";
-      ctx.font = `bold ${10}px sans-serif`;
-      ctx.letterSpacing = "2px";
-      ctx.fillText("PET HEALTH ID", cw / 2, idY);
-
-      ctx.fillStyle = "#004b49";
-      ctx.font = `bold ${16}px 'Courier New', monospace`;
-      ctx.letterSpacing = "0px";
-      ctx.fillText(petolifeId, cw / 2, idY + 22);
-
-      // ─── Divider ───
-      ctx.strokeStyle = "#e5ede1";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(30, idY + 36);
-      ctx.lineTo(cw - 30, idY + 36);
-      ctx.stroke();
-
-      // ─── Pet Owner ───
-      const ownerY = idY + 56;
-      ctx.fillStyle = "#6d756d";
-      ctx.font = `bold ${10}px sans-serif`;
-      ctx.fillText("PET OWNER", cw / 2, ownerY);
-
-      ctx.fillStyle = "#16211f";
-      ctx.font = `bold ${16}px Inter, sans-serif`;
-      ctx.fillText(ownerName, cw / 2, ownerY + 22);
-
-      // ─── Tagline footer ───
-      ctx.fillStyle = "#84b662";
-      ctx.font = `italic ${11}px serif`;
-      ctx.fillText("Be the best pet parent", cw / 2, ch - 18);
-
-      // Export
-      const pngFile = canvas.toDataURL("image/png");
-      const downloadLink = document.createElement("a");
-      downloadLink.download = `${petName}_PetoLife_ID.png`;
-      downloadLink.href = pngFile;
-      downloadLink.click();
-    };
-
-    // Helper: rounded rect
-    function roundRect(ctx, x, y, w, h, r, fill, stroke) {
-      ctx.beginPath();
-      ctx.moveTo(x + r, y);
-      ctx.lineTo(x + w - r, y);
-      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-      ctx.lineTo(x + w, y + h - r);
-      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-      ctx.lineTo(x + r, y + h);
-      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-      ctx.lineTo(x, y + r);
-      ctx.quadraticCurveTo(x, y, x + r, y);
-      ctx.closePath();
-      if (fill) ctx.fill();
-      if (stroke) ctx.stroke();
-    }
-
-    function roundRectTop(ctx, x, y, w, h, r) {
-      ctx.beginPath();
-      ctx.moveTo(x + r, y);
-      ctx.lineTo(x + w - r, y);
-      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-      ctx.lineTo(x + w, y + h);
-      ctx.lineTo(x, y + h);
-      ctx.lineTo(x, y + r);
-      ctx.quadraticCurveTo(x, y, x + r, y);
-      ctx.closePath();
-      ctx.fill();
-    }
-
-    // ── Load resources in parallel ──
-    const qrSvg = document.getElementById("qr-code-svg");
-    const svgData = new XMLSerializer().serializeToString(qrSvg);
-    const qrImg = new Image();
-    const logoImg = new Image();
-    const petImg = petPhotoUrl ? new Image() : null;
-    let loaded = 0;
-    const total = petPhotoUrl ? 3 : 2;
-
-    const onLoad = () => {
-      loaded++;
-      if (loaded === total) drawCard(qrImg, logoImg, petImg);
-    };
-
-    qrImg.onload = onLoad;
-    qrImg.src = "data:image/svg+xml;base64," + btoa(svgData);
-
-    logoImg.onload = onLoad;
-    logoImg.onerror = onLoad; // fallback to text if logo fails
-    logoImg.crossOrigin = "anonymous";
-    logoImg.src = polLogo;
-
-    if (petImg) {
-      petImg.onload = onLoad;
-      petImg.onerror = onLoad;
-      petImg.crossOrigin = "anonymous";
-      petImg.src = petPhotoUrl;
     }
   };
 
@@ -314,6 +133,12 @@ export default function PostIdScreen({ inlineData }) {
   return (
     <div className="page">
       <PawWatermarks />
+
+      <div style={{ position: 'absolute', top: '-9999px', left: '-9999px', width: '400px' }}>
+        <div ref={hiddenCardRef}>
+          <PetCard petData={dataToUseForCard} />
+        </div>
+      </div>
 
       {/* ── Celebration header ── */}
       <header className="postid-hero">
