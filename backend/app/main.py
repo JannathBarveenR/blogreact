@@ -2,21 +2,32 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.config import PORT, FRONTEND_URL
+from app.config import PORT, FRONTEND_URL, ENVIRONMENT
 from app.routers import auth, location, pet_profile, pet_health_id, medical_records, checklist, user_profile
 from app.routers.v2 import medical_events, reference_data, timeline, reminders, documents, export
 from app.supabase_client import supabase
+
+# ---------------------------------------------------------------------------
+# In production, disable /docs and /redoc to prevent API structure exposure.
+# In development, keep them enabled for easier debugging.
+# ---------------------------------------------------------------------------
+_is_production = ENVIRONMENT == "production"
 
 app = FastAPI(
     title="PetOLife API",
     description="Backend API for PetOLife — pet health profile management",
     version="2.0.0",
+    docs_url=None if _is_production else "/docs",
+    redoc_url=None if _is_production else "/redoc",
+    openapi_url=None if _is_production else "/openapi.json",
 )
 
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
-app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["127.0.0.1", "localhost"])
+# Trust Docker internal network (nginx container forwards requests).
+# In production, nginx is the only entrypoint — trust all proxied headers.
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
 app.add_middleware(GZipMiddleware, minimum_size=500)
 
 # ---------------------------------------------------------------------------
