@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   FiEdit2,
   FiBell,
@@ -34,6 +34,13 @@ const UserProfile = ({ pets = [], onPetSelect, onAddPet, onUpdatePet }) => {
   const [showEditPets, setShowEditPets] = useState(false);
 
   const [showNotificationsPage, setShowNotificationsPage] = useState(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state?.tab === 'notifications') {
+      setShowNotificationsPage(true);
+    }
+  }, [location.state]);
 
   /* ---------- Privacy ---------- */
 

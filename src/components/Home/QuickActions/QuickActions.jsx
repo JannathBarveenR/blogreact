@@ -12,7 +12,7 @@ export default function QuickActions({ onNavigateTab }) {
     if (typeof onNavigateTab === "function") {
       onNavigateTab("timeline");
     } else {
-      navigate("/home", { state: { tab: "timeline" } });
+      navigate("/timeline");
     }
   };
 
@@ -20,7 +20,7 @@ export default function QuickActions({ onNavigateTab }) {
     if (typeof onNavigateTab === "function") {
       onNavigateTab("medicalrecords");
     } else {
-      navigate("/home", { state: { tab: "medicalrecords" } });
+      navigate("/records");
     }
   };
 
