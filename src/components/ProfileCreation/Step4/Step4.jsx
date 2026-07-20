@@ -180,6 +180,17 @@ function Step4({ goBack, petData, setStep, isSubmitting, setIsSubmitting, submit
     }
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Max size to photo upload is 5mb");
+        return;
+      }
+      setLocalPetData((prev) => ({ ...prev, petPhotoFile: file }));
+    }
+  };
+
   const inputStyle = { padding: '9px 10px', borderRadius: '10px', border: '1.5px solid #dce8d8', outline: 'none', width: '100%', maxWidth: '150px', textAlign: 'left', fontFamily: 'inherit', fontSize: '13.5px', color: '#16211f', background: '#fbfdf9' };
 
   return (
@@ -203,13 +214,28 @@ function Step4({ goBack, petData, setStep, isSubmitting, setIsSubmitting, submit
         </button>
 
         <div className="pet-summary-top">
-          <div className="pet-avatar-wrap">
-            <PetAvatar
-              src={localPetData.petPhotoFile ? URL.createObjectURL(localPetData.petPhotoFile) : null}
-              petType={localPetData.petType}
-              className="pet-avatar"
-              size={48}
-            />
+          <div className="pet-avatar-wrap" style={{ position: 'relative' }}>
+            <label style={{ cursor: isEditing ? 'pointer' : 'default', display: 'block' }}>
+              <PetAvatar
+                src={localPetData.petPhotoFile ? URL.createObjectURL(localPetData.petPhotoFile) : null}
+                petType={localPetData.petType}
+                className="pet-avatar"
+                size={48}
+              />
+              {isEditing && (
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  hidden 
+                  onChange={handleImageChange}
+                />
+              )}
+              {isEditing && (
+                <div style={{ position: 'absolute', bottom: -5, right: -5, background: '#4a8f43', color: 'white', borderRadius: '50%', padding: '2px 4px', fontSize: '10px' }}>
+                  <FiEdit2 size={10} />
+                </div>
+              )}
+            </label>
           </div>
 
           <div className="pet-summary-meta">
