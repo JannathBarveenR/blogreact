@@ -1,0 +1,128 @@
+/* =============================================
+   CustomSelect.css — Sleek Custom Select Dropdown
+   ============================================= */
+
+.cs-wrap {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.cs-trigger {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 14px;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  text-align: left;
+  min-width: 0;
+}
+
+.cs-trigger:hover:not(:disabled) {
+  border-color: #004b49;
+}
+
+.cs-trigger--open {
+  border-color: #004b49;
+  box-shadow: 0 0 0 3px rgba(0, 75, 73, 0.12);
+}
+
+.cs-trigger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cs-trigger__label {
+  font-weight: 500;
+  color: #1e293b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1;
+}
+
+.cs-trigger__label--placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.cs-trigger__chevron {
+  font-size: 20px !important;
+  color: #64748b;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.cs-trigger__chevron--open {
+  transform: rotate(180deg);
+  color: #004b49;
+}
+
+/* Menu Dropdown */
+.cs-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  z-index: 100;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 220px;
+  overflow-y: auto;
+  animation: csMenuFade 0.2s ease both;
+  box-sizing: border-box;
+}
+
+@keyframes csMenuFade {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.cs-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #334155;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.cs-option:hover {
+  background: #f1f5f9;
+  color: #004b49;
+  font-weight: 600;
+}
+
+.cs-option--selected {
+  background: #e6f4e3;
+  color: #004b49;
+  font-weight: 700;
+}
+
+.cs-option__check {
+  font-size: 18px !important;
+  color: #004b49;
+  font-variation-settings: 'wght' 600;
+}

@@ -1,0 +1,170 @@
+.save-conf {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 40px 20px;
+  position: relative;
+  overflow: hidden;
+  animation: saveConfFadeIn 0.4s ease both;
+}
+
+@keyframes saveConfFadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.save-conf__confetti-box {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.confetti-piece {
+  position: absolute;
+  top: -10px;
+  width: 8px;
+  height: 12px;
+  border-radius: 2px;
+  animation: confettiFall linear forwards;
+}
+
+@keyframes confettiFall {
+  to { transform: translateY(500px) rotate(720deg); opacity: 0; }
+}
+
+.save-conf__icon-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #e6f4e3;
+  color: #004b49;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 24px rgba(0, 75, 73, 0.15);
+  animation: checkPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+@keyframes checkPop {
+  0% { transform: scale(0); }
+  70% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+.save-conf__icon {
+  font-size: 44px;
+  font-variation-settings: 'FILL' 1, 'wght' 700;
+}
+
+.save-conf__title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #004b49;
+  margin: 0 0 6px;
+}
+
+.save-conf__subtitle {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0 0 28px;
+}
+
+.save-conf__card {
+  width: 100%;
+  max-width: 320px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border-left: 4px solid #004b49;
+  margin-bottom: 32px;
+  text-align: left;
+}
+
+.save-conf__badge {
+  display: inline-block;
+  padding: 3px 10px;
+  background: #e6f4e3;
+  color: #004b49;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 50px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.save-conf__card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 4px;
+}
+
+.save-conf__card-date {
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 0 0 16px;
+}
+
+.save-conf__details {
+  display: flex;
+  gap: 12px;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 12px;
+}
+
+.save-conf__detail-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.save-conf__detail-icon {
+  font-size: 16px;
+  color: #004b49;
+}
+
+.save-conf__actions {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.save-conf__btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.save-conf__btn--primary {
+  background: #004b49;
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 14px rgba(0, 75, 73, 0.25);
+}
+
+.save-conf__btn--secondary {
+  background: #fff;
+  color: #004b49;
+  border: 1.5px solid #cbd5e1;
+}
+
+.save-conf__btn:hover {
+  transform: translateY(-1px);
+}

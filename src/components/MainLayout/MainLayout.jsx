@@ -15,46 +15,45 @@ const MainLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  
-  // Set tab from navigation state if available
-  const [activeTab, setActiveTab] = useState(location.state?.tab || "home");
-  
+
+  // Derive active tab directly from URL pathname so browser history works natively
+  const getTabFromPath = (path) => {
+    if (path.startsWith("/timeline")) return "timeline";
+    if (path.startsWith("/records")) return "medicalrecords";
+    if (path.startsWith("/profile")) return "profile";
+    return "home";
+  };
+
+  const activeTab = getTabFromPath(location.pathname);
+
   const [pets, setPets] = useState([]);
   const [activePetId, setActivePetId] = useState(null);
   const [loadingPets, setLoadingPets] = useState(true);
-
-  useEffect(() => {
-    if (location.state?.tab) {
-      setActiveTab(location.state.tab);
-    }
-  }, [location.state]);
 
   const fetchPets = async () => {
     if (!user) return;
     setLoadingPets(true);
     try {
-      // Try local storage first
       const localPets = localStorage.getItem(`pets_${user.id}`);
       if (localPets) {
         const parsed = JSON.parse(localPets);
         setPets(parsed);
         const savedActive = localStorage.getItem(`active_pet_id_${user.id}`);
-        if (savedActive && parsed.some(p => p.id === savedActive)) {
+        if (savedActive && parsed.some((p) => p.id === savedActive)) {
           setActivePetId(savedActive);
         } else if (parsed.length > 0) {
           setActivePetId(parsed[0].id);
         }
       }
 
-      // ✅ Fetch only THIS user's pets using their user.id
       const res = await fetchWithAuth(`/api/pet-profile/by-user/${user.id}`);
       if (res.ok) {
         const data = await res.json();
         setPets(data);
         localStorage.setItem(`pets_${user.id}`, JSON.stringify(data));
-        
+
         const savedActive = localStorage.getItem(`active_pet_id_${user.id}`);
-        if (savedActive && data.some(p => p.id === savedActive)) {
+        if (savedActive && data.some((p) => p.id === savedActive)) {
           setActivePetId(savedActive);
         } else if (data.length > 0) {
           setActivePetId(data[0].id);
@@ -72,16 +71,19 @@ const MainLayout = () => {
     fetchPets();
   }, [user]);
 
-  // Single source of truth for "go start the add-pet flow" —
-  // used by AddPetCard, BottomNav's FAB, Home, MedicalRecords, and UserProfile.
   const handleAddPet = () => {
     navigate("/create-pet-profile");
   };
 
-  // Same pattern QuickActions already uses for its "Medical Records" card —
-  // just flip the active tab, no route change needed.
   const handleUploadRecords = () => {
-    setActiveTab("medicalrecords");
+    navigate("/records");
+  };
+
+  const handleNavigateTab = (tabKey) => {
+    if (tabKey === "home") navigate("/home");
+    else if (tabKey === "timeline" || tabKey === "checklist") navigate("/timeline/home");
+    else if (tabKey === "medicalrecords" || tabKey === "docs") navigate("/records");
+    else if (tabKey === "profile") navigate("/profile");
   };
 
   const handlePetSelect = (selectedPet) => {
@@ -93,18 +95,23 @@ const MainLayout = () => {
   };
 
   const renderContent = () => {
-    if (activeTab === "timeline" || activeTab === "checklist") {
+    if (activeTab === "timeline") {
       return (
-        <div style={{ paddingBottom: '70px', height: '100vh', overflowY: 'auto' }}>
+        <div style={{ paddingBottom: "70px", height: "100vh", overflowY: "auto" }}>
           <TopNav />
-          <TimelinePage />
+          <TimelinePage
+            pets={pets}
+            activePetId={activePetId}
+            onPetSelect={handlePetSelect}
+            onAddPet={handleAddPet}
+          />
         </div>
       );
     }
-    
-    if (activeTab === "medicalrecords" || activeTab === "docs") {
+
+    if (activeTab === "medicalrecords") {
       return (
-        <div style={{ paddingBottom: '70px', height: '100vh', overflowY: 'auto' }}>
+        <div style={{ paddingBottom: "70px", height: "100vh", overflowY: "auto" }}>
           <TopNav />
           <MedicalRecords
             pets={pets}
@@ -118,8 +125,7 @@ const MainLayout = () => {
 
     if (activeTab === "profile") {
       return (
-        <div style={{ paddingBottom: '70px', height: '100vh', overflowY: 'auto' }}>
-
+        <div style={{ paddingBottom: "70px", height: "100vh", overflowY: "auto" }}>
           <UserProfile
             pets={pets}
             activePetId={activePetId}
@@ -133,14 +139,14 @@ const MainLayout = () => {
 
     // HOME TAB
     return (
-      <div style={{ paddingBottom: '70px', height: '100vh', overflowY: 'auto' }}>
+      <div style={{ paddingBottom: "70px", height: "100vh", overflowY: "auto" }}>
         <TopNav />
         <Home
           pets={pets}
           activePetId={activePetId}
           onPetSelect={handlePetSelect}
           onAddPet={handleAddPet}
-          onNavigate={setActiveTab}
+          onNavigate={(target) => handleNavigateTab(target)}
         />
       </div>
     );
@@ -151,7 +157,7 @@ const MainLayout = () => {
       {renderContent()}
       <BottomNav
         active={activeTab}
-        onNavigate={(page) => setActiveTab(page)}
+        onNavigate={handleNavigateTab}
         onAddPet={handleAddPet}
         onUploadRecords={handleUploadRecords}
       />

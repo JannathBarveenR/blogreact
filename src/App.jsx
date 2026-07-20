@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import Login from "./components/Login/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
 import "./App.css";
@@ -20,8 +20,6 @@ function LoadingFallback() {
     </div>
   );
 }
-
-import { useEffect } from "react";
 
 function App() {
   useEffect(() => {
@@ -52,13 +50,18 @@ function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/pet/:id" element={<PetCard />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
-          
+
+          {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>
             <Route path="/home" element={<MainLayout />} />
+            <Route path="/timeline" element={<MainLayout />} />
+            <Route path="/timeline/home" element={<MainLayout />} />
+            <Route path="/records" element={<MainLayout />} />
+            <Route path="/profile" element={<MainLayout />} />
             <Route path="/create-pet-profile" element={<ProfileCreate />} />
             <Route path="/parent-profile" element={<ParentProfile />} />
           </Route>
-          
+
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/landing" replace />} />
         </Routes>

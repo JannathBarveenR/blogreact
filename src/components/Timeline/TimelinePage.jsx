@@ -1,127 +1,213 @@
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import "./TimelinePage.css";
-import timelineImg from "../../assets/timeline.webp"; 
-// Small inline icon components (no external icon library needed)
-const CalendarIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="1.8" />
-    <path d="M3 9.5H21" stroke="currentColor" strokeWidth="1.8" />
-    <path d="M8 3V6.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    <path d="M16 3V6.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    <path d="M7 13.5H9V15.5H7z" fill="currentColor" />
-    <path d="M11 13.5H13V15.5H11z" fill="currentColor" />
-    <path d="M15 13.5H17V15.5H15z" fill="currentColor" />
-  </svg>
-);
 
-const ShieldIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M12 3L19 6V11C19 15.5 16 19 12 21C8 19 5 15.5 5 11V6L12 3Z"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinejoin="round"
-    />
-    <path d="M8.5 12L11 14.5L15.5 9.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
+import Pets from "../Home/Pets/Pets";
+import FilterChips from "./FilterChips";
+import TimelineCard from "./TimelineCard";
+import EmptyTimeline from "./EmptyTimeline";
+import AddPawNote from "./AddPawNote/AddPawNote";
+import DocumentModal from "./DocumentModal";
+import { getTimeline } from "../../api/timelineApi";
 
-const TrendIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M4 17L9.5 11.5L13.5 15.5L20 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M14.5 8H20V13.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    <rect x="4" y="18" width="2.2" height="2.2" rx="0.4" fill="currentColor" opacity="0.35" />
-    <rect x="8" y="18" width="2.2" height="2.2" rx="0.4" fill="currentColor" opacity="0.5" />
-    <rect x="12" y="18" width="2.2" height="2.2" rx="0.4" fill="currentColor" opacity="0.7" />
-    <rect x="16" y="18" width="2.2" height="2.2" rx="0.4" fill="currentColor" opacity="1" />
-  </svg>
-);
+/* ── date-group helper ──────────────────────────────────────────── */
+function groupByDate(events) {
+  const groups = {};
+  for (const ev of events) {
+    const d = ev.date_logged || "Unknown";
+    if (!groups[d]) groups[d] = [];
+    groups[d].push(ev);
+  }
+  return Object.entries(groups).sort(([a], [b]) => (b > a ? 1 : -1));
+}
 
-const MailIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="3" y="5.5" width="18" height="13" rx="2" stroke="currentColor" strokeWidth="1.8" />
-    <path d="M3.5 6.5L12 13L20.5 6.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
+function formatDateHeader(dateStr) {
+  if (!dateStr || dateStr === "Unknown") return "Unknown Date";
+  const d = new Date(dateStr + "T00:00:00");
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const target = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const diffDays = Math.round((today - target) / (1000 * 60 * 60 * 24));
 
-const HeartIcon = () => (
-  <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 20.5C12 20.5 3.5 15.4 3.5 9.6C3.5 6.8 5.7 4.7 8.4 4.7C10 4.7 11.3 5.5 12 6.7C12.7 5.5 14 4.7 15.6 4.7C18.3 4.7 20.5 6.8 20.5 9.6C20.5 15.4 12 20.5 12 20.5Z" />
-  </svg>
-);
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays < 7) return d.toLocaleDateString("en-IN", { weekday: "long" });
+  return d.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+}
 
-const PawIcon = ({ className }) => (
-  <svg viewBox="0 0 24 24" fill="currentColor" className={className} xmlns="http://www.w3.org/2000/svg">
-    <ellipse cx="12" cy="15.5" rx="5" ry="4.2" />
-    <ellipse cx="5.2" cy="9.5" rx="1.8" ry="2.3" />
-    <ellipse cx="9.6" cy="6.3" rx="1.8" ry="2.3" />
-    <ellipse cx="14.4" cy="6.3" rx="1.8" ry="2.3" />
-    <ellipse cx="18.8" cy="9.5" rx="1.8" ry="2.3" />
-  </svg>
-);
+/* ── component ──────────────────────────────────────────────────── */
+export default function TimelinePage({
+  pets = [],
+  activePetId,
+  onPetSelect,
+  onAddPet,
+}) {
+  const [filter, setFilter] = useState("all");
+  const [events, setEvents] = useState([]);
+  const [rawEventsCount, setRawEventsCount] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [showAddNote, setShowAddNote] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState(null);
 
-const SparkleIcon = () => (
-  <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 2L13.8 9.2L21 11L13.8 12.8L12 20L10.2 12.8L3 11L10.2 9.2L12 2Z" />
-  </svg>
-);
+  const selectedPet = pets.find((p) => p.id === activePetId) || pets[0] || null;
+  const petName = selectedPet?.pet_name || selectedPet?.name || "";
 
-const features = [
-  {
-    icon: <CalendarIcon />,
-    title: "Track vaccinations & due dates",
-  },
-  {
-    icon: <ShieldIcon />,
-    title: "Never miss important care",
-  },
-  {
-    icon: <TrendIcon />,
-    title: "AI-powered health insights",
-  },
-];
+  /* ── fetch timeline ────────────────────────────────────────────── */
+  const fetchFeed = useCallback(async () => {
+    if (!selectedPet?.id) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getTimeline(selectedPet.id, "chronological");
+      const raw = data.events || [];
+      setRawEventsCount(raw.length);
 
-export default function TimelinePage() {
+      let feed = raw;
+
+      // client-side category filter
+      if (filter !== "all") {
+        feed = feed.filter((e) => e.category === filter);
+      }
+
+      setEvents(feed);
+    } catch (err) {
+      console.error("Timeline fetch error:", err);
+      setError("Unable to load timeline. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedPet?.id, filter]);
+
+  useEffect(() => {
+    fetchFeed();
+  }, [fetchFeed]);
+
+  /* ── handlers ──────────────────────────────────────────────────── */
+  const handleAddNote = () => setShowAddNote(true);
+  const handleCloseAddNote = () => {
+    setShowAddNote(false);
+    fetchFeed(); // refresh after saving
+  };
+
+  const handleCardClick = (entry) => {
+    console.log("Open detail for", entry);
+  };
+
+  /* ── Add Paw Note overlay ──────────────────────────────────────── */
+  if (showAddNote) {
+    return (
+      <AddPawNote
+        petId={selectedPet?.id}
+        petName={petName}
+        onClose={handleCloseAddNote}
+        onSaved={handleCloseAddNote}
+      />
+    );
+  }
+
+  /* ── no pets ───────────────────────────────────────────────────── */
+  if (!selectedPet) {
+    return (
+      <div className="tl-page">
+        <div className="tl-page__empty-pets">
+          <span className="material-symbols-outlined" style={{ fontSize: 48, color: "#cbd5e1" }}>
+            pets
+          </span>
+          <p>Add a pet to start tracking their health timeline.</p>
+          <button className="tl-page__add-pet-btn" onClick={onAddPet}>
+            Add Your First Pet
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── grouped events ────────────────────────────────────────────── */
+  const dateGroups = groupByDate(events);
+
   return (
-    <div className="ptcs-page">
-      <div className="ptcs-card">
-      {/* faint decorative paw prints */}
-      <PawIcon className="ptcs-bg-paw ptcs-bg-paw--tl" />
-      <PawIcon className="ptcs-bg-paw ptcs-bg-paw--tr" />
-      <PawIcon className="ptcs-bg-paw ptcs-bg-paw--br" />
-
-      <div className="ptcs-hero">
-        {/* Replace src with your own asset, e.g. "/timeline.webp" */}
-        <img src={timelineImg} alt="Puppy sitting beside a calendar" className="ptcs-hero-img" />
+    <div className="tl-page">
+      {/* Pet Switcher */}
+      <div className="tl-page__pets">
+        <Pets
+          pets={pets}
+          selectedPet={selectedPet}
+          onPetSelect={onPetSelect}
+          onAddPet={onAddPet}
+        />
       </div>
 
-      <div className="ptcs-badge">
-        <SparkleIcon />
-        <span>Coming soon</span>
-        <SparkleIcon />
+      {/* Section Title */}
+      <div className="tl-page__title-row">
+        <h2 className="tl-page__title">
+          <span className="tl-page__title-name">{petName}'s</span> Timeline
+        </h2>
+        <div className="tl-page__title-dot" />
       </div>
 
-      <h1 className="ptcs-heading">
-        Timeline is on
-        <br />
-        <span className="ptcs-heading-accent">the way!</span>
-      </h1>
+      {/* Filter Chips */}
+      <FilterChips activeFilter={filter} onFilterChange={setFilter} />
 
-      <p className="ptcs-subtitle">
-        We're working hard to bring you a smart health timeline for your pet.
-      </p>
-
-      <div className="ptcs-features">
-        {features.map((f) => (
-          <div className="ptcs-feature-card" key={f.title}>
-            <div className="ptcs-feature-icon">{f.icon}</div>
-            <p className="ptcs-feature-title">{f.title}</p>
+      {/* Content */}
+      <div className="tl-page__content">
+        {loading ? (
+          <div className="tl-page__loading">
+            <div className="tl-page__spinner" />
+            <span>Loading timeline…</span>
           </div>
-        ))}
+        ) : error ? (
+          <div className="tl-page__error">
+            <span className="material-symbols-outlined" style={{ fontSize: 32, color: "#f59e0b" }}>
+              warning
+            </span>
+            <p>{error}</p>
+            <button className="tl-page__retry" onClick={fetchFeed}>Retry</button>
+          </div>
+        ) : events.length === 0 ? (
+          <EmptyTimeline
+            petName={petName}
+            totalEventsCount={rawEventsCount}
+            activeFilter={filter}
+            onAddNote={handleAddNote}
+            onClearFilter={() => setFilter("all")}
+          />
+        ) : (
+          <div className="tl-page__feed">
+            {dateGroups.map(([date, entries]) => (
+              <div key={date} className="tl-page__date-group">
+                <div className="tl-page__date-header">
+                  <div className="tl-page__date-line" />
+                  <span className="tl-page__date-label">{formatDateHeader(date)}</span>
+                  <div className="tl-page__date-line" />
+                </div>
+                <div className="tl-page__cards">
+                  {entries.map((entry) => (
+                    <TimelineCard
+                      key={entry.entry_id || entry.event_id}
+                      entry={entry}
+                      onClick={handleCardClick}
+                      onPreviewDoc={(doc) => setPreviewDoc(doc)}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      
-    </div>
+      {/* FAB */}
+      {events.length > 0 && (
+        <button className="tl-page__fab" onClick={handleAddNote}>
+          <span className="material-symbols-outlined tl-page__fab-icon">add</span>
+          <span className="tl-page__fab-text">Add Paw Note</span>
+        </button>
+      )}
+
+      {/* Document Preview Lightbox Modal */}
+      {previewDoc && (
+        <DocumentModal doc={previewDoc} onClose={() => setPreviewDoc(null)} />
+      )}
     </div>
   );
 }

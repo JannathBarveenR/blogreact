@@ -5,28 +5,57 @@ CATEGORIES = ["diagnosis","medication","vaccination","deworming",
               "anti_tick_flea","grooming","other"]
 
 def _rows(pet_id):
-    return (supabase.table("medical_events").select("*")
+    events = (supabase.table("medical_events").select("*")
             .eq("pet_id", pet_id).eq("is_deleted", False)
             .order("event_date", desc=True).execute().data) or []
+    if not events:
+        return []
+    docs = (supabase.table("medical_documents").select("*")
+            .eq("pet_id", pet_id).execute().data) or []
+    docs_by_event = {}
+    for d in docs:
+        eid = d.get("event_id")
+        if eid:
+            if eid not in docs_by_event: docs_by_event[eid] = []
+            docs_by_event[eid].append(d)
+    for ev in events:
+        ev["documents"] = docs_by_event.get(ev["id"], [])
+    return events
 
 def _summary(entry, ev):
     """Compact card payload per form type."""
     cf = entry.get("category_fields", {}) or {}
     ft = entry.get("form_type")
-    base = {"entry_id": entry.get("entry_id"), "category": entry.get("category"),
-            "item_name": entry.get("item_name"), "status": entry.get("status"),
-            "date_logged": entry.get("date_logged"),
-            "next_due_date": entry.get("next_due_date"),
-            "event_id": ev["id"], "visit_group_id": ev["visit_group_id"]}
+    base = {
+        "entry_id": entry.get("entry_id"),
+        "category": entry.get("category"),
+        "item_name": entry.get("item_name"),
+        "status": entry.get("status"),
+        "date_logged": entry.get("date_logged"),
+        "next_due_date": entry.get("next_due_date"),
+        "notes": entry.get("notes") or ev.get("overall_notes"),
+        "event_id": ev["id"],
+        "visit_group_id": ev["visit_group_id"],
+        "clinic_name": ev.get("clinic_name"),
+        "vet_name": ev.get("vet_name"),
+        "reason_for_visit": ev.get("reason_for_visit"),
+        "documents": ev.get("documents", []),
+    }
     if ft == "consultation_vitals":
-        base["vitals"] = {"weight": cf.get("weight"), "weight_unit": cf.get("weight_unit"),
-                          "temperature": cf.get("temperature")}
+        base["vitals"] = {
+            "weight": cf.get("weight"),
+            "weight_unit": cf.get("weight_unit"),
+            "temperature": cf.get("temperature"),
+        }
     elif ft == "treatment_medication":
-        base["treatment"] = {"dose": cf.get("dose"), "dose_unit": cf.get("dose_unit"),
-                             "route": cf.get("route"),
-                             "frequency": cf.get("frequency"),
-                             "duration": cf.get("duration"),
-                             "duration_unit": cf.get("duration_unit")}
+        base["treatment"] = {
+            "dose": cf.get("dose"),
+            "dose_unit": cf.get("dose_unit"),
+            "route": cf.get("route"),
+            "frequency": cf.get("frequency"),
+            "duration": cf.get("duration"),
+            "duration_unit": cf.get("duration_unit"),
+        }
     elif ft == "procedure_diagnostics":
         base["procedure"] = {"procedure_type": cf.get("procedure_type")}
     return base

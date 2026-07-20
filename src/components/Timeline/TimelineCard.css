@@ -1,0 +1,257 @@
+.tl-card {
+  display: flex;
+  background: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.tl-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.09);
+}
+
+.tl-card:active {
+  transform: scale(0.98);
+}
+
+.tl-card__accent {
+  width: 4px;
+  flex-shrink: 0;
+  border-radius: 4px 0 0 4px;
+}
+
+/* 80% / 20% Split Layout */
+.tl-card__split {
+  display: flex;
+  width: 100%;
+  padding: 14px 16px 14px 12px;
+  gap: 10px;
+  box-sizing: border-box;
+}
+
+/* 80% Left Side */
+.tl-card__left {
+  flex: 0 0 76%;
+  max-width: 76%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.tl-card__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tl-card__icon-wrap {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tl-card__icon {
+  font-size: 17px !important;
+  font-variation-settings: 'FILL' 1, 'wght' 500;
+  line-height: 1;
+}
+
+.tl-card__badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 50px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tl-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tl-card__title {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.3;
+}
+
+.tl-card__reason {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #0891b2;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tl-card__reason-icon {
+  font-size: 14px !important;
+  line-height: 1;
+}
+
+.tl-card__notes {
+  margin: 0;
+  font-size: 12.5px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+/* 20% Right Side (Portrait Orientation) */
+.tl-card__right {
+  flex: 0 0 24%;
+  max-width: 24%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  box-sizing: border-box;
+  padding-right: 4px;
+}
+
+.tl-card__date {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+/* Portrait Prescription Thumbnail Card */
+.tl-card__rx-portrait {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  margin-top: auto;
+}
+
+.tl-card__rx-portrait:hover {
+  transform: scale(1.06);
+}
+
+.tl-card__rx-thumb-wrap {
+  position: relative;
+  width: 44px;
+  height: 56px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  border: 1.5px solid #004b49;
+}
+
+.tl-card__rx-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.tl-card__rx-file-card {
+  position: relative;
+  width: 44px;
+  height: 56px;
+  border-radius: 8px;
+  background: #f0fdf4;
+  border: 1.5px solid #86c540;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0, 75, 73, 0.08);
+}
+
+.tl-card__rx-file-icon {
+  font-size: 22px !important;
+  color: #004b49;
+  font-variation-settings: 'FILL' 1;
+}
+
+.tl-card__rx-count-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 4px;
+  border-radius: 50px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 5;
+}
+
+.tl-card__right-spacer {
+  height: 1px;
+}
+
+/* Footer Tags */
+.tl-card__footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.tl-card__status {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 50px;
+  text-transform: capitalize;
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.tl-card__status--confirmed {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.tl-card__status--suspected {
+  background: #fffbeb;
+  color: #d97706;
+}
+
+.tl-card__status--rule_out {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.tl-card__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 50px;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.tl-card__tag--due {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.tl-card__tag-icon {
+  font-size: 12px !important;
+  font-variation-settings: 'FILL' 0, 'wght' 500;
+  line-height: 1;
+}
