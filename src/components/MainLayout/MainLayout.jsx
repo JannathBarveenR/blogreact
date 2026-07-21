@@ -8,8 +8,8 @@ import MedicalRecords from "../medical/MedicalRecords";
 import Home from "../Home/Home";
 import TimelinePage from "../Timeline/TimelinePage";
 import UserProfile from "../UserProfile/UserProfile";
-import fetchWithAuth from "../../utils/fetchWithAuth";
 import useAuth from "../../hooks/useAuth";
+import { usePets, useInvalidatePets } from "../../hooks/usePetsQuery";
 
 const MainLayout = () => {
   const navigate = useNavigate();
@@ -26,50 +26,22 @@ const MainLayout = () => {
 
   const activeTab = getTabFromPath(location.pathname);
 
-  const [pets, setPets] = useState([]);
+  // TanStack Query: pets are now cached. Switching tabs re-uses cached data instantly.
+  const { data: pets = [], isLoading: loadingPets } = usePets(user?.id);
+  const invalidatePets = useInvalidatePets();
   const [activePetId, setActivePetId] = useState(null);
-  const [loadingPets, setLoadingPets] = useState(true);
 
-  const fetchPets = async () => {
-    if (!user) return;
-    setLoadingPets(true);
-    try {
-      const localPets = localStorage.getItem(`pets_${user.id}`);
-      if (localPets) {
-        const parsed = JSON.parse(localPets);
-        setPets(parsed);
-        const savedActive = localStorage.getItem(`active_pet_id_${user.id}`);
-        if (savedActive && parsed.some((p) => p.id === savedActive)) {
-          setActivePetId(savedActive);
-        } else if (parsed.length > 0) {
-          setActivePetId(parsed[0].id);
-        }
-      }
-
-      const res = await fetchWithAuth(`/api/pet-profile/by-user/${user.id}`);
-      if (res.ok) {
-        const data = await res.json();
-        setPets(data);
-        localStorage.setItem(`pets_${user.id}`, JSON.stringify(data));
-
-        const savedActive = localStorage.getItem(`active_pet_id_${user.id}`);
-        if (savedActive && data.some((p) => p.id === savedActive)) {
-          setActivePetId(savedActive);
-        } else if (data.length > 0) {
-          setActivePetId(data[0].id);
-          localStorage.setItem(`active_pet_id_${user.id}`, data[0].id);
-        }
-      }
-    } catch (err) {
-      console.error("Failed to fetch pets", err);
-    } finally {
-      setLoadingPets(false);
-    }
-  };
-
+  // Sync activePetId when pets data arrives
   useEffect(() => {
-    fetchPets();
-  }, [user]);
+    if (!pets.length || !user?.id) return;
+    const savedActive = localStorage.getItem(`active_pet_id_${user.id}`);
+    if (savedActive && pets.some((p) => p.id === savedActive)) {
+      setActivePetId(savedActive);
+    } else {
+      setActivePetId(pets[0].id);
+      localStorage.setItem(`active_pet_id_${user.id}`, pets[0].id);
+    }
+  }, [pets, user?.id]);
 
   const handleAddPet = () => {
     navigate("/create-pet-profile");
@@ -131,7 +103,7 @@ const MainLayout = () => {
             activePetId={activePetId}
             onPetSelect={handlePetSelect}
             onAddPet={handleAddPet}
-            refreshPets={fetchPets}
+            refreshPets={() => invalidatePets(user?.id)}
           />
         </div>
       );
