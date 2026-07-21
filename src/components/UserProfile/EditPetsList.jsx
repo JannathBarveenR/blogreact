@@ -1,6 +1,8 @@
 import React, { useState, useRef } from "react";
 import { FiEdit2, FiArrowLeft, FiPlus, FiCheck, FiX } from "react-icons/fi";
 import { Dog, Cat, Rabbit, Bird, PawPrint } from "lucide-react";
+import fetchWithAuth from "../../utils/fetchWithAuth";
+import queryClient from "../../utils/queryClient";
 import "./EditPetsList.css";
 const EMPTY_FORM = {
   pet_name: "",
@@ -58,21 +60,43 @@ const EditPetsList = ({
 
   const handleSave = async (pet) => {
     setSaving(true);
+    const petId = getPetId(pet);
     try {
-      const updatedPet = {
-        ...pet,
+      const updatePayload = {
         pet_name: form.pet_name,
-        name: form.pet_name,
-        species: form.species,
-        pet_type: form.species,
         breed: form.breed,
-        age: form.age,
-        approx_age: form.age,
-        pet_photo_url: form.pet_photo_url,
-        image: form.pet_photo_url,
+        birth_date: form.age, // Backend supports birth_date string which resolves to age
       };
-      await onUpdatePet?.(updatedPet, photoFile);
+
+      const res = await fetchWithAuth(`/api/pet-profile/${petId}`, {
+        method: "PATCH",
+        body: JSON.stringify(updatePayload),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to update pet profile");
+      }
+
+      if (photoFile) {
+        const formData = new FormData();
+        formData.append("file", photoFile);
+        await fetchWithAuth(`/api/pet-profile/${petId}/photo`, {
+          method: "POST",
+          body: formData,
+        });
+      }
+
+      // Force UI refresh instantly
+      queryClient.invalidateQueries({ queryKey: ["pets"] });
+
+      // Call parent if it needs to do anything (like close modal)
+      if (onUpdatePet) {
+        await onUpdatePet(pet, photoFile);
+      }
       cancelEdit();
+    } catch (err) {
+      console.error("Failed to save pet:", err);
+      alert("An error occurred while saving.");
     } finally {
       setSaving(false);
     }
@@ -109,7 +133,20 @@ const handleDelete = async () => {
   setDeleting(true);
 
   try {
-    await onDeletePet?.(deletePetId);
+    const res = await fetchWithAuth(`/api/pet-profile/${deletePetId}`, {
+      method: "DELETE",
+    });
+
+    if (!res.ok) {
+      throw new Error("Failed to delete pet");
+    }
+
+    // Instantly remove from the cache so it vanishes from the UI
+    queryClient.invalidateQueries({ queryKey: ["pets"] });
+
+    if (onDeletePet) {
+      await onDeletePet(deletePetId);
+    }
 
     if (editingPetId === deletePetId) {
       cancelEdit();
@@ -118,6 +155,7 @@ const handleDelete = async () => {
     setDeletePetId(null);
   } catch (err) {
     console.error("Failed to delete pet:", err);
+    alert("Could not delete pet.");
   } finally {
     setDeleting(false);
   }

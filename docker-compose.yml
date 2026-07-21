@@ -1,15 +1,14 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# PetOLife — docker-compose.yml
+# PetOLife — docker-compose.yml (Caddy Edition)
 #
 # Usage:
-#   Local testing:          docker compose up -d --build
-#   Production (server):    ENVIRONMENT=production docker compose up -d --build
+#   Local testing:  docker compose up -d --build
+#   Production:     SITE_ADDRESS=petolife.com docker compose up -d --build
 # ─────────────────────────────────────────────────────────────────────────────
 
 volumes:
-  certbot_www:       # ACME HTTP-01 challenge files
-  certbot_conf:      # SSL certs + Let's Encrypt account
-  nginx_logs:        # Persistent Nginx logs
+  caddy_data:        # SSL certificates + ACME account (persists across restarts)
+  caddy_config:      # Caddy internal runtime config
 
 networks:
   petolife_internal:
@@ -29,7 +28,7 @@ services:
       - ./backend/.env
     environment:
       ENVIRONMENT: "${ENVIRONMENT:-development}"
-      FRONTEND_URL: "${FRONTEND_URL:-http://localhost:5173}"
+      FRONTEND_URL: "${FRONTEND_URL:-http://localhost}"
     networks:
       - petolife_internal
     expose:
@@ -41,22 +40,20 @@ services:
       timeout: 10s
       retries: 3
       start_period: 25s
-    # SECURITY: Prevent privilege escalation, enforce read-only filesystem
     security_opt:
       - no-new-privileges:true
     read_only: true
     tmpfs:
       - /tmp
-    # LOGGING: CloudWatch compatible JSON format
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
 
-  # ── Nginx + React SPA ─────────────────────────────────────────────────────
-  nginx:
-    image: petolife-nginx:latest
+  # ── Caddy (Web Server + Automatic HTTPS) ───────────────────────────────
+  caddy:
+    image: petolife-caddy:latest
     build:
       context: .
       dockerfile: Dockerfile.frontend
@@ -68,10 +65,11 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ${NGINX_CONF:-./nginx/nginx-local.conf}:/etc/nginx/nginx.conf:ro
-      - certbot_conf:/etc/letsencrypt:ro
-      - certbot_www:/var/www/certbot:ro
-      - nginx_logs:/var/log/nginx
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      SITE_ADDRESS: "${SITE_ADDRESS:-localhost}"
     networks:
       - petolife_internal
       - petolife_external
@@ -92,19 +90,3 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-
-  # ── Certbot (Let's Encrypt SSL) ───────────────────────────────────────────
-  certbot:
-    image: certbot/certbot:latest
-    volumes:
-      - certbot_conf:/etc/letsencrypt
-      - certbot_www:/var/www/certbot
-    entrypoint: >
-      /bin/sh -c "trap exit TERM;
-        while :; do
-          certbot renew --webroot --webroot-path=/var/www/certbot --quiet;
-          sleep 12h & wait $${!};
-        done"
-    restart: unless-stopped
-    networks:
-      - petolife_external

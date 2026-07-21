@@ -5,6 +5,7 @@ import { FiEdit2, FiCheck } from "../icons";
 import { API_BASE, petTypes, breedData } from "../constants";
 import fetchWithAuth from "../../../utils/fetchWithAuth";
 import { PetAvatar } from "../../common/PetAvatar";
+import queryClient from "../../../utils/queryClient";
 import "./Step4.css";
 
 // Centralized age calculation so every consumer of pet data gets the
@@ -170,6 +171,9 @@ function Step4({ goBack, petData, setStep, isSubmitting, setIsSubmitting, submit
                (localPetData.petPhotoFile ? URL.createObjectURL(localPetData.petPhotoFile) : ""),
         pet_ids: validIds,
       };
+
+      // Invalidating TanStack query cache ensures the dashboard fetches the new list
+      queryClient.invalidateQueries({ queryKey: ["pets", userId] });
 
       onNavigateToPetHome({ newPet: petForHome });
     } catch (err) {

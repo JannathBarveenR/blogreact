@@ -1,5 +1,5 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# PetOLife — Frontend Dockerfile (Multi-stage)
+# PetOLife — Frontend Dockerfile (Multi-stage: Node build → Caddy server)
 # ─────────────────────────────────────────────────────────────────────────────
 
 # ─── Stage 1: Build ───────────────────────────────────────────────────────────
@@ -9,12 +9,11 @@ WORKDIR /app
 
 # Install dependencies in a cached layer
 COPY package.json package-lock.json ./
-# SECURITY: --ignore-scripts prevents malicious npm scripts from executing during install
 RUN npm ci --legacy-peer-deps --ignore-scripts
 
 COPY . .
 
-# Production build
+# Production build — Vite bakes these env vars into the static JS bundle
 ARG VITE_API_BASE_URL=""
 ARG VITE_SUPABASE_URL=""
 ARG VITE_SUPABASE_ANON_KEY=""
@@ -25,24 +24,18 @@ ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
 
 RUN npm run build
 
-# ─── Stage 2: Production Nginx Server ────────────────────────────────────────
-FROM nginx:1.27-alpine AS runner
+# ─── Stage 2: Production Caddy Server ────────────────────────────────────────
+FROM caddy:2-alpine AS runner
 
-# Copy compiled React SPA
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Copy compiled React SPA to Caddy's default root
+COPY --from=builder /app/dist /srv
 
-# The main nginx.conf is mounted at runtime via docker-compose.
-# Remove default to ensure our config takes full control.
-RUN rm /etc/nginx/conf.d/default.conf
-
-# Use non-root user for nginx if possible (requires additional config in nginx.conf)
-# But standard nginx alpine image runs master as root and workers as nginx user.
-
+# Caddyfile is mounted at runtime via docker-compose
 EXPOSE 80 443
 
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
     CMD wget --quiet --tries=1 --spider http://localhost/ || exit 1
 
 LABEL org.opencontainers.image.title="PetOLife Frontend" \
-      org.opencontainers.image.description="React SPA served by Nginx" \
+      org.opencontainers.image.description="React SPA served by Caddy" \
       org.opencontainers.image.vendor="PetOLife"
