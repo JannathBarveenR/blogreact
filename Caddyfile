@@ -2,6 +2,11 @@
 # PetOLife — Caddyfile (Production)
 # ─────────────────────────────────────────────────────────────────────────────
 
+# Redirect www to root domain
+www.{$SITE_ADDRESS:localhost} {
+	redir https://{$SITE_ADDRESS:localhost}{uri}
+}
+
 # Production: Serve on petolife.com with automatic HTTPS
 {$SITE_ADDRESS:localhost} {
 	# ── Reverse Proxy: API routes to FastAPI backend ──────────────────
