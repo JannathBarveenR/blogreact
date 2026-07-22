@@ -1,14 +1,9 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# PetOLife — docker-compose.yml (Caddy Edition)
+# PetOLife — docker-compose.yml (Nginx - just as webserver )
 #
 # Usage:
 #   Local testing:  docker compose up -d --build
-#   Production:     SITE_ADDRESS=petolife.com docker compose up -d --build
 # ─────────────────────────────────────────────────────────────────────────────
-
-volumes:
-  caddy_data:        # SSL certificates + ACME account (persists across restarts)
-  caddy_config:      # Caddy internal runtime config
 
 networks:
   petolife_internal:
@@ -51,9 +46,9 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  # ── Caddy (Web Server + Automatic HTTPS) ───────────────────────────────
-  caddy:
-    image: petolife-caddy:latest
+  # ── Frontend (React SPA served by Nginx) ───────────────────────────────
+  frontend:
+    image: petolife-frontend:latest
     build:
       context: .
       dockerfile: Dockerfile.frontend
@@ -63,13 +58,6 @@ services:
         VITE_SUPABASE_ANON_KEY: "${SUPABASE_ANON_KEY}"
     ports:
       - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    environment:
-      SITE_ADDRESS: "${SITE_ADDRESS:-localhost}"
     networks:
       - petolife_internal
       - petolife_external
@@ -79,12 +67,6 @@ services:
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:2019/metrics"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
     logging:
       driver: "json-file"
       options:
