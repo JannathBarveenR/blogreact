@@ -38,13 +38,22 @@ app.add_middleware(GZipMiddleware, minimum_size=500)
 _raw_origins = os.getenv("ALLOWED_ORIGINS", "")
 _extra_origins = [o.strip() for o in _raw_origins.split(",") if o.strip()]
 
+_frontend_origins = []
+if FRONTEND_URL:
+    _clean_url = FRONTEND_URL.rstrip("/")
+    _frontend_origins.append(_clean_url)
+    if "://www." in _clean_url:
+        _frontend_origins.append(_clean_url.replace("://www.", "://"))
+    elif "://" in _clean_url:
+        _frontend_origins.append(_clean_url.replace("://", "://www."))
+
 ALLOWED_ORIGINS = list(
     {
         "http://localhost:5173",
         "http://localhost:3000",
         "http://127.0.0.1:5173",
         "http://127.0.0.1:3000",
-        *([FRONTEND_URL] if FRONTEND_URL else []),
+        *_frontend_origins,
         *_extra_origins,
     }
 )

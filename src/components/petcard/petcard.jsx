@@ -12,7 +12,7 @@ export default function PetCard({ petData: propPetData }) {
   useEffect(() => {
     const fetchFullProfile = async (petolifeId) => {
       try {
-        const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+        const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
         const res = await fetch(`${API_BASE}/api/pet-profile/public/${encodeURIComponent(petolifeId)}`);
         if (res.ok) {
           const data = await res.json();
@@ -65,7 +65,7 @@ export default function PetCard({ petData: propPetData }) {
   if (loading) return <div className="petcard-id-wrapper loading">Loading pet ID...</div>;
   if (!fullProfile) return <div className="petcard-id-wrapper empty">No pet profile available.</div>;
 
-  const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
   const qrUrl = fullProfile.petolife_id
     ? `${API_BASE}/api/pet-profile/by-petolife-id/${encodeURIComponent(fullProfile.petolife_id)}`
     : '';
