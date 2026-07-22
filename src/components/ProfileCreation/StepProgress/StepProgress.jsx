@@ -1,285 +1,65 @@
 import React from "react";
 import { TOTAL_STEPS } from "../constants";
-import dogParent from "../../../assets/dog-parent.webp";
-import homeCard from "../../../assets/dog-home.webp";
 
-function CelebrationBurst({ left, top, delay = 0 }) {
-  return (
-    <div
-      className="absolute pointer-events-none"
-      style={{
-        left,
-        top,
-        animationDelay: `${delay}s`,
-      }}
-    >
-      <div className="relative h-[90px] w-[90px] animate-[burst_2.5s_infinite]">
-        {[...Array(12)].map((_, i) => (
-          <span
-            key={i}
-            className="
-              absolute
-              left-1/2
-              top-1/2
-              h-[22px]
-              w-[2px]
-              rounded-full
-              origin-bottom
-              bg-gradient-to-b
-              from-[#84B662]
-              to-transparent
-            "
-            style={{
-              transform: `translate(-50%, -100%) rotate(${i * 30}deg)`,
-            }}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
+const STEP_LABELS = ["Photo", "Details", "Review"];
 
 function StepProgress({ stepNumber }) {
-  const TRACK_START = 8;
-  const TRACK_END = 88;
-
-  const currentPosition =
-    TRACK_START +
-    ((stepNumber - 1) / (TOTAL_STEPS - 1)) *
-      (TRACK_END - TRACK_START);
-
   return (
-    <>
-      <style>
-        {`
-          @keyframes burst {
-            0% {
-              transform: scale(0);
-              opacity: 0;
-            }
-            20% {
-              opacity: 1;
-            }
-            100% {
-              transform: scale(1.3);
-              opacity: 0;
-            }
-          }
+    <div className="w-full mb-6">
+      <div className="relative flex items-center justify-between px-1">
+        {Array.from({ length: TOTAL_STEPS }).map((_, i) => {
+          const step = i + 1;
+          const isDone = step < stepNumber;
+          const isActive = step === stepNumber;
+          const isLast = step === TOTAL_STEPS;
 
-          @keyframes sparkle {
-            0%,100% {
-              transform: scale(1);
-              box-shadow:
-                0 0 10px rgba(132,182,98,.3),
-                0 0 20px rgba(132,182,98,.2);
-            }
-
-            50% {
-              transform: scale(1.15);
-              box-shadow:
-                0 0 25px rgba(132,182,98,.8),
-                0 0 40px rgba(132,182,98,.3);
-            }
-          }
-
-          @keyframes glowPulse {
-            0%,100% {
-              opacity:.3;
-              transform:scale(1);
-            }
-
-            50% {
-              opacity:.8;
-              transform:scale(1.25);
-            }
-          }
-
-          .sparkle {
-            animation: sparkle 1.5s infinite;
-          }
-
-          .glow-ring {
-            position:absolute;
-            width:70px;
-            height:70px;
-            border-radius:9999px;
-            background:rgba(132,182,98,.15);
-            filter:blur(18px);
-            animation:glowPulse 2s infinite;
-          }
-        `}
-      </style>
-
-      <div className="relative overflow-visible rounded-[28px] ">
-
-        {/* Background blur */}
-        <div className="absolute -left-10 bottom-0 h-20 w-20 rounded-full bg-[#84B662]/10 blur-2xl" />
-        <div className="absolute -right-10 top-0 h-20 w-20 rounded-full bg-[#004B49]/5 blur-2xl" />
-
-        <div className="relative h-[110px]">
-
-          {/* Base Line */}
-          <div
-            className="absolute top-[56px] h-[5px] rounded-full bg-[#D9DDD6]"
-            style={{
-              left: `${TRACK_START}%`,
-              width: `${TRACK_END - TRACK_START}%`,
-            }}
-          />
-
-          {/* Active Line */}
-          <div
-            className="
-              absolute
-              top-[56px]
-              h-[5px]
-              rounded-full
-              bg-gradient-to-r
-              from-[#84B662]
-              to-[#6FA54F]
-              transition-all
-              duration-700
-            "
-            style={{
-              left: `${TRACK_START}%`,
-              width: `${currentPosition - TRACK_START}%`,
-            }}
-          />
-
-          {/* Step Dots */}
-          {[1, 2, 3, 4].map((step) => {
-            const position =
-              TRACK_START +
-              ((step - 1) / (TOTAL_STEPS - 1)) *
-                (TRACK_END - TRACK_START);
-
-            const active = step <= stepNumber;
-
-            return (
-              <div
-                key={step}
-                className="absolute top-[47px] -translate-x-1/2"
-                style={{
-                  left: `${position}%`,
-                }}
-              >
+          return (
+            <React.Fragment key={step}>
+              <div className="flex flex-col items-center gap-1.5 relative z-10">
                 <div
                   className={`
-                    relative
-                    flex
-                    h-7
-                    w-7
-                    items-center
-                    justify-center
-                    rounded-full
-                    border-2
-                    transition-all
-                    duration-500
+                    flex items-center justify-center
+                    h-9 w-9 rounded-full text-[15px] font-bold
+                    transition-all duration-500 ease-out
                     ${
-                      step === TOTAL_STEPS &&
-                      stepNumber === TOTAL_STEPS
-                        ? "sparkle"
-                        : ""
-                    }
-                    ${
-                      active
-                        ? "border-[#84B662] bg-white shadow-[0_0_20px_rgba(132,182,98,.5)]"
-                        : "border-[#D0D0D0] bg-white"
+                      isDone
+                        ? "bg-[#84B662] text-white scale-100"
+                        : isActive
+                        ? "bg-white border-2 border-[#84B662] text-[#004B49] scale-110 shadow-[0_0_0_6px_rgba(132,182,98,0.15)]"
+                        : "bg-[#EDF2EA] text-[#9BAE9F] border-2 border-transparent"
                     }
                   `}
                 >
-                  {step === TOTAL_STEPS &&
-                    stepNumber === TOTAL_STEPS && (
-                      <div className="glow-ring" />
-                    )}
-
-                  {active && (
-                    <div className="h-3 w-3 rounded-full bg-[#84B662]" />
-                  )}
+                  {isDone ? "🐾" : step}
                 </div>
+                <span
+                  className={`text-[11px] font-semibold tracking-tight transition-colors duration-300 ${
+                    isActive ? "text-[#004B49]" : isDone ? "text-[#5C8A63]" : "text-[#B4BEB6]"
+                  }`}
+                >
+                  {STEP_LABELS[i] || `Step ${step}`}
+                </span>
               </div>
-            );
-          })}
 
-          {/* Walking Parent */}
-          <div
-            className="absolute transition-all duration-700 ease-in-out"
-            style={{
-              left: `calc(${currentPosition}% - 24px)`,
-              top: "10px",
-              zIndex: 20,
-            }}
-          >
-            <img
-              src={dogParent}
-              alt="Pet Parent"
-              className="
-                h-[48px]
-                w-auto
-                object-contain
-                drop-shadow-lg
-              "
-            />
-          </div>
-
-          {/* Home */}
-          <div
-            className="absolute"
-            style={{
-              right: "-5px",
-              top: "-4px",
-              zIndex: 10,
-            }}
-          >
-            {stepNumber === TOTAL_STEPS && (
-              <>
-                <CelebrationBurst
-                  left="-90px"
-                  top="-40px"
-                  delay={0}
-                />
-
-                <CelebrationBurst
-                  left="10px"
-                  top="-70px"
-                  delay={0.5}
-                />
-
-                <CelebrationBurst
-                  left="100px"
-                  top="-30px"
-                  delay={1}
-                />
-              </>
-            )}
-
-            <img
-              src={homeCard}
-              alt="Home"
-              className="
-                h-[64px]
-                w-auto
-                object-contain
-              "
-            />
-          </div>
-
-
-
-        </div>
-
-        {/* Step Badge */}
-        <div className="mt-0 text-center">
-          <div >
-            <span className="text-[16px] font-bold text-[#004B49]">
-              {stepNumber === TOTAL_STEPS
-                ? `Step ${TOTAL_STEPS} of ${TOTAL_STEPS}`
-                : `Step ${stepNumber} of ${TOTAL_STEPS}`}
-            </span>
-          </div>
-        </div>
+              {!isLast && (
+                <div className="flex-1 h-[3px] mx-1 rounded-full bg-[#E4EBE0] relative overflow-hidden -translate-y-2.5">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[#84B662] to-[#6FA54F] transition-all duration-700 ease-out"
+                    style={{ width: step < stepNumber ? "100%" : "0%" }}
+                  />
+                </div>
+              )}
+            </React.Fragment>
+          );
+        })}
       </div>
-    </>
+
+      <div className="text-center mt-3">
+        <span className="text-[13px] font-bold text-[#004B49]">
+          Step {stepNumber} of {TOTAL_STEPS}
+        </span>
+      </div>
+    </div>
   );
 }
 

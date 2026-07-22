@@ -471,3 +471,52 @@
   .pet-grid { grid-template-columns: repeat(3, 1fr); }
   .cpp-header h2 { font-size: 22px; }
 }
+
+.dob-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 15px;
+  color: #1c1c1c;
+  background: #fff;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.dob-input:focus {
+  border-color: #2d6a4f;
+}
+.age-toggle-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.age-toggle-btn {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1.5px solid #d9ddd6;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  color: #53755b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.age-toggle-btn.active {
+  border-color: #84B662;
+  background: #eaf5e5;
+  color: #2f4a35;
+}
+
+.age-row {
+  display: flex;
+  gap: 12px;
+}
+
+.age-field {
+  flex: 1;
+}

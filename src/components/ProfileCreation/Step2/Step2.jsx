@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import StepProgress from "../StepProgress/StepProgress";
 import StepHeaderBar from "../StepHeaderBar/StepHeaderBar";
 import { breedData, petTypes } from "../constants";
+import PetDatePicker from "../PetDatePicker/PetDatePicker";
 import "./Step2.css";
 
 function Step2({ goNext, goBack, petData }) {
@@ -30,7 +31,23 @@ function Step2({ goNext, goBack, petData }) {
     petData.petIds?.length ? petData.petIds : [{ idName: "", idNumber: "" }]
   );
 
-  const progress = 50;
+  const [knowDOB, setKnowDOB] = useState(!!petData.birthDate);
+  const [dob, setDob] = useState(petData.birthDate || "");
+  const getApproxYears = () => {
+    if (!petData.approxAge) return "";
+    const match = petData.approxAge.match(/(\d+)y/);
+    return match ? match[1] : "";
+  };
+  const getApproxMonths = () => {
+    if (!petData.approxAge) return "";
+    const match = petData.approxAge.match(/(\d+)m/);
+    return match ? match[1] : "";
+  };
+  const [years, setYears] = useState(getApproxYears());
+  const [months, setMonths] = useState(getApproxMonths());
+  const maxDate = new Date().toISOString().split("T")[0];
+
+  const progress = 66;
 
   const rawFiltered =
     breedData[selectedPet]?.filter((breed) =>
@@ -53,7 +70,16 @@ function Step2({ goNext, goBack, petData }) {
     if (!selectedPet) { setLocalError("Please select a pet type."); return; }
     if (!petName.trim()) { setLocalError("Please enter pet name."); return; }
     setLocalError("");
-    goNext({ petType: selectedPet, breed: selectedBreed, gender: selectedGender, petName, petIds });
+    goNext({
+      petType: selectedPet,
+      breed: selectedBreed,
+      gender: selectedGender,
+      petName,
+      petIds,
+      knowDOB,
+      birthDate: knowDOB ? dob : "",
+      approxAge: !knowDOB ? `${years || 0}y ${months || 0}m` : "",
+    });
   };
 
   return (
@@ -110,23 +136,20 @@ function Step2({ goNext, goBack, petData }) {
         </div>
 
         {/* BREED */}
-{/* BREED */}
-<div className="form-group">
-  <label>Breed</label>
-  <button
-    type="button"
-    className="breed-selector"
-    onClick={() => {
-      if (!selectedPet) { alert("Please select a pet type first"); return; }
-      setBreedSearch("");
-      setShowBreedDropdown(true);
-    }}
-  >
-    <span>{selectedBreed || "Search or select breed"}</span>
-    
-  </button>
-</div>
-
+        <div className="form-group">
+          <label>Breed</label>
+          <button
+            type="button"
+            className="breed-selector"
+            onClick={() => {
+              if (!selectedPet) { alert("Please select a pet type first"); return; }
+              setBreedSearch("");
+              setShowBreedDropdown(true);
+            }}
+          >
+            <span>{selectedBreed || "Search or select breed"}</span>
+          </button>
+        </div>
 
         {/* GENDER */}
         <div className="form-group">
@@ -144,6 +167,66 @@ function Step2({ goNext, goBack, petData }) {
               </button>
             ))}
           </div>
+        </div>
+
+        {/* AGE / DOB */}
+        <div className="form-group">
+          <label>Date of Birth or Age</label>
+          <div className="age-toggle-row">
+            <button
+              type="button"
+              className={`age-toggle-btn ${knowDOB ? "active" : ""}`}
+              onClick={() => setKnowDOB(true)}
+            >
+              I know the DOB
+            </button>
+            <button
+              type="button"
+              className={`age-toggle-btn ${!knowDOB ? "active" : ""}`}
+              onClick={() => setKnowDOB(false)}
+            >
+              Approximate age
+            </button>
+          </div>
+
+          {knowDOB ? (
+            <PetDatePicker value={dob} onChange={setDob} maxDate={maxDate} />
+          ) : (
+            <div className="age-row">
+              <div className="age-field">
+                <label>Years</label>
+                <input
+                  type="number"
+                  placeholder="e.g. 3"
+                  value={years}
+                  min="0"
+                  max="100"
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (v === "") { setYears(""); return; }
+                    const num = Number(v);
+                    if (num >= 0 && num <= 100) setYears(num);
+                  }}
+                />
+              </div>
+              <div className="age-field">
+                <label>Months</label>
+                <input
+                  type="number"
+                  placeholder="e.g. 6"
+                  value={months}
+                  min="0"
+                  max="11"
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (v === "") { setMonths(""); return; }
+                    const num = Number(v);
+                    if (num >= 0 && num <= 11) setMonths(num);
+                  }}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {localError && <div className="submit-error">{localError}</div>}
