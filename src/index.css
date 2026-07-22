@@ -20,3 +20,34 @@
     vertical-align: middle;
   }
 }
+/* ---- Global spacing & typography tightening ---- */
+* {
+  letter-spacing: -0.01em;
+}
+
+body {
+  line-height: 1.45;
+}
+
+h1, h2, h3, h4 {
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin-top: 0;
+}
+
+p, span, label {
+  line-height: 1.4;
+}
+
+.form-group {
+  margin-bottom: 14px;
+}
+
+.form-group label {
+  margin-bottom: 5px;
+  display: block;
+}
+
+input, textarea, select {
+  letter-spacing: 0;
+}
