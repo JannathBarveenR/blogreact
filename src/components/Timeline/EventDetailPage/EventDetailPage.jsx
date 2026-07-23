@@ -24,11 +24,15 @@ export default function EventDetailPage() {
       if (!eventId) return;
       try {
         setLoading(true);
-        // Find pet associated with event or use active pet
-        const petId = pets[0]?.id;
-        if (petId) {
-          const data = await getMedicalEvent(petId, eventId);
-          setEventData(data);
+        if (pets.length > 0) {
+          try {
+            const data = await Promise.any(
+              pets.map((pet) => getMedicalEvent(pet.id, eventId))
+            );
+            setEventData(data);
+          } catch (aggErr) {
+            setError("Medical record not found.");
+          }
         } else {
           setError("No pet profile available.");
         }
