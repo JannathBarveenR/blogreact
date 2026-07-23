@@ -520,3 +520,109 @@
 .age-field {
   flex: 1;
 }
+
+/* DOB TRIGGER FIELD */
+.dob-trigger-wrapper {
+  position: relative;
+  width: 100%;
+  cursor: pointer;
+}
+
+.dob-trigger-input {
+  width: 100%;
+  height: 56px;
+  border-radius: 18px;
+  border: 1.5px solid var(--card-border);
+  background: #fff;
+  padding: 0 46px 0 16px;
+  outline: none;
+  font-size: 15px;
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+}
+
+.dob-trigger-wrapper:hover .dob-trigger-input {
+  border-color: #cfe3c9;
+}
+
+.dob-trigger-input:focus {
+  border-color: var(--brand-green);
+  box-shadow: 0 0 0 4px rgba(132, 182, 98, 0.18);
+}
+
+.dob-calendar-icon {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 20px;
+  color: var(--brand-teal);
+  pointer-events: none;
+}
+
+/* DATE PICKER POPUP & BLURRED OVERLAY */
+.date-picker-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.35);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  z-index: 999;
+  animation: datePickerOverlayFade 0.2s ease forwards;
+}
+
+@keyframes datePickerOverlayFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.date-picker-popup {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 20px;
+  box-shadow: 0 24px 60px rgba(0, 75, 73, 0.2), 0 8px 24px rgba(0, 0, 0, 0.12);
+  animation: datePickerPop 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes datePickerPop {
+  from {
+    transform: scale(0.94);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.date-picker-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #edf2ea;
+}
+
+.date-picker-popup-header h3 {
+  margin: 0;
+  color: var(--brand-teal);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.date-picker-popup .pet-cal {
+  border: none;
+  padding: 0;
+  margin-top: 0;
+  box-shadow: none;
+}

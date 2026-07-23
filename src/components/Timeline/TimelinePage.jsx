@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import "./TimelinePage.css";
 
 import Pets from "../Home/Pets/Pets";
@@ -41,6 +42,7 @@ export default function TimelinePage({
   onPetSelect,
   onAddPet,
 }) {
+  const navigate = useNavigate();
   const [filter, setFilter] = useState("all");
   const [events, setEvents] = useState([]);
   const [rawEventsCount, setRawEventsCount] = useState(0);
@@ -90,7 +92,10 @@ export default function TimelinePage({
   };
 
   const handleCardClick = (entry) => {
-    console.log("Open detail for", entry);
+    const targetId = entry.event_id || entry.medical_event_id || entry.id || entry.visit_group_id;
+    if (targetId) {
+      navigate(`/timeline/event/${targetId}`);
+    }
   };
 
   /* ── Add Paw Note overlay ──────────────────────────────────────── */

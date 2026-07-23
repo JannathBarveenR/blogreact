@@ -1,11 +1,7 @@
-import React, { useMemo, useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import html2canvas from 'html2canvas';
-import PetCard from '../petcard/petcard';
+import PetKonvaCard from '../PetKonvaCard/PetKonvaCard';
 import './postidscreen.css';
-import { QRCodeSVG } from 'qrcode.react';
-import { PetAvatar } from '../common/PetAvatar';
-import polLogo from '../../assets/logo-with-tagline.webp';
 import {
   Check,
   PawPrint,
@@ -13,16 +9,13 @@ import {
   Home,
   FilePlus2,
   ChevronRight,
-  Copy,
-  CheckCircle2,
   Download,
 } from 'lucide-react';
 
 export default function PostIdScreen({ inlineData }) {
   const location = useLocation();
   const navigate = useNavigate();
-
-  const [copiedId, setCopiedId] = useState(false);
+  const konvaCardRef = useRef(null);
 
   const dataToUse = inlineData || location.state || {};
 
@@ -31,58 +24,47 @@ export default function PostIdScreen({ inlineData }) {
     petolifeId = 'ID',
     petPhotoUrl = '',
     petType = '',
+    breed = '',
+    birthDate = '',
+    approxAge = '',
   } = dataToUse;
 
-  const qrValue = `${window.location.origin}/api/pet-profile/by-petolife-id/${encodeURIComponent(petolifeId)}`;
-
-  const handleCopyId = () => {
-    navigator.clipboard.writeText(petolifeId);
-    setCopiedId(true);
-    setTimeout(() => setCopiedId(false), 2000);
-  };
-
-  // Parse owner name from user metadata
-  const getOwnerName = () => {
+  // Parse owner name & phone from user metadata
+  const getOwnerInfo = () => {
     const storedUserData = localStorage.getItem("user");
-    let ownerName = 'Pet Parent';
+    let name = 'Pet Parent';
+    let phone = '';
     if (storedUserData) {
       try {
         const userObj = JSON.parse(storedUserData);
-        ownerName = userObj.user_metadata?.first_name || userObj.user_metadata?.name || 'Pet Parent';
+        name = userObj.user_metadata?.full_name || userObj.user_metadata?.first_name || 'Pet Parent';
         if (userObj.user_metadata?.last_name) {
-          ownerName += ` ${userObj.user_metadata.last_name}`;
+          name += ` ${userObj.user_metadata.last_name}`;
         }
+        phone = userObj.phone || userObj.user_metadata?.phone || '';
       } catch {}
     }
-    return ownerName;
+    return { name, phone };
   };
 
-  const hiddenCardRef = useRef(null);
+  const ownerInfo = getOwnerInfo();
 
-  const dataToUseForCard = {
+  const petDataForKonva = {
     ...dataToUse,
-    petolife_id: dataToUse.petolifeId || dataToUse.petolife_id,
+    pet_name: petName,
+    petolife_id: petolifeId,
+    pet_photo_url: petPhotoUrl,
+    pet_type: petType,
+    breed,
+    birth_date: birthDate,
+    approx_age: approxAge,
+    owner_name: ownerInfo.name,
+    owner_phone: ownerInfo.phone,
   };
 
-  const handleDownloadQR = async () => {
-    if (hiddenCardRef.current) {
-      try {
-        // Find the actual card inside the wrapper to avoid capturing empty space
-        const cardElement = hiddenCardRef.current.querySelector('.petcard-id-outer') || hiddenCardRef.current;
-        const canvas = await html2canvas(cardElement, {
-          scale: 3, // high dpi
-          useCORS: true,
-          backgroundColor: null,
-          logging: false
-        });
-        const pngFile = canvas.toDataURL("image/png");
-        const downloadLink = document.createElement("a");
-        downloadLink.download = `${petName}_PetoLife_ID.png`;
-        downloadLink.href = pngFile;
-        downloadLink.click();
-      } catch (err) {
-        console.error("Failed to download card:", err);
-      }
+  const handleDownloadCard = () => {
+    if (konvaCardRef.current) {
+      konvaCardRef.current.downloadCard();
     }
   };
 
@@ -134,12 +116,6 @@ export default function PostIdScreen({ inlineData }) {
     <div className="page">
       <PawWatermarks />
 
-      <div style={{ position: 'absolute', top: '-9999px', left: '-9999px', width: '400px' }}>
-        <div ref={hiddenCardRef}>
-          <PetCard petData={dataToUseForCard} />
-        </div>
-      </div>
-
       {/* ── Celebration header ── */}
       <header className="postid-hero">
         <div className="hero-check-badge">
@@ -153,56 +129,9 @@ export default function PostIdScreen({ inlineData }) {
         </p>
       </header>
 
-      {/* ── ID Card body ── */}
-      <main className="id-card" role="status" aria-live="polite">
-
-        {/* Pet photo inside the card, centred above QR */}
-        <div className="id-pet-avatar-wrap">
-          <div className="id-pet-avatar-ring">
-            <PetAvatar
-              src={petPhotoUrl}
-              petType={petType}
-              className="id-pet-avatar-img"
-              size={68}
-            />
-          </div>
-          <span className="id-verified-badge">
-            <Check size={14} strokeWidth={3} color="var(--brand-teal)" />
-          </span>
-        </div>
-
-        <p className="id-pet-name-label">{petName}</p>
-
-        <div className="id-panel">
-          <div className="id-qr">
-            <div className="qr-frame">
-              <QRCodeSVG
-                id="qr-code-svg"
-                value={qrValue}
-                size={150}
-                bgColor="transparent"
-                fgColor="var(--ink)"
-                level="M"
-              />
-            </div>
-          </div>
-
-          <div className="id-info">
-            <div className="id-label">
-              <PawPrint size={11} />
-              <span>PET ID</span>
-              <PawPrint size={11} />
-            </div>
-            <div className="id-number-row">
-              <span className="id-number">{petolifeId}</span>
-              <button type="button" className="id-copy-btn" onClick={handleCopyId} aria-label="Copy pet ID">
-                {copiedId
-                  ? <CheckCircle2 size={16} strokeWidth={2.4} color="var(--brand-green-dark)" />
-                  : <Copy size={16} strokeWidth={2.4} />}
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* ── ID Card body (Rendered via Konva at 9:16 Story Aspect Ratio) ── */}
+      <main className="postid-konva-card-container" style={{ display: 'flex', justifyContent: 'center', margin: '12px 0 20px' }}>
+        <PetKonvaCard ref={konvaCardRef} petData={petDataForKonva} containerWidth={Math.min(350, window.innerWidth - 32)} />
       </main>
 
       {/* ── Action buttons ── */}
@@ -211,7 +140,7 @@ export default function PostIdScreen({ inlineData }) {
           tone="primary"
           icon={<Download size={18} strokeWidth={2.2} />}
           label="Download ID Card"
-          onClick={handleDownloadQR}
+          onClick={handleDownloadCard}
         />
         <div className="action-row-2">
           <ActionButton
@@ -231,3 +160,4 @@ export default function PostIdScreen({ inlineData }) {
     </div>
   );
 }
+

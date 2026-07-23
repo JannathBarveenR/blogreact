@@ -10,9 +10,12 @@ ReminderType = Literal[
     "monitoring","conditional",
 ]
 
+TimeSlot = Literal["morning", "afternoon", "night", "custom"]
+
 class ReminderCreate(BaseModel):
     title: str = Field(..., max_length=100)
     type: ReminderType
+    time_slot: Optional[TimeSlot] = "morning"
     description: Optional[str] = Field(None, max_length=300)
     due_date: date
     due_time: Optional[time] = None
@@ -26,10 +29,12 @@ class ReminderCreate(BaseModel):
     end_repeat_count: Optional[int] = None
     linked_event_id: Optional[str] = None
     notes: Optional[str] = Field(None, max_length=300)
+    status: Optional[str] = "pending"
 
 class ReminderUpdate(BaseModel):
     title: Optional[str] = None
     type: Optional[ReminderType] = None
+    time_slot: Optional[TimeSlot] = None
     description: Optional[str] = None
     due_date: Optional[date] = None
     due_time: Optional[time] = None

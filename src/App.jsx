@@ -8,10 +8,12 @@ import "./App.css";
 const LandingPg = lazy(() => import("./components/LandingPg/LandingPg"));
 const MainLayout = lazy(() => import("./components/MainLayout/MainLayout"));
 const ProfileCreate = lazy(() => import("./components/ProfileCreation/ProfileCreation/ProfileCreation"));
-const PetCard = lazy(() => import("./components/petcard/petcard"));
+const PublicPetProfile = lazy(() => import("./components/PublicPetProfile/PublicPetProfile"));
 const ResetPassword = lazy(() => import("./components/Login/ResetPassword"));
 const AuthCallback = lazy(() => import("./components/AuthCallback/AuthCallback"));
 const ParentProfile = lazy(() => import("./components/ParentProfile/ParentProfile"));
+const RemindersPage = lazy(() => import("./components/Reminders/RemindersPage"));
+const EventDetailPage = lazy(() => import("./components/Timeline/EventDetailPage/EventDetailPage"));
 
 function LoadingFallback() {
   return (
@@ -48,7 +50,7 @@ function App() {
           <Route path="/landing" element={<LandingPg />} />
           <Route path="/login" element={<Login />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/pet/:id" element={<PetCard />} />
+          <Route path="/pet/:id" element={<PublicPetProfile />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
 
           {/* Protected Routes */}
@@ -60,6 +62,9 @@ function App() {
             <Route path="/profile" element={<MainLayout />} />
             <Route path="/create-pet-profile" element={<ProfileCreate />} />
             <Route path="/parent-profile" element={<ParentProfile />} />
+            <Route path="/reminders" element={<RemindersPage />} />
+            <Route path="/timeline/event/:eventId" element={<EventDetailPage />} />
+            <Route path="/records/event/:eventId" element={<EventDetailPage />} />
           </Route>
 
           {/* Fallback */}

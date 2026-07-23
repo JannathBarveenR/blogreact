@@ -26,7 +26,7 @@
    that grows/shrinks to absorb extra/short vertical space. */
 .pid-card{
     position:relative;
-    width:min(92vw, 360px);
+    width:min(94vw, 420px);
     height:auto;
     max-height:calc(100vh - 24px);
     background:linear-gradient(180deg, #F5FAF3 0%, #ffffff 22%);
@@ -42,24 +42,61 @@
     gap: 8px;
 }
 
+.pid-card-modal-box {
+    position: relative;
+    width: min(94vw, 430px);
+    max-height: calc(100vh - 20px);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: auto;
+}
+
+.pid-modal-top-bar {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 8px;
+}
+
+.pid-download-btn {
+    margin-top: 14px;
+    width: 100%;
+    max-width: 410px;
+    height: 50px;
+    border-radius: 16px;
+    background: linear-gradient(90deg, #84b662 0%, #004b23 100%);
+    color: #ffffff;
+    border: none;
+    font-weight: 800;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0 10px 24px rgba(0, 75, 73, 0.25);
+    transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.pid-download-btn:active {
+    transform: scale(0.98);
+}
+
 /* close */
 .pid-close{
-    position:absolute;
-    top:clamp(10px, 2vh, 18px);
-    right:clamp(10px, 2vh, 18px);
-    width:clamp(28px, 5vh, 36px);
-    height:clamp(28px, 5vh, 36px);
+    position:relative;
+    width:34px;
+    height:34px;
     border:none;
     border-radius:50%;
-    background:#EDF5EA;
+    background:#ffffff;
     cursor:pointer;
     color:#21562f;
     display:flex;
     align-items:center;
     justify-content:center;
-    font-size:clamp(13px, 2vh, 16px);
+    font-size:16px;
     transition:.2s;
     z-index:20;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .pid-close:hover{

@@ -3,6 +3,7 @@ import StepProgress from "../StepProgress/StepProgress";
 import StepHeaderBar from "../StepHeaderBar/StepHeaderBar";
 import { breedData, petTypes } from "../constants";
 import PetDatePicker from "../PetDatePicker/PetDatePicker";
+import { FiCalendar } from "react-icons/fi";
 import "./Step2.css";
 
 function Step2({ goNext, goBack, petData }) {
@@ -22,6 +23,7 @@ function Step2({ goNext, goBack, petData }) {
   const [petName, setPetName] = useState(petData.petName || "");
   const [showOtherPopup, setShowOtherPopup] = useState(false);
   const [showOtherBreedPopup, setShowOtherBreedPopup] = useState(false);
+  const [showDatePickerModal, setShowDatePickerModal] = useState(false);
   const [customPetType, setCustomPetType] = useState("");
   const [customBreed, setCustomBreed] = useState("");
   const [localError, setLocalError] = useState("");
@@ -190,7 +192,27 @@ function Step2({ goNext, goBack, petData }) {
           </div>
 
           {knowDOB ? (
-            <PetDatePicker value={dob} onChange={setDob} maxDate={maxDate} />
+            <div
+              className="dob-trigger-wrapper"
+              onClick={() => setShowDatePickerModal(true)}
+            >
+              <input
+                type="text"
+                readOnly
+                placeholder="Select Date of Birth"
+                value={
+                  dob
+                    ? new Date(dob).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })
+                    : ""
+                }
+                className="dob-trigger-input"
+              />
+              <FiCalendar className="dob-calendar-icon" />
+            </div>
           ) : (
             <div className="age-row">
               <div className="age-field">
@@ -235,6 +257,40 @@ function Step2({ goNext, goBack, petData }) {
           <button className="next-btn" onClick={handleNext}>Next</button>
         </div>
       </div>
+
+      {/* DATE PICKER POPUP MODAL */}
+      {showDatePickerModal && (
+        <div
+          className="other-popup-overlay date-picker-overlay"
+          onClick={() => setShowDatePickerModal(false)}
+        >
+          <div
+            className="date-picker-popup"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="date-picker-popup-header">
+              <h3>Select Date of Birth</h3>
+              <button
+                type="button"
+                className="breed-popup-close"
+                onClick={() => setShowDatePickerModal(false)}
+              >
+                ×
+              </button>
+            </div>
+            <PetDatePicker
+              value={dob}
+              onChange={(newDob) => {
+                setDob(newDob);
+                if (newDob) {
+                  setShowDatePickerModal(false);
+                }
+              }}
+              maxDate={maxDate}
+            />
+          </div>
+        </div>
+      )}
 
       {/* BREED POPUP */}
       {showBreedDropdown && (

@@ -205,25 +205,25 @@ export default function ParentProfile() {
 
   return (
     <div className="login-root">
-      <div className="login-card">
-        <div className="screen">
+      <div className="login-card parent-profile-card">
+        <div className="screen parent-profile-screen">
           <button className="onboarding-back-btn" onClick={handleBack} type="button" aria-label="Go back">
-            <FiArrowLeft size={18} /> Back
+            <FiArrowLeft size={16} /> Back
           </button>
 
-          <div className="logo-wrap" style={{ textAlign: "center", marginBottom: 10, marginTop:"20px" }}>
-            <img src={logoImg} alt="PetOLife" className="logo-img" style={{ display: "inline-block", width: "150px" }} />
+          <div className="logo-wrap parent-profile-logo-wrap">
+            <img src={logoImg} alt="PetOLife" className="logo-img parent-profile-logo-img" />
           </div>
 
-          <div style={{ textAlign: "center", marginBottom: 24 }}>
-            <h2 className="title" style={{ fontSize: 20, margin: "0" }}>
+          <div className="parent-profile-header">
+            <h2 className="title">
               {isAlreadyCompleted ? "Edit Profile" : "Let's complete your profile"}
             </h2>
           </div>
 
-          {error && <p className="field-error" style={{ color: "#d64545", textAlign: "center", marginBottom: 16 }}>{error}</p>}
+          {error && <p className="field-error parent-profile-error">{error}</p>}
 
-          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <form onSubmit={handleSubmit} className="parent-profile-form">
             <div className="form-group">
               <label>Your Name</label>
               <input
@@ -317,7 +317,7 @@ export default function ParentProfile() {
               </div>
             </div>
 
-            <button type="submit" className="btn-primary" disabled={loading} style={{ marginTop: 12 }}>
+            <button type="submit" className="btn-primary parent-profile-submit-btn" disabled={loading}>
               {loading ? "Saving Profile…" : (isAlreadyCompleted ? "Save Profile" : "Complete Profile")}
             </button>
           </form>

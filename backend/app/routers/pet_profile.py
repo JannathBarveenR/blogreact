@@ -186,7 +186,7 @@ async def get_pets_by_user(
 async def get_by_petolife_id_redirect(petolife_id: str):
     """QR scan endpoint — redirects browser to the frontend pet profile UI. (Public)"""
     frontend_base = FRONTEND_URL or "http://localhost:5173"
-    redirect_url = f"{frontend_base}/pet/{petolife_id}"
+    redirect_url = f"{frontend_base}/pet/{petolife_id.lower()}"
     return RedirectResponse(url=redirect_url, status_code=302)
 
 
@@ -198,7 +198,7 @@ async def get_public_pet_data(petolife_id: str):
     result = (
         global_supabase.table("pet_profiles")
         .select("id, user_id, petolife_id, pet_type, pet_name, breed, gender, birth_date, weight, blood_group, identification_marks, pet_photo_url, created_at, identification_ids, pet_attributes")
-        .eq("petolife_id", petolife_id)
+        .ilike("petolife_id", petolife_id)
         .execute()
     )
 

@@ -1,26 +1,75 @@
 import React, { useState, useEffect } from "react";
 import FormSection from "./shared/FormSection";
-import ReminderToggle from "./shared/ReminderToggle";
 import DocumentUpload from "./shared/DocumentUpload";
 import SaveConfirmation from "./shared/SaveConfirmation";
 import CustomSelect from "./shared/CustomSelect";
 import CustomDatePicker from "./shared/CustomDatePicker";
-import { createMedicalEvent, searchMedicines, uploadDocument } from "../../../api/timelineApi";
+import { createMedicalEvent, searchMedicines, uploadDocument, createReminder } from "../../../api/timelineApi";
 
 const MEDICINE_TYPES = [
   { value: "tablet", label: "Tablet / Pill" },
   { value: "syrup", label: "Syrup / Liquid" },
-  { value: "eye_drop", label: "Drops (Eye/Ear)" },
+  { value: "eye_drop", label: "Drops (Eye / Ear)" },
   { value: "injection", label: "Injection" },
   { value: "ointment", label: "Ointment / Topical" },
 ];
 
-const TYPE_TO_DEFAULT_UNIT = {
-  tablet: "tablet",
-  syrup: "ml",
-  eye_drop: "drops",
-  injection: "ml",
-  ointment: "apply",
+const TYPE_TO_ALLOWED_UNITS = {
+  tablet: [
+    { value: "tablet", label: "tablet(s)" },
+    { value: "mg", label: "mg" },
+  ],
+  syrup: [
+    { value: "ml", label: "ml" },
+    { value: "tsp", label: "tsp (5ml)" },
+  ],
+  eye_drop: [
+    { value: "drops", label: "drop(s)" },
+  ],
+  injection: [
+    { value: "ml", label: "ml" },
+    { value: "mg", label: "mg" },
+  ],
+  ointment: [
+    { value: "application", label: "application(s)" },
+  ],
+};
+
+const DOSAGE_QTY_PRESETS = {
+  tablet: [
+    { value: "0.5", label: "0.5 (Half tablet)" },
+    { value: "1", label: "1 tablet" },
+    { value: "1.5", label: "1.5 tablets" },
+    { value: "2", label: "2 tablets" },
+    { value: "3", label: "3 tablets" },
+  ],
+  syrup: [
+    { value: "1", label: "1 ml" },
+    { value: "2.5", label: "2.5 ml" },
+    { value: "5", label: "5 ml (1 tsp)" },
+    { value: "10", label: "10 ml (2 tsp)" },
+    { value: "15", label: "15 ml" },
+    { value: "50", label: "50 ml" },
+  ],
+  eye_drop: [
+    { value: "1", label: "1 drop" },
+    { value: "1.5", label: "1.5 drops" },
+    { value: "2", label: "2 drops" },
+    { value: "3", label: "3 drops" },
+    { value: "4", label: "4 drops" },
+    { value: "5", label: "5 drops" },
+  ],
+  injection: [
+    { value: "0.5", label: "0.5 ml" },
+    { value: "1", label: "1 ml" },
+    { value: "2", label: "2 ml" },
+    { value: "5", label: "5 ml" },
+  ],
+  ointment: [
+    { value: "1", label: "1 (Thin Layer)" },
+    { value: "2", label: "2 (Moderate Coat)" },
+    { value: "3", label: "3 (Thick / Heavy Layer)" },
+  ],
 };
 
 const UNIT_OPTIONS = [
@@ -29,13 +78,14 @@ const UNIT_OPTIONS = [
   { value: "drops", label: "drop(s)" },
   { value: "mg", label: "mg" },
   { value: "tsp", label: "tsp" },
-  { value: "apply", label: "apply" },
+  { value: "application", label: "application(s)" },
 ];
 
 const FREQUENCY_OPTIONS = [
   { value: "Daily (Once)", label: "Once Daily" },
-  { value: "Twice Daily", label: "Twice Daily (Morning/Night)" },
+  { value: "Twice Daily", label: "Twice Daily (Morning / Night)" },
   { value: "Thrice Daily", label: "Thrice Daily" },
+  { value: "Every 8 Hours", label: "Every 8 Hours" },
   { value: "As Needed", label: "As Needed" },
 ];
 
@@ -45,47 +95,72 @@ const FOOD_RELATION_OPTIONS = [
   { value: "with_food", label: "With Food" },
 ];
 
+const REMINDER_EVENT_TYPES = [
+  { value: "vet_visit", label: "Vet Visit (Follow-up Checkup)" },
+  { value: "another_medication", label: "Another Set of Medication" },
+  { value: "vaccination", label: "Vaccination" },
+  { value: "other", label: "Other Reminder" },
+];
+
 export default function MedicationForm({ petId, petName, onClose, onSaved }) {
+  // Prescription documents (AT THE TOP)
+  const [files, setFiles] = useState([]);
+
+  // Added list of medicines under this single medication prescription
+  const [addedMedicines, setAddedMedicines] = useState([]);
+  const [ackMessage, setAckMessage] = useState("");
+
+  // Inputs for adding a medicine item
   const [medName, setMedName] = useState("");
   const [medType, setMedType] = useState("tablet");
   const [doseQty, setDoseQty] = useState("1");
   const [doseUnit, setDoseUnit] = useState("tablet");
-
-  const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
   const [durationDays, setDurationDays] = useState(5);
   const [frequency, setFrequency] = useState("Daily (Once)");
   const [foodRelation, setFoodRelation] = useState("after_food");
-  const [notes, setNotes] = useState("");
+  const [specialInstructions, setSpecialInstructions] = useState("");
 
-  const [reminderEnabled, setReminderEnabled] = useState(true);
-  const [nextDueDate, setNextDueDate] = useState(() => {
+  // Search suggestions
+  const [medsList, setMedsList] = useState([]);
+  const [showMeds, setShowMeds] = useState(false);
+
+  // Global schedule dates (At the back)
+  const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
+
+  // Follow-up Reminder configuration (At the back)
+  const [followUpEnabled, setFollowUpEnabled] = useState(true);
+  const [followUpType, setFollowUpType] = useState("vet_visit");
+  const [followUpDate, setFollowUpDate] = useState(() => {
     const d = new Date();
     d.setDate(d.getDate() + 5);
     return d.toISOString().split("T")[0];
   });
+  const [followUpNotes, setFollowUpNotes] = useState("");
 
-  const [files, setFiles] = useState([]);
-  const [medsList, setMedsList] = useState([]);
-  const [showMeds, setShowMeds] = useState(false);
-
+  // Submit & Save state
   const [submitting, setSubmitting] = useState(false);
   const [savedData, setSavedData] = useState(null);
 
-  // Auto-switch default dose unit when medicine type changes
+  // Auto-switch default dose unit and default preset when medicine type changes
   const handleMedTypeChange = (newType) => {
     setMedType(newType);
-    if (TYPE_TO_DEFAULT_UNIT[newType]) {
-      setDoseUnit(TYPE_TO_DEFAULT_UNIT[newType]);
+    const allowedUnits = TYPE_TO_ALLOWED_UNITS[newType];
+    if (allowedUnits && allowedUnits.length > 0) {
+      setDoseUnit(allowedUnits[0].value);
+    }
+    const presets = DOSAGE_QTY_PRESETS[newType];
+    if (presets && presets.length > 0) {
+      setDoseQty(presets[0].value);
     }
   };
 
-  // Update next due date when start date or duration changes
+  // Update follow-up default date when start date or duration changes
   useEffect(() => {
     if (startDate && durationDays) {
       const start = new Date(startDate + "T00:00:00");
       const end = new Date(start);
       end.setDate(end.getDate() + Number(durationDays));
-      setNextDueDate(end.toISOString().split("T")[0]);
+      setFollowUpDate(end.toISOString().split("T")[0]);
     }
   }, [startDate, durationDays]);
 
@@ -104,38 +179,150 @@ export default function MedicationForm({ petId, petName, onClose, onSaved }) {
     }
   };
 
+  // Handler to add current medicine input into addedMedicines list
+  const handleAddMedicineToList = () => {
+    if (!medName.trim()) return;
+
+    const newItem = {
+      id: Date.now().toString(),
+      name: medName.trim(),
+      type: medType,
+      doseQty: doseQty || "1",
+      doseUnit: doseUnit,
+      durationDays: Number(durationDays) || 5,
+      frequency: frequency,
+      foodRelation: foodRelation,
+      specialInstructions: specialInstructions.trim(),
+    };
+
+    setAddedMedicines((prev) => [...prev, newItem]);
+    
+    // Clear item form inputs
+    setMedName("");
+    setSpecialInstructions("");
+    setShowMeds(false);
+
+    // Show temporary clear acknowledgment toast
+    setAckMessage(`✓ Added "${newItem.name}" (${newItem.doseQty} ${newItem.doseUnit}) to prescription list!`);
+    setTimeout(() => setAckMessage(""), 3500);
+  };
+
+  const handleRemoveMedicine = (idToRemove) => {
+    setAddedMedicines((prev) => prev.filter((item) => item.id !== idToRemove));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!medName.trim()) return;
+
+    // If user filled in a medicine name but didn't click "+ Add Medicine", auto-add it
+    let finalMedicines = [...addedMedicines];
+    if (medName.trim()) {
+      finalMedicines.push({
+        id: Date.now().toString(),
+        name: medName.trim(),
+        type: medType,
+        doseQty: doseQty || "1",
+        doseUnit: doseUnit,
+        durationDays: Number(durationDays) || 5,
+        frequency: frequency,
+        foodRelation: foodRelation,
+        specialInstructions: specialInstructions.trim(),
+      });
+    }
+
+    if (finalMedicines.length === 0) {
+      alert("Please add at least one medicine (tablet, syrup, or drops) to the medication list.");
+      return;
+    }
 
     setSubmitting(true);
     try {
-      const combinedDose = doseQty ? `${doseQty} ${doseUnit}` : "";
+      // ── Build JSON Array of all medicines for backend category_fields column ──
+      const medicinesJsonList = finalMedicines.map((item) => ({
+        id: item.id,
+        name: item.name,
+        type: item.type,
+        dose_qty: item.doseQty,
+        dose_unit: item.doseUnit,
+        dose_combined: `${item.doseQty} ${item.doseUnit}`,
+        frequency: item.frequency,
+        food_relation: item.foodRelation,
+        duration_days: Number(item.durationDays),
+        special_instructions: item.specialInstructions || "",
+      }));
 
-      const categoryEntry = {
+      // Main summary category entry holding the full medicines_list JSON array
+      const mainCategoryEntry = {
         category: "medication",
-        item_name: medName.trim(),
+        item_name: finalMedicines.length === 1 
+          ? finalMedicines[0].name 
+          : `${finalMedicines[0].name} + ${finalMedicines.length - 1} more`,
         date_logged: startDate,
-        next_due_date: reminderEnabled && nextDueDate ? nextDueDate : null,
-        notes: notes || null,
+        next_due_date: followUpEnabled && followUpDate ? followUpDate : null,
+        notes: finalMedicines.map((m) => `${m.name}: ${m.doseQty} ${m.doseUnit} (${m.frequency})`).join("\n"),
         category_fields: {
-          medicine_type: medType,
-          dose: combinedDose || null,
-          frequency: [frequency],
-          food_relation: foodRelation,
-          duration: Number(durationDays),
+          medicine_type: finalMedicines[0].type,
+          dose: `${finalMedicines[0].doseQty} ${finalMedicines[0].doseUnit}`,
+          frequency: [finalMedicines[0].frequency],
+          food_relation: finalMedicines[0].foodRelation,
+          duration: Number(finalMedicines[0].durationDays),
           duration_unit: "days",
+          medicines_list: medicinesJsonList, // Stored as JSON array in backend JSONB column
+          total_items: finalMedicines.length,
         },
       };
 
+      // Individual entries for tracking each medicine item
+      const individualEntries = finalMedicines.map((item) => ({
+        category: "medication",
+        item_name: item.name,
+        date_logged: startDate,
+        next_due_date: followUpEnabled && followUpDate ? followUpDate : null,
+        notes: item.specialInstructions || null,
+        category_fields: {
+          medicine_type: item.type,
+          dose: `${item.doseQty} ${item.doseUnit}`,
+          frequency: [item.frequency],
+          food_relation: item.foodRelation,
+          duration: Number(item.durationDays),
+          duration_unit: "days",
+        },
+      }));
+
       const payload = {
         event_date: startDate,
-        category_entries: [categoryEntry],
+        category_entries: [mainCategoryEntry],
       };
 
       const res = await createMedicalEvent(petId, payload);
       const createdEvent = res.event || res;
 
+      // Create Follow-up Reminder if enabled
+      if (followUpEnabled && followUpDate) {
+        try {
+          const typeLabelMap = {
+            vet_visit: "Vet Visit",
+            another_medication: "Next Medication Set",
+            vaccination: "Vaccination",
+            other: "Reminder",
+          };
+
+          const remPayload = {
+            title: `Follow-up ${typeLabelMap[followUpType] || "Checkup"} for ${petName}`,
+            type: followUpType === "vet_visit" ? "vet_visit" : followUpType === "another_medication" ? "medication" : followUpType === "vaccination" ? "vaccination" : "custom",
+            due_date: followUpDate,
+            due_time: "09:00:00",
+            notes: followUpNotes || `Follow-up after medication (${finalMedicines.map((m) => m.name).join(", ")})`,
+            linked_event_id: createdEvent?.id || null,
+          };
+
+          await createReminder(petId, remPayload);
+        } catch (remErr) {
+          console.error("Failed to save follow-up reminder:", remErr);
+        }
+      }
+
+      // Upload Prescription document if attached
       if (files.length > 0 && createdEvent.id) {
         for (const f of files) {
           try {
@@ -147,12 +334,12 @@ export default function MedicationForm({ petId, petName, onClose, onSaved }) {
       }
 
       setSavedData({
-        title: medName.trim(),
+        title: `Medication (${finalMedicines.length} Item${finalMedicines.length > 1 ? "s" : ""})`,
         date: startDate,
         details: [
-          { icon: "pill", label: `Dose: ${combinedDose || "Prescribed"}` },
-          { icon: "schedule", label: `${durationDays} Days (${frequency})` },
-          ...(reminderEnabled && nextDueDate ? [{ icon: "event", label: `End Date: ${nextDueDate}` }] : []),
+          { icon: "pill", label: finalMedicines.map((m) => `${m.name} (${m.doseQty} ${m.doseUnit})`).join(", ") },
+          { icon: "schedule", label: `Start Date: ${startDate}` },
+          ...(followUpEnabled && followUpDate ? [{ icon: "event", label: `Follow-up Reminder: ${followUpDate}` }] : []),
         ],
       });
     } catch (err) {
@@ -170,16 +357,24 @@ export default function MedicationForm({ petId, petName, onClose, onSaved }) {
         categoryLabel="Medication"
         summary={savedData}
         onViewTimeline={onSaved}
-        onAddAnother={() => setSavedData(null)}
+        onAddAnother={() => {
+          setSavedData(null);
+          setAddedMedicines([]);
+          setMedName("");
+          setFiles([]);
+        }}
       />
     );
   }
 
+  const currentPresets = DOSAGE_QTY_PRESETS[medType] || [];
+
   return (
     <div className="pn-form-container">
+      {/* ── Form Top Navigation ── */}
       <div className="pn-form-header">
         <div className="pn-form-header__left">
-          <button className="pn-form-header__back" onClick={onClose}>
+          <button className="pn-form-header__back" onClick={onClose} type="button">
             <span className="material-symbols-outlined">arrow_back</span>
           </button>
           <h2 className="pn-form-header__title">Add Medication</h2>
@@ -187,7 +382,67 @@ export default function MedicationForm({ petId, petName, onClose, onSaved }) {
       </div>
 
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        <FormSection title="Medicine Information" accentColor="#7c3aed">
+        
+        {/* ── 1. PRESCRIBED MEDICINES LIST (TOP ACKNOWLEDGED SECTION) ── */}
+        <FormSection title={`Prescribed Medicines (${addedMedicines.length})`} accentColor="#004b23">
+          {ackMessage && (
+            <div style={{ background: "#eaf5e5", color: "#004b23", border: "1px solid #84b662", borderRadius: 12, padding: "10px 14px", fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", gap: 8 }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>check_circle</span>
+              {ackMessage}
+            </div>
+          )}
+
+          {addedMedicines.length === 0 ? (
+            <div style={{ background: "#f8faf7", border: "1px dashed #cfe3c9", borderRadius: 14, padding: "14px", textAlign: "center", color: "#53755b", fontSize: 13 }}>
+              No medicines added yet. Fill out the fields below and click <strong>"+ Add Medicine to List"</strong> to include multiple tablets or syrups.
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {addedMedicines.map((item, index) => (
+                <div
+                  key={item.id}
+                  style={{
+                    background: "#ffffff",
+                    border: "1.5px solid #84b662",
+                    borderRadius: 14,
+                    padding: "12px 14px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    boxShadow: "0 4px 12px rgba(0, 75, 73, 0.06)",
+                  }}
+                >
+                  <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 16, fontWeight: 800, color: "#004b23" }}>
+                        {index + 1}. {item.name}
+                      </span>
+                      <span style={{ background: "#eaf5e5", color: "#004b23", borderRadius: 8, padding: "2px 8px", fontSize: 11, fontWeight: 700, textTransform: "capitalize" }}>
+                        {item.type}
+                      </span>
+                    </div>
+
+                    <div style={{ fontSize: 12.5, fontWeight: 600, color: "#4d6051" }}>
+                      Dosage: <strong>{item.doseQty} {item.doseUnit}</strong> • {item.frequency} ({item.durationDays} Days)
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveMedicine(item.id)}
+                    style={{ background: "#fee2e2", border: "none", color: "#dc2626", borderRadius: 10, width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+                    title="Remove medicine"
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: 18 }}>delete</span>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </FormSection>
+
+        {/* ── 2. ADD MEDICINE ITEM FORM ── */}
+        <FormSection title="Add Medicine Item" accentColor="#7c3aed">
           <div className="pn-field" style={{ position: "relative" }}>
             <label className="pn-field__label">Medicine Name *</label>
             <div className="pn-input-wrap">
@@ -197,7 +452,6 @@ export default function MedicationForm({ petId, petName, onClose, onSaved }) {
                 placeholder="e.g. Amoxyclav, Meloxicam"
                 value={medName}
                 onChange={(e) => handleMedChange(e.target.value)}
-                required
               />
               <span className="material-symbols-outlined pn-input-icon">pill</span>
             </div>
@@ -221,61 +475,62 @@ export default function MedicationForm({ petId, petName, onClose, onSaved }) {
             )}
           </div>
 
-          <div className="pn-grid-2">
-            <div className="pn-field">
-              <label className="pn-field__label">Medicine Type</label>
-              <CustomSelect
-                value={medType}
-                options={MEDICINE_TYPES}
-                onChange={handleMedTypeChange}
-              />
-            </div>
+          {/* Line 2: Medicine Type */}
+          <div className="pn-field">
+            <label className="pn-field__label">Medicine Type</label>
+            <CustomSelect
+              value={medType}
+              options={MEDICINE_TYPES}
+              onChange={handleMedTypeChange}
+            />
+          </div>
 
-            <div className="pn-field">
-              <label className="pn-field__label">Dosage</label>
-              <div style={{ display: "flex", gap: 6, width: "100%" }}>
+          {/* Line 3: Dosage & Quantity */}
+          <div className="pn-field">
+            <label className="pn-field__label">Dosage & Quantity</label>
+            <div style={{ display: "flex", gap: 8, width: "100%" }}>
+              {currentPresets.length > 0 ? (
+                <div style={{ flex: "1 1 50%", minWidth: 0 }}>
+                  <CustomSelect
+                    value={doseQty}
+                    options={currentPresets}
+                    onChange={setDoseQty}
+                    placeholder="Quantity"
+                  />
+                </div>
+              ) : (
                 <input
                   type="text"
                   className="pn-input"
-                  style={{ flex: "1 1 50px", minWidth: 0, padding: "12px 10px" }}
-                  placeholder="e.g. 1"
+                  style={{ flex: "1 1 50%", minWidth: 0, padding: "12px 10px" }}
+                  placeholder="Qty"
                   value={doseQty}
                   onChange={(e) => setDoseQty(e.target.value)}
                 />
-                <div style={{ flex: "1 1 95px", minWidth: 0 }}>
-                  <CustomSelect
-                    value={doseUnit}
-                    options={UNIT_OPTIONS}
-                    onChange={setDoseUnit}
-                  />
+              )}
+
+              <div style={{ flex: "1 1 50%", minWidth: 0 }}>
+                <div
+                  style={{
+                    height: 48,
+                    borderRadius: 14,
+                    background: "#f1f5f9",
+                    border: "1.5px solid #cbd5e1",
+                    color: "#64748b",
+                    fontWeight: 700,
+                    fontSize: 13.5,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "0 12px",
+                    userSelect: "none",
+                    cursor: "not-allowed",
+                  }}
+                  title="Unit is automatically fixed based on medicine type"
+                >
+                  {TYPE_TO_ALLOWED_UNITS[medType]?.[0]?.label || doseUnit}
                 </div>
               </div>
-            </div>
-          </div>
-        </FormSection>
-
-        <FormSection title="Schedule & Timing" accentColor="#64748b">
-          <div className="pn-grid-2">
-            <div className="pn-field">
-              <label className="pn-field__label">Start Date</label>
-              <CustomDatePicker
-                value={startDate}
-                onChange={setStartDate}
-                placeholder="Start Date"
-                label="Select Start Date"
-              />
-            </div>
-
-            <div className="pn-field">
-              <label className="pn-field__label">Duration (Days)</label>
-              <input
-                type="number"
-                min="1"
-                max="365"
-                className="pn-input"
-                value={durationDays}
-                onChange={(e) => setDurationDays(e.target.value)}
-              />
             </div>
           </div>
 
@@ -299,30 +554,130 @@ export default function MedicationForm({ petId, petName, onClose, onSaved }) {
             </div>
           </div>
 
+          <div className="pn-grid-2">
+            <div className="pn-field">
+              <label className="pn-field__label">Duration (Days)</label>
+              <input
+                type="number"
+                min="1"
+                max="365"
+                className="pn-input"
+                value={durationDays}
+                onChange={(e) => setDurationDays(e.target.value)}
+              />
+            </div>
+
+            <div className="pn-field">
+              <label className="pn-field__label">Special Instructions</label>
+              <input
+                type="text"
+                className="pn-input"
+                placeholder="e.g. Keep refrigerated"
+                value={specialInstructions}
+                onChange={(e) => setSpecialInstructions(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleAddMedicineToList}
+            disabled={!medName.trim()}
+            style={{
+              width: "100%",
+              height: 44,
+              borderRadius: 12,
+              background: medName.trim() ? "linear-gradient(90deg, #84b662 0%, #004b23 100%)" : "#e2e8f0",
+              color: medName.trim() ? "#ffffff" : "#94a3b8",
+              border: "none",
+              fontWeight: 800,
+              fontSize: 14,
+              cursor: medName.trim() ? "pointer" : "not-allowed",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              boxShadow: medName.trim() ? "0 6px 16px rgba(0, 75, 73, 0.15)" : "none",
+              transition: "all 0.2s ease",
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>add_circle</span>
+            + Add Medicine to List
+          </button>
+        </FormSection>
+
+        {/* ── 3. UPLOAD PRESCRIPTION ── */}
+        <DocumentUpload files={files} onFilesChange={setFiles} label="Upload Prescription" />
+
+        {/* ── 4. SCHEDULE & FOLLOW-UP REMINDERS (REMINDER SECTION AT THE BACK) ── */}
+        <FormSection title="Schedule & Follow-up Reminders" accentColor="#64748b">
           <div className="pn-field">
-            <label className="pn-field__label">Special Instructions</label>
-            <textarea
-              className="pn-textarea"
-              placeholder="e.g. Keep refrigerated, mix with curd..."
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+            <label className="pn-field__label">Medication Start Date</label>
+            <CustomDatePicker
+              value={startDate}
+              onChange={setStartDate}
+              placeholder="Start Date"
+              label="Select Start Date"
             />
+          </div>
+
+          <div style={{ background: "#f8faf7", border: "1px solid #cfe3c9", borderRadius: 14, padding: "14px", display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <label style={{ fontSize: 14, fontWeight: 700, color: "#004b23" }}>Set Follow-up Reminder</label>
+              <input
+                type="checkbox"
+                checked={followUpEnabled}
+                onChange={(e) => setFollowUpEnabled(e.target.checked)}
+                style={{ width: 20, height: 20, accentColor: "#004b23", cursor: "pointer" }}
+              />
+            </div>
+
+            {followUpEnabled && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 4 }}>
+                <div className="pn-field">
+                  <label className="pn-field__label">Follow-up Event Type</label>
+                  <CustomSelect
+                    value={followUpType}
+                    options={REMINDER_EVENT_TYPES}
+                    onChange={setFollowUpType}
+                  />
+                </div>
+
+                <div className="pn-field">
+                  <label className="pn-field__label">Reminder Date</label>
+                  <CustomDatePicker
+                    value={followUpDate}
+                    onChange={setFollowUpDate}
+                    placeholder="Reminder Date"
+                    label="Select Follow-up Date"
+                  />
+                </div>
+
+                <div className="pn-field">
+                  <label className="pn-field__label">Reminder Notes (Optional)</label>
+                  <input
+                    type="text"
+                    className="pn-input"
+                    placeholder="e.g. Follow-up vet visit for post-treatment review"
+                    value={followUpNotes}
+                    onChange={(e) => setFollowUpNotes(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </FormSection>
 
-        <DocumentUpload files={files} onFilesChange={setFiles} label="Upload Prescription" />
-
-        <ReminderToggle
-          enabled={reminderEnabled}
-          onToggle={setReminderEnabled}
-          dueDate={nextDueDate}
-          onDueDateChange={setNextDueDate}
-          label="Enable Daily Dose Reminders"
-        />
-
-        <button type="submit" className="pn-submit-btn" disabled={submitting || !medName.trim()}>
+        {/* ── 5. SUBMIT BUTTON ── */}
+        <button
+          type="submit"
+          className="pn-submit-btn"
+          disabled={submitting || (addedMedicines.length === 0 && !medName.trim())}
+        >
           <span className="material-symbols-outlined">save</span>
-          {submitting ? "Saving Medication..." : "Save Medication"}
+          {submitting
+            ? "Saving Medication..."
+            : `Save Medication (${addedMedicines.length + (medName.trim() ? 1 : 0)} Item${addedMedicines.length + (medName.trim() ? 1 : 0) !== 1 ? "s" : ""})`}
         </button>
       </form>
     </div>

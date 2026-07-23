@@ -71,8 +71,19 @@ export default function TimelineCard({ entry, onClick, onPreviewDoc }) {
     }
   };
 
+  const handleCardClick = () => {
+    if (onClick) {
+      onClick(entry);
+    } else {
+      const targetId = entry.event_id || entry.medical_event_id || entry.id || entry.visit_group_id;
+      if (targetId) {
+        window.location.href = `/timeline/event/${targetId}`;
+      }
+    }
+  };
+
   return (
-    <div className="tl-card" onClick={() => onClick?.(entry)} role="button" tabIndex={0}>
+    <div className="tl-card" onClick={handleCardClick} role="button" tabIndex={0}>
       {/* Left Accent Bar */}
       <div className="tl-card__accent" style={{ background: config.color }} />
 

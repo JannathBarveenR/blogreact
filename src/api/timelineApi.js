@@ -80,6 +80,15 @@ export async function createReminder(petId, payload) {
   return res.json();
 }
 
+export async function updateReminder(petId, reminderId, patch) {
+  const res = await fetchWithAuth(`/api/v2/pets/${petId}/reminders/${reminderId}`, {
+    method: "PUT",
+    body: JSON.stringify(patch),
+  });
+  if (!res.ok) throw new Error("Failed to update reminder");
+  return res.json();
+}
+
 export async function completeReminder(petId, reminderId) {
   const res = await fetchWithAuth(`/api/v2/pets/${petId}/reminders/${reminderId}/complete`, {
     method: "PUT",
