@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import "./MedicalRecords.css";
 import fetchWithAuth from "../../utils/fetchWithAuth";
 import ProfileCard from "../Home/ProfileCard/ProfileCard";
@@ -76,12 +77,6 @@ export default function MedicalRecords({
   const [uploadType, setUploadType] = useState("");
   const [progress, setProgress] = useState(0);
   const [showPreview, setShowPreview] = useState(false);
-  const [viewFile, setViewFile] = useState(null);
-
-  // Real Database Records State
-  const [allRecords, setAllRecords] = useState([]);
-  const [loadingRecords, setLoadingRecords] = useState(false);
-
   const [formData, setFormData] = useState({
     recordName: "",
     category: "Prescription",
@@ -92,29 +87,17 @@ export default function MedicalRecords({
   const [showMetaForm, setShowMetaForm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  // Fetch medical records from the API for the active pet
-  const fetchRecords = useCallback(async () => {
-    if (!activePetId) {
-      setAllRecords([]);
-      return;
-    }
-    setLoadingRecords(true);
-    try {
+  const queryClient = useQueryClient();
+  const { data: allRecords = [], isLoading: loadingRecords, refetch: fetchRecords } = useQuery({
+    queryKey: ["medicalRecords", activePetId],
+    queryFn: async () => {
+      if (!activePetId) return [];
       const res = await fetchWithAuth(`/api/medical-records/${activePetId}`);
-      if (res.ok) {
-        const data = await res.json();
-        setAllRecords(data || []);
-      }
-    } catch (err) {
-      console.error("Error fetching medical records:", err);
-    } finally {
-      setLoadingRecords(false);
-    }
-  }, [activePetId]);
-
-  useEffect(() => {
-    fetchRecords();
-  }, [fetchRecords]);
+      if (!res.ok) throw new Error("Failed to fetch medical records");
+      return res.json();
+    },
+    enabled: !!activePetId,
+  });
 
   useEffect(() => {
     if (!showUploadProgress) return;

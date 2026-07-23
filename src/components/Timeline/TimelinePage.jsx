@@ -8,7 +8,7 @@ import TimelineCard from "./TimelineCard";
 import EmptyTimeline from "./EmptyTimeline";
 import AddPawNote from "./AddPawNote/AddPawNote";
 import DocumentModal from "./DocumentModal";
-import { getTimeline } from "../../api/timelineApi";
+import { useTimeline } from "../../hooks/useTimelineQueries";
 
 /* ── date-group helper ──────────────────────────────────────────── */
 function groupByDate(events) {
@@ -44,51 +44,27 @@ export default function TimelinePage({
 }) {
   const navigate = useNavigate();
   const [filter, setFilter] = useState("all");
-  const [events, setEvents] = useState([]);
-  const [rawEventsCount, setRawEventsCount] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [showAddNote, setShowAddNote] = useState(false);
   const [previewDoc, setPreviewDoc] = useState(null);
 
   const selectedPet = pets.find((p) => p.id === activePetId) || pets[0] || null;
   const petName = selectedPet?.pet_name || selectedPet?.name || "";
 
-  /* ── fetch timeline ────────────────────────────────────────────── */
-  const fetchFeed = useCallback(async () => {
-    if (!selectedPet?.id) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await getTimeline(selectedPet.id, "chronological");
-      const raw = data.events || [];
-      setRawEventsCount(raw.length);
+  /* ── TanStack Query feed ────────────────────────────────────────── */
+  const { data: timelineData, isLoading: loading, isError } = useTimeline(selectedPet?.id, "chronological");
+  const rawEvents = timelineData?.events || [];
+  const rawEventsCount = rawEvents.length;
 
-      let feed = raw;
+  const events = filter === "all"
+    ? rawEvents
+    : rawEvents.filter((e) => e.category === filter);
 
-      // client-side category filter
-      if (filter !== "all") {
-        feed = feed.filter((e) => e.category === filter);
-      }
-
-      setEvents(feed);
-    } catch (err) {
-      console.error("Timeline fetch error:", err);
-      setError("Unable to load timeline. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedPet?.id, filter]);
-
-  useEffect(() => {
-    fetchFeed();
-  }, [fetchFeed]);
+  const error = isError ? "Unable to load timeline. Please try again." : null;
 
   /* ── handlers ──────────────────────────────────────────────────── */
   const handleAddNote = () => setShowAddNote(true);
   const handleCloseAddNote = () => {
     setShowAddNote(false);
-    fetchFeed(); // refresh after saving
   };
 
   const handleCardClick = (entry) => {

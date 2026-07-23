@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FiArrowLeft, FiCheck, FiX, FiCalendar, FiClock, FiPlus, FiAlertTriangle, FiFilter } from "react-icons/fi";
 import useAuth from "../../hooks/useAuth";
 import { usePets } from "../../hooks/usePetsQuery";
-import { getReminders, updateReminder, createReminder } from "../../api/timelineApi";
+import { useReminders, useCreateReminder, useCompleteReminder } from "../../hooks/useTimelineQueries";
 import { PetAvatar } from "../common/PetAvatar";
 import CustomDatePicker from "../Timeline/Forms/shared/CustomDatePicker";
 import CustomSelect from "../Timeline/Forms/shared/CustomSelect";
@@ -29,8 +29,11 @@ export default function RemindersPage() {
   const { data: pets = [] } = usePets(user?.id);
   const [activePetId, setActivePetId] = useState(null);
 
-  const [reminders, setReminders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data: remindersData, isLoading: loading } = useReminders(activePetId);
+  const createReminderMutation = useCreateReminder(activePetId);
+  const completeReminderMutation = useCompleteReminder(activePetId);
+
+  const reminders = Array.isArray(remindersData) ? remindersData : (remindersData?.reminders || []);
   const [activeTab, setActiveTab] = useState("active"); // "active" | "history"
 
   // Quick Add Reminder Modal
@@ -54,63 +57,40 @@ export default function RemindersPage() {
 
   const activePet = pets.find((p) => p.id === activePetId) || pets[0];
 
-  const fetchPetReminders = async () => {
-    if (!activePetId) return;
-    try {
-      setLoading(true);
-      const res = await getReminders(activePetId);
-      const list = res.reminders || res || [];
-      setReminders(list);
-    } catch (err) {
-      console.error("Failed to fetch reminders:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchPetReminders();
-  }, [activePetId]);
-
   const handleAction = async (reminderId, newStatus) => {
-    try {
-      // Optimistic UI update
-      setReminders((prev) =>
-        prev.map((r) => (r.id === reminderId ? { ...r, status: newStatus } : r))
-      );
-      await updateReminder(activePetId, reminderId, { status: newStatus });
-    } catch (err) {
-      console.error("Failed to update reminder status:", err);
-      fetchPetReminders();
+    if (newStatus === "completed") {
+      completeReminderMutation.mutate(reminderId);
     }
   };
 
   const handleCreateReminder = async (e) => {
     e.preventDefault();
     if (!title.trim() || !activePetId) return;
-    try {
-      setSubmitting(true);
-      const timeMap = { morning: "08:00:00", afternoon: "14:00:00", night: "21:00:00" };
-      const payload = {
-        title: title.trim(),
-        type,
-        time_slot: timeSlot,
-        due_date: dueDate,
-        due_time: timeMap[timeSlot] || "09:00:00",
-        notes: notes.trim() || null,
-        status: "pending",
-      };
-      await createReminder(activePetId, payload);
-      setTitle("");
-      setNotes("");
-      setShowAddForm(false);
-      fetchPetReminders();
-    } catch (err) {
-      console.error("Failed to create reminder:", err);
-      alert("Failed to create reminder.");
-    } finally {
-      setSubmitting(false);
-    }
+    setSubmitting(true);
+    const timeMap = { morning: "08:00:00", afternoon: "14:00:00", night: "21:00:00" };
+    const payload = {
+      title: title.trim(),
+      type,
+      time_slot: timeSlot,
+      due_date: dueDate,
+      due_time: timeMap[timeSlot] || "09:00:00",
+      notes: notes.trim() || null,
+      status: "pending",
+    };
+
+    createReminderMutation.mutate(payload, {
+      onSuccess: () => {
+        setTitle("");
+        setNotes("");
+        setShowAddForm(false);
+        setSubmitting(false);
+      },
+      onError: (err) => {
+        console.error("Failed to create reminder:", err);
+        alert("Failed to create reminder.");
+        setSubmitting(false);
+      },
+    });
   };
 
   const activeReminders = reminders.filter((r) => r.status === "pending" || !r.status);

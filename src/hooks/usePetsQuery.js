@@ -25,15 +25,6 @@ export function usePets(userId) {
     enabled: !!userId,
     staleTime: 5 * 60 * 1000,  // 5 minutes
     gcTime: 15 * 60 * 1000,    // 15 minutes
-    // Show cached localStorage data instantly while fetching in background
-    placeholderData: () => {
-      try {
-        const cached = localStorage.getItem(`pets_${userId}`);
-        return cached ? JSON.parse(cached) : undefined;
-      } catch {
-        return undefined;
-      }
-    },
   });
 }
 

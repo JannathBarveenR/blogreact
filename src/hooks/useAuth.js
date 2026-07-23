@@ -13,7 +13,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../utils/supabaseClient";
-import { appCache } from "../utils/appCache";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 
@@ -61,7 +60,6 @@ export default function useAuth() {
       localStorage.removeItem(`pets_${userId}`);
       localStorage.removeItem(`active_pet_id_${userId}`);
     }
-    appCache.invalidateAll();
     _lastValidatedAt = 0;
     _validationPromise = null;
     setToken(null);
