@@ -24,6 +24,8 @@ Metadata:
         Parameters: [InstanceType, KeyPairName, LatestAmiId]
       - Label: { default: "Security & CDN" }
         Parameters: [AdminIPCIDR, CloudFrontCertArn]
+      - Label: { default: "Notifications" }
+        Parameters: [AlertNotificationEmail]
 
 # ─────────────────────────────────────────────────────────────────────────────
 Parameters:
@@ -74,6 +76,12 @@ Parameters:
   CloudFrontCertArn:
     Type: String
     Description: "ACM Certificate ARN in us-east-1 (required for CloudFront HTTPS)"
+
+  AlertNotificationEmail:
+    Type: String
+    Description: "Email address to receive CloudWatch alarm notifications"
+    AllowedPattern: '[^\s@]+@[^\s@]+\.[^\s@]+'
+    ConstraintDescription: "Must be a valid email address"
 
 # ═════════════════════════════════════════════════════════════════════════════
 #  RESOURCES
@@ -131,8 +139,8 @@ Resources:
         - Key: Name
           Value: !Sub "${EnvironmentName}-public-b"
 
-  # One private subnet (app EC2 instances — no public IP, no direct internet)
-  PrivateSubnet:
+  # Two private subnets (app EC2 instances — no public IP, spread across 2 AZs)
+  PrivateSubnetA:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
@@ -141,7 +149,18 @@ Resources:
       MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
-          Value: !Sub "${EnvironmentName}-private"
+          Value: !Sub "${EnvironmentName}-private-a"
+
+  PrivateSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.11.0/24
+      AvailabilityZone: !Select [1, !GetAZs ""]
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-private-b"
 
   # AWS-managed NAT Gateway (one-way internet for private subnet)
   NatGatewayEIP:
@@ -207,10 +226,16 @@ Resources:
       DestinationCidrBlock: 0.0.0.0/0
       NatGatewayId: !Ref NatGateway
 
-  PrivateSubnetRouteTableAssoc:
+  PrivateSubnetARouteTableAssoc:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      SubnetId: !Ref PrivateSubnet
+      SubnetId: !Ref PrivateSubnetA
+      RouteTableId: !Ref PrivateRouteTable
+
+  PrivateSubnetBRouteTableAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnetB
       RouteTableId: !Ref PrivateRouteTable
 
   # Free S3 endpoint (avoids NAT charges for S3 traffic)
@@ -491,7 +516,9 @@ Resources:
       LaunchTemplate:
         LaunchTemplateId: !Ref LaunchTemplate
         Version: !GetAtt LaunchTemplate.LatestVersionNumber
-      VPCZoneIdentifier: [!Ref PrivateSubnet]
+      VPCZoneIdentifier:
+        - !Ref PrivateSubnetA
+        - !Ref PrivateSubnetB
       TargetGroupARNs: [!Ref ALBTargetGroup]
       MinSize: 1
       DesiredCapacity: 1
@@ -579,6 +606,22 @@ Resources:
             ErrorCachingMinTTL: 0
 
   # ═══════════════════════════════════════════════════════════════════════
+  # SNS — Email notifications for alarms
+  # ═══════════════════════════════════════════════════════════════════════
+
+  AlertsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub "${EnvironmentName}-petolife-alerts"
+
+  AlertsEmailSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref AlertsTopic
+      Protocol: email
+      Endpoint: !Ref AlertNotificationEmail
+
+  # ═══════════════════════════════════════════════════════════════════════
   # CLOUDWATCH ALARMS (free tier: up to 10 alarms)
   # ═══════════════════════════════════════════════════════════════════════
 
@@ -597,6 +640,8 @@ Resources:
       EvaluationPeriods: 1
       Threshold: 80
       ComparisonOperator: GreaterThanThreshold
+      AlarmActions: [!Ref AlertsTopic]
+      OKActions: [!Ref AlertsTopic]
 
   UnhealthyHostAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -615,6 +660,8 @@ Resources:
       EvaluationPeriods: 3
       Threshold: 0
       ComparisonOperator: GreaterThanThreshold
+      AlarmActions: [!Ref AlertsTopic]
+      OKActions: [!Ref AlertsTopic]
 
   ALB5xxAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -632,6 +679,8 @@ Resources:
       Threshold: 10
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlertsTopic]
+      OKActions: [!Ref AlertsTopic]
 
 # ═════════════════════════════════════════════════════════════════════════════
 #  OUTPUTS

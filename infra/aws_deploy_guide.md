@@ -20,10 +20,10 @@ graph TB
             NAT["AWS Managed NAT Gateway<br/>(Elastic IP)"]
         end
 
-        subgraph PrivateSubnet ["Private Subnet (No Public IP)"]
-            ASG["Auto Scaling Group (Min: 1, Max: 2)<br/>Target: CPU > 60%"]
-            App1["EC2 Instance 1 (Primary: t3.medium)<br/>Docker Compose: Frontend + Backend"]
-            App2["EC2 Instance 2 (Burst: t3.medium)<br/>Spun up automatically on traffic spike"]
+        subgraph PrivateSubnets ["Private Subnets (2 AZs — ap-south-1a & ap-south-1b)"]
+            ASG["Auto Scaling Group (Min: 1, Max: 2)<br/>Multi-AZ Target: CPU > 60%"]
+            App1["EC2 Instance 1 (Primary: t3.medium, AZ-A)<br/>Docker Compose: Frontend + Backend"]
+            App2["EC2 Instance 2 (Burst: t3.medium, AZ-B)<br/>Spun up automatically on traffic spike"]
         end
     end
 
@@ -41,19 +41,22 @@ graph TB
 
     App1 <--> SM["AWS Secrets Manager<br/>(Root .env & Backend .env)"]
     App2 <--> SM
+
+    CW["CloudWatch Alarms<br/>(CPU, 5xx, Unhealthy)"] --> SNS["AWS SNS Topic<br/>(Email Notifications)"]
 ```
 
 ### Key Components & Count
 
 1. **Total EC2 Count (Base State)**: **2 EC2 Instances**
-   - **Instance #1**: Bastion Host (`t3.micro`, Public Subnet, handles SSH access).
-   - **Instance #2**: Main App Server (`t3.medium`, Private Subnet, runs both Frontend static SPA & FastAPI Backend via Docker Compose).
-2. **AWS Managed NAT Gateway**: 1 Gateway in Public Subnet. Provides one-way internet access to private app instances so they can perform `git pull`, download Docker images, and communicate with external APIs (like Supabase).
-3. **AWS CloudFront (CDN)**: Serves assets from edge locations across India with sub-20ms latency. Terminates SSL (HTTPS) using a free ACM certificate.
-4. **AWS Application Load Balancer (ALB)**: Receives traffic from CloudFront and routes it to the Auto Scaling Group target instances.
-5. **AWS Auto Scaling Group (ASG)**: Maintains 1 EC2 instance by default. When CPU utilization exceeds 60%, it spins up Instance #3 (a 2nd app server) to handle excess load. As soon as traffic normalizes, ASG terminates Instance #3 immediately to minimize cost.
-6. **AWS Secrets Manager**: Stores `.env` and `backend/.env` configuration securely. The EC2 instance retrieves secrets on boot via an IAM role (no keys hardcoded or stored in Git/S3).
-7. **CloudWatch Alarms**: Monitors CPU utilization, ALB target health, and 5xx response rates.
+   - **Instance #1**: Bastion Host (`t3.micro`, Public Subnet A, handles SSH access).
+   - **Instance #2**: Main App Server (`t3.medium`, Private Subnet A, runs both Frontend static SPA & FastAPI Backend via Docker Compose).
+2. **Multi-AZ Networking**: Private Subnets span across 2 Availability Zones (`ap-south-1a` & `ap-south-1b`) for high-availability compute placement. Reuses 1 AWS Managed NAT Gateway for cost optimization.
+3. **AWS Managed NAT Gateway**: 1 Gateway in Public Subnet A. Provides one-way internet access to private app instances so they can perform `git pull`, download Docker images, and communicate with external APIs (like Supabase).
+4. **AWS CloudFront (CDN)**: Serves assets from edge locations across India with sub-20ms latency. Terminates SSL (HTTPS) using a free ACM certificate.
+5. **AWS Application Load Balancer (ALB)**: Receives traffic from CloudFront and routes it to the Auto Scaling Group target instances across both AZs.
+6. **AWS Auto Scaling Group (ASG)**: Maintains 1 EC2 instance by default. When CPU utilization exceeds 60%, it spins up Instance #3 (a 2nd app server in AZ-B) to handle excess load. As soon as traffic normalizes, ASG terminates Instance #3 immediately to minimize cost.
+7. **AWS Secrets Manager**: Stores `.env` and `backend/.env` configuration securely. The EC2 instance retrieves secrets on boot via an IAM role (no keys hardcoded or stored in Git/S3).
+8. **CloudWatch Alarms & SNS Notifications**: Monitors CPU utilization, ALB target health, and 5xx response rates. Sends instant email alerts via AWS SNS whenever an alarm triggers or recovers.
 
 ---
 
@@ -118,6 +121,7 @@ Since your repository is a private organization repo, EC2 instances need authent
 | **KeyPairName** | `petolife-key-mumbai` | Key pair created in Step 2 |
 | **AdminIPCIDR** | `YOUR_IP/32` | Your IP address from Step 5 |
 | **CloudFrontCertArn**| `arn:aws:acm:us-east-1:...` | ACM Certificate ARN from Step 3 |
+| **AlertNotificationEmail** | `admin@petolife.com` | Your email address to receive CloudWatch alarm notifications |
 
 5. Click **Next** → **Next**.
 6. At the bottom of the final page, check the box: **"I acknowledge that AWS CloudFormation might create IAM resources with custom names."**
@@ -270,3 +274,40 @@ You can reuse `cloudformation-full.yml` for **any other project or repository** 
 - **Zero hardcoded code logic**: Everything is initialized via CloudFormation parameters (`GitRepoUrl`, `GitBranch`).
 - **Standardized runtime environment**: Bootstrap script installs Docker, pulls secrets from Secrets Manager, and executes `docker compose up -d --build`.
 - **Decoupled config**: App secrets live in AWS Secrets Manager, independent of source repositories.
+
+---
+
+## ❓ FAQ & Troubleshooting Guide
+
+### 1. The website shows 502 Bad Gateway or Unhealthy in ALB Target Group
+* **Cause**: The EC2 instance is still booting up, cloning the repository, or building Docker images.
+* **Fix**: Wait 3–4 minutes for the Docker build to complete. SSH into the instance via Bastion and check bootstrap logs:
+  ```bash
+  tail -f /var/log/petolife-bootstrap.log
+  ```
+
+### 2. Updated Secrets in AWS Secrets Manager, but app still uses old values
+* **Cause**: Docker Compose reads `.env` files only on container initialization.
+* **Fix**: Go to EC2 Console → Terminate the `prod-petolife-app` instance. The Auto Scaling Group will immediately launch a fresh replacement instance that fetches the updated secrets.
+
+### 3. SSH connection to Bastion Host times out
+* **Cause**: Your ISP changed your public IP address, so the Bastion Security Group is blocking your new IP.
+* **Fix**: Visit [whatismyip.com](https://whatismyip.com), copy your new IPv4 address, go to **EC2 Console** → **Security Groups** → `prod-bastion-sg`, and update the SSH inbound rule with `YOUR_NEW_IP/32`.
+
+### 4. How to allow teammates to SSH into the Bastion Host?
+* You manage SSH access directly in the AWS Security Group:
+  1. Go to **EC2 Console** → **Security Groups**.
+  2. Select **`prod-bastion-sg`** → Click **Edit inbound rules**.
+  3. Click **Add rule**:
+     - **Type**: `SSH` (Port 22)
+     - **Source**: `Custom` → Enter your teammate's IP address ending in `/32` (e.g., `103.21.54.12/32`).
+     - **Description**: Teammate Name (e.g., `John's Laptop`).
+  4. Click **Save rules**. They can now SSH into the Bastion host!
+
+### 5. How to reduce AWS costs when not actively working?
+* **Tip**: Go to EC2 Console → Select `prod-bastion` → **Instance State** → **Stop Instance**. You can keep it stopped when not SSH-ing in and start it whenever needed.
+
+### 6. CloudFront shows SSL / Certificate error
+* **Cause**: CloudFront requires ACM certificates to be requested in the **`us-east-1` (N. Virginia)** region specifically.
+* **Fix**: Ensure your ACM certificate was created in `us-east-1` and validated via Squarespace DNS.
+
