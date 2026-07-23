@@ -77,6 +77,7 @@ export default function MedicalRecords({
   const [uploadType, setUploadType] = useState("");
   const [progress, setProgress] = useState(0);
   const [showPreview, setShowPreview] = useState(false);
+  const [viewFile, setViewFile] = useState(null);
   const [formData, setFormData] = useState({
     recordName: "",
     category: "Prescription",

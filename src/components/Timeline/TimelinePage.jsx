@@ -9,6 +9,7 @@ import EmptyTimeline from "./EmptyTimeline";
 import AddPawNote from "./AddPawNote/AddPawNote";
 import DocumentModal from "./DocumentModal";
 import { useTimeline } from "../../hooks/useTimelineQueries";
+import { useQueryClient } from "@tanstack/react-query";
 
 /* ── date-group helper ──────────────────────────────────────────── */
 function groupByDate(events) {
@@ -62,9 +63,11 @@ export default function TimelinePage({
   const error = isError ? "Unable to load timeline. Please try again." : null;
 
   /* ── handlers ──────────────────────────────────────────────────── */
+  const queryClient = useQueryClient();
   const handleAddNote = () => setShowAddNote(true);
   const handleCloseAddNote = () => {
     setShowAddNote(false);
+    queryClient.invalidateQueries({ queryKey: ["timeline"] });
   };
 
   const handleCardClick = (entry) => {

@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FiEdit2, FiCamera } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import fetchWithAuth from "../../utils/fetchWithAuth";
@@ -11,46 +12,36 @@ const EditableUserCard = ({
 }) => {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
-  const [profile, setProfile] = useState({
-    full_name: "",
-    phone: "",
-    email: "",
-    city: "",
-    state: "",
-    pincode: "",
-    avatar_url: ""
+  const queryClient = useQueryClient();
+
+  const { data: serverProfile, isLoading: loading } = useQuery({
+    queryKey: ["userProfile", user?.id],
+    queryFn: async () => {
+      const res = await fetchWithAuth(`/api/user-profile/${user?.id}`);
+      if (!res.ok) throw new Error("Failed to fetch user profile");
+      return res.json();
+    },
+    enabled: !!user?.id,
+    staleTime: 10 * 60 * 1000, // Cache for 10 minutes
   });
 
-  const [loading, setLoading] = useState(true);
-
-  const fetchProfile = async () => {
-    try {
-      const res = await fetchWithAuth(`/api/user-profile/${user.id}`);
-      if (res.ok) {
-        const data = await res.json();
-        setProfile({
-          full_name: data.full_name || "",
-          phone: data.phone || "",
-          email: data.email || "",
-          city: data.city || "",
-          state: data.state || "",
-          pincode: data.pincode || "",
-          avatar_url: data.avatar_url || ""
-        });
-        onProfileLoaded?.(data);
-      }
-    } catch (err) {
-      console.error("Error fetching user profile:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [avatarOverride, setAvatarOverride] = useState(null);
 
   useEffect(() => {
-    if (user?.id) {
-      fetchProfile();
+    if (serverProfile) {
+      onProfileLoaded?.(serverProfile);
     }
-  }, [user]);
+  }, [serverProfile]);
+
+  const profile = {
+    full_name: serverProfile?.full_name || "",
+    phone: serverProfile?.phone || "",
+    email: serverProfile?.email || "",
+    city: serverProfile?.city || "",
+    state: serverProfile?.state || "",
+    pincode: serverProfile?.pincode || "",
+    avatar_url: avatarOverride || serverProfile?.avatar_url || "",
+  };
 
   const handleAvatarChange = async (e) => {
     const file = e.target.files[0];
@@ -58,7 +49,7 @@ const EditableUserCard = ({
 
     const prevUrl = profile.avatar_url;
     const objectUrl = URL.createObjectURL(file);
-    setProfile((prev) => ({ ...prev, avatar_url: objectUrl }));
+    setAvatarOverride(objectUrl);
 
     const formData = new FormData();
     formData.append("file", file);
@@ -70,16 +61,15 @@ const EditableUserCard = ({
       });
       if (res.ok) {
         const data = await res.json();
-        setProfile((prev) => ({ ...prev, avatar_url: data.avatar_url }));
-        
-        // Notify parent profile tab about the updated photo
+        setAvatarOverride(data.avatar_url);
+        queryClient.invalidateQueries({ queryKey: ["userProfile", user?.id] });
         onProfileLoaded?.({ ...profile, avatar_url: data.avatar_url });
       } else {
-        setProfile((prev) => ({ ...prev, avatar_url: prevUrl }));
+        setAvatarOverride(prevUrl);
       }
     } catch (err) {
       console.error("Error uploading avatar:", err);
-      setProfile((prev) => ({ ...prev, avatar_url: prevUrl }));
+      setAvatarOverride(prevUrl);
     }
   };
 

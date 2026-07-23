@@ -65,8 +65,8 @@ const PetKonvaCard = forwardRef(({ petData = {}, containerWidth = 360 }, ref) =>
   };
 
   const phoneMasked = formatPhoneMask(rawPhone);
-
-  const qrUrl = `${window.location.origin}/pet/${encodeURIComponent(petolifeId.toLowerCase())}`;
+  const frontendBase = import.meta.env.VITE_FRONTEND_URL || (typeof window !== "undefined" ? window.location.origin : "");
+  const qrUrl = `${frontendBase}/pet/${encodeURIComponent(petolifeId.toLowerCase())}`;
 
   useEffect(() => {
     QRCode.toDataURL(qrUrl, { margin: 1, width: 280, color: { dark: "#004b23", light: "#ffffff" } }, (err, url) => {
