@@ -23,8 +23,9 @@ class PetProfileUpdate(BaseModel):
     pet_name: Optional[str] = None
     breed: Optional[str] = None
     gender: Optional[str] = None
-    birth_date: Optional[str] = None
-    weight: Optional[float] = None
+    birth_date: Optional[str] = Form(None),
+    approx_age: Optional[str] = Form(None),
+    weight: Optional[str] = Form(None),
     blood_group: Optional[str] = None
 
 from app.supabase_client import supabase as global_supabase
@@ -111,6 +112,7 @@ async def create_pet_profile(
         "breed": breed or None,
         "gender": gender or None,
         "birth_date": birth_date or None,
+        "approx_age": approx_age or None,
         "weight": float(weight) if weight else None,
         "blood_group": blood_group or None,
         "identification_marks": identification_marks or None,
