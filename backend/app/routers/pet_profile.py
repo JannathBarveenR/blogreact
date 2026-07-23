@@ -187,7 +187,7 @@ async def get_pets_by_user(
 @router.get("/by-petolife-id/{petolife_id:path}")
 async def get_by_petolife_id_redirect(petolife_id: str):
     """QR scan endpoint — redirects browser to the frontend pet profile UI. (Public)"""
-    frontend_base = FRONTEND_URL or "http://localhost:5173"
+    frontend_base = FRONTEND_URL or "https://www.petolife.com"
     redirect_url = f"{frontend_base}/pet/{petolife_id.lower()}"
     return RedirectResponse(url=redirect_url, status_code=302)
 
