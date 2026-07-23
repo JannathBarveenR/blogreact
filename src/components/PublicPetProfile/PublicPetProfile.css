@@ -1,0 +1,257 @@
+.pub-pet-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: linear-gradient(180deg, #eaf5e5 0%, #f4f8f1 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 16px;
+  box-sizing: border-box;
+}
+
+.pub-pet-card {
+  width: 100%;
+  max-width: 440px;
+  background: #ffffff;
+  border-radius: 28px;
+  padding: 24px;
+  box-shadow: 0 20px 60px rgba(0, 75, 73, 0.14);
+  border: 1.5px solid #cfe3c9;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.pub-pet-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid #edf2ea;
+  padding-bottom: 14px;
+}
+
+.pub-logo {
+  height: 48px;
+  width: auto;
+  object-fit: contain;
+}
+
+.pub-verified-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #eaf5e5;
+  color: #004b23;
+  padding: 5px 14px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.pub-hero-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.pub-avatar-wrap {
+  position: relative;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  border: 4px solid #84b662;
+  box-shadow: 0 8px 24px rgba(0, 75, 73, 0.16);
+  margin-bottom: 12px;
+}
+
+.pub-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.pub-check-icon {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: #84b662;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pub-pet-name {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  color: #004b23;
+}
+
+.pub-pet-id-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  background: #f0f8ed;
+  border: 1px solid #cfe3c9;
+  color: #004b23;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.pub-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  background: #fafdf8;
+  border: 1px solid #e4ebe0;
+  border-radius: 20px;
+  padding: 16px;
+}
+
+.pub-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pub-detail-full {
+  grid-column: span 2;
+}
+
+.pub-icon-bubble {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #eaf5e5;
+  color: #004b23;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.pub-detail-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.pub-detail-text label {
+  font-size: 11px;
+  color: #6a8270;
+  font-weight: 600;
+}
+
+.pub-detail-text strong {
+  font-size: 14px;
+  color: #004b23;
+  font-weight: 700;
+}
+
+.pub-cta-card {
+  background: linear-gradient(135deg, #004b23 0%, #06402b 100%);
+  color: #ffffff;
+  border-radius: 22px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 12px 28px rgba(0, 75, 73, 0.22);
+}
+
+.pub-cta-icon {
+  font-size: 32px;
+  margin-bottom: 6px;
+}
+
+.pub-cta-card h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.pub-cta-card p {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: #c0e8d0;
+  line-height: 1.4;
+}
+
+.pub-cta-btn {
+  width: 100%;
+  height: 48px;
+  background: linear-gradient(90deg, #84b662 0%, #6aab3a 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+}
+
+.pub-cta-btn:hover {
+  opacity: 0.95;
+}
+
+.pub-cta-btn:active {
+  transform: scale(0.98);
+}
+
+.pub-footer {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #53755b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.pub-pet-loading,
+.pub-pet-error {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f4f8f1;
+}
+
+.pub-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3.5px solid #cfe3c9;
+  border-top-color: #004b23;
+  border-radius: 50%;
+  animation: pubSpin 0.7s linear infinite;
+  margin-bottom: 12px;
+}
+
+@keyframes pubSpin {
+  to { transform: rotate(360deg); }
+}
+
+.pub-error-card {
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 24px;
+  text-align: center;
+  max-width: 380px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
+}

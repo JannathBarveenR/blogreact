@@ -1,0 +1,152 @@
+/* Parent Profile Custom Component Styles */
+
+.parent-profile-card {
+  max-width: 100%;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  height: 100%;
+  border-radius: 0;
+  background: #def3e1;
+  display: flex;
+  flex-direction: column;
+}
+
+.parent-profile-screen {
+  flex: 1;
+  padding: 20px 24px 28px !important;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 500px) {
+  .parent-profile-card {
+    max-width: 440px;
+    min-height: unset;
+    height: auto;
+    border-radius: 28px;
+    margin: auto;
+    box-shadow: 0 16px 48px rgba(6, 64, 43, 0.12);
+  }
+
+  .parent-profile-screen {
+    padding: 28px 32px 32px !important;
+  }
+}
+
+.onboarding-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  color: #06402b;
+  cursor: pointer;
+  padding: 4px 0;
+  align-self: flex-start;
+  margin-bottom: 8px;
+  transition: color 0.2s;
+}
+
+.onboarding-back-btn:hover {
+  color: #84b662;
+}
+
+.parent-profile-logo-wrap {
+  text-align: center;
+  margin: 4px 0 8px !important;
+  width: 100% !important;
+}
+
+.parent-profile-logo-img {
+  display: inline-block;
+  width: 140px !important;
+  height: auto;
+}
+
+.parent-profile-header {
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.parent-profile-header .title {
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0;
+  color: #06402b;
+}
+
+.parent-profile-error {
+  color: #d64545;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.parent-profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px !important;
+}
+
+.parent-profile-form .form-group {
+  margin-bottom: 0 !important;
+}
+
+.parent-profile-form .form-group label {
+  margin-bottom: 6px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #1a1a1a !important;
+}
+
+.parent-profile-form .form-group input {
+  height: 46px !important;
+  border-radius: 14px !important;
+  font-size: 14px !important;
+  padding: 0 16px !important;
+}
+
+.parent-profile-form .phone-input-group input {
+  padding-left: 58px !important;
+}
+
+.parent-profile-form .pincode-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px !important;
+}
+
+.parent-profile-form .pincode-row .form-group {
+  margin-bottom: 0 !important;
+}
+
+.parent-profile-submit-btn {
+  margin-top: 10px !important;
+  min-height: 48px !important;
+  height: 48px !important;
+  border-radius: 16px !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+}
+
+.onboarding-pincode-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid #c0e8d0;
+  border-top-color: #06402b;
+  border-radius: 50%;
+  animation: onboarding-spin 0.6s linear infinite;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+@keyframes onboarding-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+

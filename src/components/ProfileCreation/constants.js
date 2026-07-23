@@ -1,6 +1,6 @@
 // constants.js — shared data used by Step2
 
-export const TOTAL_STEPS = 4;
+export const TOTAL_STEPS = 3;
 
 export const API_BASE =
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE_URL) || "";
@@ -68,6 +68,7 @@ export const breedData = {
   Cat: catBreeds,
   Bird: birdBreeds,
   Rabbit: rabbitBreeds,
+  Parrot: birdBreeds,
 };
 
 export const petTypes = [
@@ -75,5 +76,6 @@ export const petTypes = [
   { name: "Cat" },
   { name: "Bird" },
   { name: "Rabbit" },
+  { name: "Parrot" },
   { name: "Other" },
 ];

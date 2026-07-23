@@ -1,14 +1,11 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
-  FiPlus,
   FiEdit2,
   FiBell,
   FiLock,
   FiTrash2,
-  FiChevronRight,
-  FiEye,
-  FiEyeOff
+  FiChevronRight
 } from "react-icons/fi";
 import { ShieldCheck } from "lucide-react";
 
@@ -16,17 +13,18 @@ import useAuth from "../../hooks/useAuth";
 import EditableUserCard from "./EditableUserCard";
 import EditPetList from "./EditPetsList";
 import PetIdCardModal from "./PetIdCardModal";
+import Pets from "../Home/Pets/Pets";
 
 import "./UserProfile.css";
 
-import dogIcon from "../../assets/dog.png";
-import catIcon from "../../assets/cats.png";
-import rabbitIcon from "../../assets/rabbit.png";
-import birdIcon from "../../assets/bird.png";
-import defaultPetIcon from "../../assets/other.png";
-import NO_PETS_IMG from "../../assets/no-pets.png";
+import dogIcon from "../../assets/dog.webp";
+import catIcon from "../../assets/cats.webp";
+import rabbitIcon from "../../assets/rabbit.webp";
+import birdIcon from "../../assets/bird.webp";
+import defaultPetIcon from "../../assets/other.webp";
+import NO_PETS_IMG from "../../assets/no-pets.webp";
 
-const UserProfile = ({ pets = [], activePetId, onPetSelect, onAddPet, onUpdatePet }) => {
+const UserProfile = ({ pets = [], onPetSelect, onAddPet, onUpdatePet }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [userProfile, setUserProfile] = useState(null);
@@ -36,6 +34,13 @@ const UserProfile = ({ pets = [], activePetId, onPetSelect, onAddPet, onUpdatePe
   const [showEditPets, setShowEditPets] = useState(false);
 
   const [showNotificationsPage, setShowNotificationsPage] = useState(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state?.tab === 'notifications') {
+      setShowNotificationsPage(true);
+    }
+  }, [location.state]);
 
   /* ---------- Privacy ---------- */
 
@@ -49,19 +54,15 @@ const UserProfile = ({ pets = [], activePetId, onPetSelect, onAddPet, onUpdatePe
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const showCurrentPassword = false;
+  const showNewPassword = false;
+  const showConfirmPassword = false;
 
   /* ---------- Delete Account ---------- */
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
-  const [showDeletePassword, setShowDeletePassword] = useState(false);
-
-  // Fallback to first pet if no activePetId is provided but pets exist
-  const selectedPet =
-    pets.find((p) => p.id === activePetId) || (pets.length > 0 ? pets[0] : null);
+  const showDeletePassword = false;
 
   const confirmLogout = () => {
     if (logout) {
@@ -177,6 +178,12 @@ const getPetIcon = (pet) => {
   // ====== Settings menu rows ======
   // Each entry maps to a route; wire these to real screens/handlers as
   // they become available. Delete Account is flagged `danger` for styling.
+  const isGoogleUser = 
+    user?.app_metadata?.provider === "google" ||
+    user?.app_metadata?.providers?.includes("google") ||
+    user?.identities?.some(id => id.provider === "google") ||
+    userProfile?.auth_provider === "google";
+
   const settingsRows = [
     {
       icon: FiBell,
@@ -190,12 +197,12 @@ const getPetIcon = (pet) => {
       subtitle: "Manage your privacy settings",
       path: "/settings/privacy",
     },
-    {
+    ...(!isGoogleUser ? [{
       icon: FiLock,
       title: "Change Password",
       subtitle: "Update your account password",
       path: "/settings/change-password",
-    },
+    }] : []),
     {
       icon: FiTrash2,
       title: "Delete Account",
@@ -315,59 +322,21 @@ if (showNotificationsPage) {
         </div>
       ) : (
         <>
-          <div className="pets-grid">
-            {pets.map((pet) => {
-              const photo = getPetPhoto(pet);
-              const petIcon = getPetIcon(pet);
-
-              return (
-                <div
-                  className={`pet-chip${pet.id === viewingPetId ? " active" : ""}`}
-                  key={pet.id}
-                  onClick={() => handlePetSelect(pet.id)}
-                  role="button"
-                  tabIndex={0}
-                >
-                  <div className="pet-chip-avatar">
-                    {photo ? (
-                      <img
-                        src={photo}
-                        alt={pet.pet_name || pet.name || "Pet"}
-                        className="pet-chip-img"
-                      />
-                    ) : (
-                      <img
-                        src={petIcon}
-                        alt={pet.pet_type || "Pet"}
-                        className="pet-chip-default-icon"
-                      />
-                    )}
-                  </div>
-                  <span className="pet-chip-name">
-                    {pet.pet_name || pet.name || "Unnamed"}
-                  </span>
-                </div>
-              );
-            })}
-
-            {/* Add New Pet */}
-            <div className="add-pet-card">
-              <div className="add-pet-circle" onClick={onAddPet}>
-                <FiPlus size={26} />
-              </div>
-              <p>Add Pet</p>
-            </div>
-          </div>
+          <Pets
+            pets={pets}
+            selectedPet={viewedPet}
+            onPetSelect={(pet) => handlePetSelect(pet.id)}
+            onAddPet={onAddPet}
+          />
 
           {viewedPet && (
-           <PetIdCardModal
-    pet={viewedPet}
-    avatarSrc={getPetPhoto(viewedPet)}
-    isPhoto={Boolean(getPetPhoto(viewedPet))}
-    FallbackIcon={getPetIcon(viewedPet)}
-    owner={userProfile || getOwnerInfo()}
-    onClose={handleCancelView}
-/>
+            <PetIdCardModal
+              pet={viewedPet}
+              avatarSrc={getPetPhoto(viewedPet)}
+              FallbackIcon={getPetIcon(viewedPet)}
+              owner={userProfile || getOwnerInfo()}
+              onClose={handleCancelView}
+            />
           )}
         </>
       )}

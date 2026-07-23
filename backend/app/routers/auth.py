@@ -117,7 +117,7 @@ async def signup(body: SignupRequest):
                 status_code=400,
                 detail="This phone number or email is already registered. Please login instead."
             )
-        raise HTTPException(status_code=400, detail=error_msg)
+        raise HTTPException(status_code=400, detail="Signup failed. Please try again.")
 
 
 @router.post("/login")
@@ -162,7 +162,7 @@ async def login(body: LoginRequest):
     except Exception as e:
         error_msg = str(e)
         print(f"Login error: {error_msg}")
-        raise HTTPException(status_code=401, detail=error_msg)
+        raise HTTPException(status_code=401, detail="Invalid credentials. Please try again.")
 
 
 @router.get("/google")
@@ -173,7 +173,7 @@ async def google_oauth():
             {
                 "provider": "google",
                 "options": {
-                    "redirect_to": f"{FRONTEND_URL}/home",
+                    "redirect_to": f"{FRONTEND_URL}/auth/callback",
                 },
             }
         )
@@ -214,6 +214,7 @@ async def get_current_user(authorization: Optional[str] = Header(None)):
             "id": result.user.id,
             "email": result.user.email,
             "user_metadata": result.user.user_metadata,
+            "app_metadata": getattr(result.user, "app_metadata", {}),
         }
 
     except HTTPException:
@@ -257,7 +258,7 @@ async def forgot_password(body: ForgotPasswordRequest):
     except Exception as e:
         error_msg = str(e)
         print(f"Forgot password error: {error_msg}")
-        raise HTTPException(status_code=400, detail=error_msg)
+        raise HTTPException(status_code=400, detail="Failed to send reset email. Please try again.")
 
 
 @router.post("/reset-password")
@@ -286,4 +287,4 @@ async def reset_password(body: ResetPasswordRequest):
     except Exception as e:
         error_msg = str(e)
         print(f"Reset password error: {error_msg}")
-        raise HTTPException(status_code=400, detail=f"Failed to reset password: {error_msg}")
+        raise HTTPException(status_code=400, detail="Failed to reset password. Please try again.")

@@ -1,0 +1,204 @@
+/* =============================================
+   CustomDatePicker.css — Custom Calendar Modal
+   ============================================= */
+
+.cdp-wrap {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.cdp-trigger {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 14px;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  text-align: left;
+}
+
+.cdp-trigger:hover:not(:disabled) {
+  border-color: #004b49;
+}
+
+.cdp-trigger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cdp-trigger__label {
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.cdp-trigger__label--placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.cdp-trigger__icon {
+  font-size: 20px !important;
+  color: #64748b;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+/* Modal Overlay */
+.cdp-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: cdpFadeIn 0.2s ease both;
+}
+
+@keyframes cdpFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.cdp-modal {
+  width: 100%;
+  max-width: 340px;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: cdpScaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+  box-sizing: border-box;
+}
+
+@keyframes cdpScaleUp {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.cdp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cdp-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  color: #004b49;
+}
+
+.cdp-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: #f1f5f9;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.cdp-close .material-symbols-outlined {
+  font-size: 18px !important;
+}
+
+.cdp-close:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.cdp-selectors {
+  display: flex;
+  gap: 8px;
+}
+
+.cdp-select {
+  flex: 1;
+  height: 38px;
+  border-radius: 10px;
+  border: 1.5px solid #cbd5e1;
+  padding: 0 10px;
+  outline: none;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #1e293b;
+  background: #f8fafc;
+  cursor: pointer;
+}
+
+.cdp-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.cdp-weekday {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-align: center;
+  padding: 4px 0;
+}
+
+.cdp-empty {
+  aspect-ratio: 1;
+}
+
+.cdp-day {
+  aspect-ratio: 1;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #1e293b;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.cdp-day:hover:not(:disabled) {
+  background: #e6f4e3;
+  color: #004b49;
+}
+
+.cdp-day--selected {
+  background: #004b49 !important;
+  color: #ffffff !important;
+  font-weight: 700;
+}
+
+.cdp-day--today {
+  border: 1.5px solid #86c540;
+  color: #004b49;
+}
+
+.cdp-day:disabled {
+  color: #cbd5e1;
+  cursor: not-allowed;
+  font-weight: 400;
+}

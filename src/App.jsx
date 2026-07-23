@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import Login from "./components/Login/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
 import "./App.css";
@@ -8,8 +8,12 @@ import "./App.css";
 const LandingPg = lazy(() => import("./components/LandingPg/LandingPg"));
 const MainLayout = lazy(() => import("./components/MainLayout/MainLayout"));
 const ProfileCreate = lazy(() => import("./components/ProfileCreation/ProfileCreation/ProfileCreation"));
-const PetCard = lazy(() => import("./components/petcard/petcard"));
+const PublicPetProfile = lazy(() => import("./components/PublicPetProfile/PublicPetProfile"));
 const ResetPassword = lazy(() => import("./components/Login/ResetPassword"));
+const AuthCallback = lazy(() => import("./components/AuthCallback/AuthCallback"));
+const ParentProfile = lazy(() => import("./components/ParentProfile/ParentProfile"));
+const RemindersPage = lazy(() => import("./components/Reminders/RemindersPage"));
+const EventDetailPage = lazy(() => import("./components/Timeline/EventDetailPage/EventDetailPage"));
 
 function LoadingFallback() {
   return (
@@ -20,6 +24,23 @@ function LoadingFallback() {
 }
 
 function App() {
+  useEffect(() => {
+    // Parse OAuth hash fragment globally to catch redirects to / or /landing
+    const hash = window.location.hash;
+    if (hash && hash.includes("access_token=")) {
+      const params = new URLSearchParams(hash.replace("#", "?"));
+      const accessToken = params.get("access_token");
+      const refreshToken = params.get("refresh_token");
+      if (accessToken) {
+        localStorage.setItem("access_token", accessToken);
+        if (refreshToken) localStorage.setItem("refresh_token", refreshToken);
+        // Clean up URL and redirect to home
+        window.history.replaceState(null, "", "/home");
+        window.location.href = "/home"; // Force navigation so ProtectedRoute picks it up
+      }
+    }
+  }, []);
+
   return (
     <Router>
       <Suspense fallback={<LoadingFallback />}>
@@ -29,14 +50,23 @@ function App() {
           <Route path="/landing" element={<LandingPg />} />
           <Route path="/login" element={<Login />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/pet/:id" element={<PetCard />} />
-          
+          <Route path="/pet/:id" element={<PublicPetProfile />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
+
           {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>
             <Route path="/home" element={<MainLayout />} />
+            <Route path="/timeline" element={<MainLayout />} />
+            <Route path="/timeline/home" element={<MainLayout />} />
+            <Route path="/records" element={<MainLayout />} />
+            <Route path="/profile" element={<MainLayout />} />
             <Route path="/create-pet-profile" element={<ProfileCreate />} />
+            <Route path="/parent-profile" element={<ParentProfile />} />
+            <Route path="/reminders" element={<RemindersPage />} />
+            <Route path="/timeline/event/:eventId" element={<EventDetailPage />} />
+            <Route path="/records/event/:eventId" element={<EventDetailPage />} />
           </Route>
-          
+
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/landing" replace />} />
         </Routes>

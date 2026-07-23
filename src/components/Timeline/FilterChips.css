@@ -1,0 +1,72 @@
+.filter-chips-wrapper {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: linear-gradient(to bottom, var(--bg-page, #f5f5f5) 85%, transparent);
+  padding: 12px 0 8px 0;
+}
+
+.filter-chips-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 0 4px 4px 4px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.filter-chips-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 50px;
+  background: #fff;
+  color: #64748b;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.filter-chip:hover {
+  border-color: #004b49;
+  color: #004b49;
+  background: rgba(0, 75, 73, 0.04);
+}
+
+.filter-chip:active {
+  transform: scale(0.96);
+}
+
+.filter-chip--active {
+  background: #004b49;
+  border-color: #004b49;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 75, 73, 0.25);
+}
+
+.filter-chip--active:hover {
+  background: #003d3b;
+  color: #ffffff;
+}
+
+.filter-chip__icon {
+  font-size: 16px;
+  font-variation-settings: 'FILL' 1, 'wght' 500;
+  line-height: 1;
+}
+
+.filter-chip__label {
+  line-height: 1;
+}

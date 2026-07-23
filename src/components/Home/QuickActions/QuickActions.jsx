@@ -2,8 +2,8 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import "./QuickActions.css";
 
-import checklistIcon from "../../../assets/checklist-icon.png";
-import medicalRecordsIcon from "../../../assets/medical-icon.png";
+import checklistIcon from "../../../assets/checklist-icon.webp";
+import medicalRecordsIcon from "../../../assets/medical-icon.webp";
 
 export default function QuickActions({ onNavigateTab }) {
   const navigate = useNavigate();
@@ -12,7 +12,7 @@ export default function QuickActions({ onNavigateTab }) {
     if (typeof onNavigateTab === "function") {
       onNavigateTab("timeline");
     } else {
-      navigate("/home", { state: { tab: "timeline" } });
+      navigate("/timeline");
     }
   };
 
@@ -20,7 +20,7 @@ export default function QuickActions({ onNavigateTab }) {
     if (typeof onNavigateTab === "function") {
       onNavigateTab("medicalrecords");
     } else {
-      navigate("/home", { state: { tab: "medicalrecords" } });
+      navigate("/records");
     }
   };
 

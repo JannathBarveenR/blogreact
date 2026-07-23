@@ -169,8 +169,8 @@
   background: #0f6353;
 }
 
-@media (max-width: 380px) {
+/* @media (max-width: 380px) {
   .quick-actions-grid {
     grid-template-columns: 1fr;
   }
-}
+} */

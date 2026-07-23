@@ -12,8 +12,10 @@
   display: flex;
   justify-content: center;
   padding: 18px 16px 26px;
-  min-height: 100vh;
+  height: 100vh;
+  overflow-y: auto;
   background: var(--bg-page);
+  box-sizing: border-box;
 }
 
 .cpp-container {
@@ -60,7 +62,7 @@
 }
 
 .pet-card {
-  min-height: 74px;
+  min-height: 52px;
   border-radius: 18px;
   border: 1.5px solid var(--card-border);
   background: #fff;
@@ -68,11 +70,11 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   cursor: pointer;
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
   box-shadow: 0 3px 10px rgba(0, 75, 73, 0.04);
-  padding: 12px 6px;
+  padding: 8px 4px;
 }
 
 .pet-card:hover {
@@ -131,6 +133,7 @@
   position: relative;
   width: 100%;
   max-width: 400px;
+  height: 480px; /* Fixed height so search results collapsing doesn't shrink the popup dialog */
   max-height: 80vh;
   background: #fff;
   border-radius: 24px;
@@ -193,7 +196,7 @@
 
 .breed-popup-list {
   overflow-y: auto;
-  max-height: 50vh;
+  flex-grow: 1;
   border-top: 1px solid #f0f2ef;
   margin-top: 4px;
 }
@@ -370,8 +373,8 @@
 .other-popup-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 30, 28, 0.5);
-  backdrop-filter: blur(4px);
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(3px);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -465,6 +468,161 @@
 .save-breed-btn:hover { opacity: 0.92; }
 
 @media (max-width: 480px) {
-  .pet-grid { grid-template-columns: repeat(2, 1fr); }
+  .pet-grid { grid-template-columns: repeat(3, 1fr); }
   .cpp-header h2 { font-size: 22px; }
+}
+
+.dob-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 15px;
+  color: #1c1c1c;
+  background: #fff;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.dob-input:focus {
+  border-color: #2d6a4f;
+}
+.age-toggle-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.age-toggle-btn {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1.5px solid #d9ddd6;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  color: #53755b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.age-toggle-btn.active {
+  border-color: #84B662;
+  background: #eaf5e5;
+  color: #2f4a35;
+}
+
+.age-row {
+  display: flex;
+  gap: 12px;
+}
+
+.age-field {
+  flex: 1;
+}
+
+/* DOB TRIGGER FIELD */
+.dob-trigger-wrapper {
+  position: relative;
+  width: 100%;
+  cursor: pointer;
+}
+
+.dob-trigger-input {
+  width: 100%;
+  height: 56px;
+  border-radius: 18px;
+  border: 1.5px solid var(--card-border);
+  background: #fff;
+  padding: 0 46px 0 16px;
+  outline: none;
+  font-size: 15px;
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+}
+
+.dob-trigger-wrapper:hover .dob-trigger-input {
+  border-color: #cfe3c9;
+}
+
+.dob-trigger-input:focus {
+  border-color: var(--brand-green);
+  box-shadow: 0 0 0 4px rgba(132, 182, 98, 0.18);
+}
+
+.dob-calendar-icon {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 20px;
+  color: var(--brand-teal);
+  pointer-events: none;
+}
+
+/* DATE PICKER POPUP & BLURRED OVERLAY */
+.date-picker-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.35);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  z-index: 999;
+  animation: datePickerOverlayFade 0.2s ease forwards;
+}
+
+@keyframes datePickerOverlayFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.date-picker-popup {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 20px;
+  box-shadow: 0 24px 60px rgba(0, 75, 73, 0.2), 0 8px 24px rgba(0, 0, 0, 0.12);
+  animation: datePickerPop 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes datePickerPop {
+  from {
+    transform: scale(0.94);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.date-picker-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #edf2ea;
+}
+
+.date-picker-popup-header h3 {
+  margin: 0;
+  color: var(--brand-teal);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.date-picker-popup .pet-cal {
+  border: none;
+  padding: 0;
+  margin-top: 0;
+  box-shadow: none;
 }

@@ -1,0 +1,74 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# PetOLife — docker-compose.yml (Nginx - just as webserver )
+#
+# Usage:
+#   Local testing:  docker compose up -d --build
+# ─────────────────────────────────────────────────────────────────────────────
+
+networks:
+  petolife_internal:
+    driver: bridge
+  petolife_external:
+    driver: bridge
+
+services:
+
+  # ── FastAPI Backend ───────────────────────────────────────────────────────
+  backend:
+    image: petolife-backend:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    env_file:
+      - ./backend/.env
+    environment:
+      ENVIRONMENT: "${ENVIRONMENT:-development}"
+      FRONTEND_URL: "${FRONTEND_URL:-http://localhost}"
+    networks:
+      - petolife_internal
+    expose:
+      - "8000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 25s
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ── Frontend (React SPA served by Nginx) ───────────────────────────────
+  frontend:
+    image: petolife-frontend:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      args:
+        VITE_API_BASE_URL: "${VITE_API_BASE_URL}"
+        VITE_SUPABASE_URL: "${SUPABASE_URL}"
+        VITE_SUPABASE_ANON_KEY: "${SUPABASE_ANON_KEY}"
+    ports:
+      - "80:80"
+    networks:
+      - petolife_internal
+      - petolife_external
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

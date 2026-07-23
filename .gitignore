@@ -1,6 +1,9 @@
 # Environment files (never commit secrets or env configs)
 .env
-.env.server
+.env.*
+!.env.example
+*.env
+dbcopy.sql
 
 # Logs
 logs

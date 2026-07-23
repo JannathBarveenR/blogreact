@@ -83,3 +83,181 @@ img {
     height: 52px;
   }
 }
+
+/* Education Section */
+.education-section {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  margin: 20px 0 16px 0;
+}
+
+.education-brand-label {
+  text-transform: uppercase;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #86c540;
+  margin-bottom: 2px;
+}
+
+.education-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #004b49;
+  margin: 0 0 12px 0;
+}
+
+.education-card {
+  position: relative;
+  width: 100%;
+  height: 140px;
+  border-radius: var(--radius-card, 16px);
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 20px 24px;
+  cursor: pointer;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+}
+
+.education-card:active {
+  transform: scale(0.98);
+}
+
+.education-card-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 42%; /* Keep text aligned inside the light green left segment of the banner */
+  height: 95%;
+  justify-content: center;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.education-logo-img {
+  height: 46px;
+  width: auto;
+  align-self: flex-start;
+  object-fit: contain;
+}
+
+.education-text {
+  font-size: 17px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #004b49; /* High-contrast brand green on light background */
+  margin-top: 1px;
+}
+
+.education-desc {
+  font-size: 12px;
+  font-weight: 500;
+  color: #2d3748; /* High-contrast charcoal grey */
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+/* Checklist Styling */
+.checklist-card {
+  background: var(--white);
+  border-radius: var(--radius-card, 16px);
+  padding: 20px;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 12px 0 16px 0;
+  box-sizing: border-box;
+}
+
+.checklist-header {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #004b49;
+  margin-bottom: 4px;
+}
+
+.checklist-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #f7fafc;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.checklist-item:hover {
+  background: #edf2f7;
+}
+
+.checklist-item.checked {
+  background: rgba(134, 197, 64, 0.08);
+}
+
+.checklist-checkbox {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 11px;
+  color: transparent;
+  transition: all 0.2s ease;
+}
+
+.checklist-item.checked .checklist-checkbox {
+  background: #86c540;
+  border-color: #86c540;
+  color: #ffffff;
+}
+
+.checklist-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: #4a5568;
+  transition: all 0.2s ease;
+}
+
+.checklist-item.checked .checklist-text {
+  color: #a0aec0;
+  text-decoration: line-through;
+}
+
+/* Section headers styling to match standard fonts and colors */
+.dashboard-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.dashboard-section-title {
+  font-family: 'Manrope', sans-serif !important;
+  font-size: 18px !important;
+  font-weight: 900 !important;
+  color: #004b49 !important; /* Dark brand green */
+  margin: 0 !important;
+}

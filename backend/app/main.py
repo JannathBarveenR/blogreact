@@ -2,20 +2,32 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.config import PORT, FRONTEND_URL
+from app.config import PORT, FRONTEND_URL, ENVIRONMENT
 from app.routers import auth, location, pet_profile, pet_health_id, medical_records, checklist, user_profile
+from app.routers.v2 import medical_events, reference_data, timeline, reminders, documents, export
 from app.supabase_client import supabase
+
+# ---------------------------------------------------------------------------
+# In production, disable /docs and /redoc to prevent API structure exposure.
+# In development, keep them enabled for easier debugging.
+# ---------------------------------------------------------------------------
+_is_production = ENVIRONMENT == "production"
 
 app = FastAPI(
     title="PetOLife API",
     description="Backend API for PetOLife — pet health profile management",
     version="2.0.0",
+    docs_url=None if _is_production else "/docs",
+    redoc_url=None if _is_production else "/redoc",
+    openapi_url=None if _is_production else "/openapi.json",
 )
 
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
-app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["127.0.0.1", "localhost"])
+# Trust Docker internal network (nginx container forwards requests).
+# In production, nginx is the only entrypoint — trust all proxied headers.
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
 app.add_middleware(GZipMiddleware, minimum_size=500)
 
 # ---------------------------------------------------------------------------
@@ -26,13 +38,22 @@ app.add_middleware(GZipMiddleware, minimum_size=500)
 _raw_origins = os.getenv("ALLOWED_ORIGINS", "")
 _extra_origins = [o.strip() for o in _raw_origins.split(",") if o.strip()]
 
+_frontend_origins = []
+if FRONTEND_URL:
+    _clean_url = FRONTEND_URL.rstrip("/")
+    _frontend_origins.append(_clean_url)
+    if "://www." in _clean_url:
+        _frontend_origins.append(_clean_url.replace("://www.", "://"))
+    elif "://" in _clean_url:
+        _frontend_origins.append(_clean_url.replace("://", "://www."))
+
 ALLOWED_ORIGINS = list(
     {
         "http://localhost:5173",
         "http://localhost:3000",
         "http://127.0.0.1:5173",
         "http://127.0.0.1:3000",
-        *([FRONTEND_URL] if FRONTEND_URL else []),
+        *_frontend_origins,
         *_extra_origins,
     }
 )
@@ -55,6 +76,13 @@ app.include_router(medical_records.router, prefix="/api/medical-records", tags=[
 app.include_router(checklist.router,       prefix="/api/checklist",       tags=["Checklist"])
 app.include_router(user_profile.router,    prefix="/api/user-profile",    tags=["User Profile"])
 
+# V2 AI Timeline Routers
+app.include_router(reference_data.router)
+app.include_router(medical_events.router)
+app.include_router(timeline.router)
+app.include_router(reminders.router)
+app.include_router(documents.router)
+app.include_router(export.router)
 
 @app.get("/")
 async def root():

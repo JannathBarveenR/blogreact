@@ -1,138 +1,105 @@
-.hero {
+.dashboard-hero {
   position: relative;
   width: 100%;
-  aspect-ratio: 1264 / 842;      /* locks to the source image — guarantees zero cropping */
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  border-radius: 20px;
+  padding: 24px 30px;
   font-family: 'Manrope', sans-serif;
   box-sizing: border-box;
-  overflow: hidden !important;
-}
-
-.hero * {
-  box-sizing: border-box;
-}
-
-.hero-inner {
-  position: relative;
-  height: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-}
-
-.hero-left {
-  width: 46%;
-  padding: clamp(4%, 5vw, 6%) 0 clamp(4%, 5vw, 6%) clamp(4%, 6vw, 6%);
+  background: #ffffff;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: clamp(10px, 1.4vw, 25px);
-  margin-left: 1px;
-}.hero-text{
-  margin-left: -5px;
-  margin-top: 2px;
+  gap: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  margin-bottom: 8px;
 }
 
-.hero-badge {
-  margin-left: -19px;
-  display: inline-flex;
-  align-items: left;
-  gap: 10px;
-  background: #f5f5f5;
-  border-radius: 999px;
-  padding: 6px 14px 6px 6px;
-  font-size: clamp(18px, 1.3vw, 14px);
-  text-align: center;
-  font-weight: 600;
-  color: #004B23;
-  white-space: nowrap;
-  height: 40px;
-  width: fit-content;
-}
-
-.hero-badge-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: clamp(33px, 2vw, 22px);
-  height: clamp(33px, 2vw, 22px);
-  border-radius: 50%;
-  background: #ffffff;
-  color: #84B662;
-}
-
-.hero-badge-icon svg {
-  width: 65%;
-  height: 65%;
-}
-
-.hero-title {
+.dashboard-hero-title {
   margin: 0;
+  font-size: 18px;
   font-weight: 800;
-  font-size: clamp(20px , 3.6vw, 52px);
-  line-height: 1.08;
-  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: #004b49; /* Dark green greeting */
 }
 
-.hero-title-dark {
-  display: block;
-  color: #004B23;
+.dashboard-hero-username {
+  color: #86c540; /* Light green username */
 }
 
-.hero-title-green {
-  display: block;
-  color: #84B662;
-}
-
-.hero-subtitle {
-  max-width: 26em;
-  font-size: clamp(10px, 1.15vw, 15px);
-  line-height: 1.5;
-  color: #5E706D;
+.dashboard-hero-subtitle {
   margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+  font-weight: 500;
+  text-align: left;
+  color: #4a5568; /* Soft grey text */
+  white-space: normal;
+  word-wrap: break-word;
 }
 
-.hero-cta {
+.quote-style {
+  font-style: italic;
+  opacity: 0.9;
+}
+
+/* Checklist inside the Good morning card */
+.hero-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.hero-checklist-item {
   display: flex;
   align-items: center;
   gap: 10px;
-  width: fit-content;
-  margin-top: 4px;
-  height: clamp(26px, 5vw, 52px);
-  padding: 3px 20px 3px 3px;
-  border: none;
-  border-radius: 999px;
-  background: #1F6B3A;
-  color: #ffffff;
-  font-weight: 600;
-  font-size: clamp(18px, 1.3vw, 15px);
-  white-space: nowrap;
+  padding: 8px 12px;
+  background: #f7fafc;
+  border-radius: 10px;
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.2s ease;
+  transition: background 0.18s ease;
+  user-select: none;
 }
 
-.hero-cta:hover {
-  background: #195c30;
-  transform: translateY(-1px);
+.hero-checklist-item:hover {
+  background: #edf2f7;
 }
 
-.hero-cta-icon {
+.hero-checklist-item.checked {
+  background: rgba(134, 197, 64, 0.09);
+}
+
+.hero-checklist-checkbox {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e0;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  width: clamp(20px, 4.4vw, 38px);
-  height: clamp(20px, 4.4vw, 38px);
-  border-radius: 50%;
-  background: #ffffff;
-  color: #1F6B3A;
+  transition: all 0.18s ease;
 }
 
-.hero-cta-icon svg {
-  width: 50%;
-  height: 50%;
+.hero-checklist-item.checked .hero-checklist-checkbox {
+  background: #86c540;
+  border-color: #86c540;
+}
+
+.hero-check-mark {
+  font-size: 10px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.hero-checklist-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: #4a5568;
+  transition: all 0.18s ease;
+}
+
+.hero-checklist-item.checked .hero-checklist-text {
+  color: #a0aec0;
+  text-decoration: line-through;
 }

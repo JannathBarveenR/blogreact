@@ -1,0 +1,715 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  PetOLife — Production Infrastructure (Mumbai ap-south-1).
+  One-click deployment: VPC, NAT Gateway, Bastion, ALB, ASG (1-2),
+  CloudFront CDN, ACM SSL, Secrets Manager, CloudWatch Alarms.
+
+  PRE-REQUISITES (do these BEFORE deploying):
+    1. Switch to ap-south-1 (Mumbai) in the AWS Console.
+    2. Create a Key Pair in ap-south-1.
+    3. Create an ACM certificate for your domain in us-east-1
+       (CloudFront requires certs from N. Virginia).
+    4. After stack creation, upload your .env secrets and
+       terminate the placeholder EC2 so ASG relaunches with real config.
+
+# ─────────────────────────────────────────────────────────────────────────────
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label: { default: "Application" }
+        Parameters: [EnvironmentName, DomainName]
+      - Label: { default: "Source Code" }
+        Parameters: [GitRepoUrl, GitBranch, GitHubToken]
+      - Label: { default: "Compute" }
+        Parameters: [InstanceType, KeyPairName, LatestAmiId]
+      - Label: { default: "Security & CDN" }
+        Parameters: [AdminIPCIDR, CloudFrontCertArn]
+      - Label: { default: "Notifications" }
+        Parameters: [AlertNotificationEmail]
+
+# ─────────────────────────────────────────────────────────────────────────────
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: prod
+    Description: Prefix for all resource names
+
+  DomainName:
+    Type: String
+    Default: petolife.com
+    Description: Your domain (e.g., petolife.com)
+
+  GitRepoUrl:
+    Type: String
+    Description: "HTTPS clone URL (e.g., https://github.com/user/repo.git)"
+
+  GitBranch:
+    Type: String
+    Default: main
+    Description: Branch to deploy
+
+  GitHubToken:
+    Type: String
+    NoEcho: true
+    Description: "GitHub Personal Access Token (PAT) with 'repo' scope for private repo access"
+
+  InstanceType:
+    Type: String
+    Default: t3.medium
+    AllowedValues: [t3.micro, t3.small, t3.medium, t3.large]
+    Description: "t3.medium = 4GB (recommended), t3.small = 2GB"
+
+  KeyPairName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Existing Key Pair in this region
+
+  LatestAmiId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id
+    Description: Ubuntu 24.04 LTS (auto-resolved)
+
+  AdminIPCIDR:
+    Type: String
+    Description: "Your IP for Bastion SSH (e.g., 183.83.192.61/32)"
+    AllowedPattern: '(\d{1,3}\.){3}\d{1,3}/\d{1,2}'
+
+  CloudFrontCertArn:
+    Type: String
+    Description: "ACM Certificate ARN in us-east-1 (required for CloudFront HTTPS)"
+
+  AlertNotificationEmail:
+    Type: String
+    Description: "Email address to receive CloudWatch alarm notifications"
+    AllowedPattern: '[^\s@]+@[^\s@]+\.[^\s@]+'
+    ConstraintDescription: "Must be a valid email address"
+
+# ═════════════════════════════════════════════════════════════════════════════
+#  RESOURCES
+# ═════════════════════════════════════════════════════════════════════════════
+Resources:
+
+  # ═══════════════════════════════════════════════════════════════════════
+  # NETWORKING — VPC, Subnets, NAT, Routes
+  # ═══════════════════════════════════════════════════════════════════════
+
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-petolife-vpc"
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-igw"
+
+  VPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  # Two public subnets (ALB requires 2 Availability Zones)
+  # Holds: ALB, Bastion, NAT Gateway
+  PublicSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-public-a"
+
+  PublicSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.2.0/24
+      AvailabilityZone: !Select [1, !GetAZs ""]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-public-b"
+
+  # Two private subnets (app EC2 instances — no public IP, spread across 2 AZs)
+  PrivateSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.10.0/24
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-private-a"
+
+  PrivateSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.11.0/24
+      AvailabilityZone: !Select [1, !GetAZs ""]
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-private-b"
+
+  # AWS-managed NAT Gateway (one-way internet for private subnet)
+  NatGatewayEIP:
+    Type: AWS::EC2::EIP
+    DependsOn: VPCGatewayAttachment
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-nat-eip"
+
+  NatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGatewayEIP.AllocationId
+      SubnetId: !Ref PublicSubnetA
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-nat"
+
+  # Public route table: internet via IGW
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-public-rt"
+
+  PublicDefaultRoute:
+    Type: AWS::EC2::Route
+    DependsOn: VPCGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnetARouteTableAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnetA
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnetBRouteTableAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnetB
+      RouteTableId: !Ref PublicRouteTable
+
+  # Private route table: internet via NAT Gateway (outbound only)
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-private-rt"
+
+  PrivateDefaultRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway
+
+  PrivateSubnetARouteTableAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnetA
+      RouteTableId: !Ref PrivateRouteTable
+
+  PrivateSubnetBRouteTableAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnetB
+      RouteTableId: !Ref PrivateRouteTable
+
+  # Free S3 endpoint (avoids NAT charges for S3 traffic)
+  S3VPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPC
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.s3"
+      RouteTableIds:
+        - !Ref PublicRouteTable
+        - !Ref PrivateRouteTable
+      VpcEndpointType: Gateway
+
+  # ═══════════════════════════════════════════════════════════════════════
+  # SECURITY GROUPS
+  # ═══════════════════════════════════════════════════════════════════════
+
+  # ALB: accepts HTTP from anywhere (CloudFront connects here)
+  ALBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: HTTP to ALB (CloudFront handles HTTPS)
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+          Description: HTTP from CloudFront / internet
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-alb-sg"
+
+  # Bastion: SSH from YOUR IP only
+  BastionSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: SSH from admin IP only
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref AdminIPCIDR
+          Description: SSH from admin
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-bastion-sg"
+
+  # App: HTTP from ALB only + SSH from Bastion only
+  AppSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: HTTP from ALB + SSH from Bastion only
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          SourceSecurityGroupId: !Ref ALBSecurityGroup
+          Description: HTTP from ALB
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          SourceSecurityGroupId: !Ref BastionSecurityGroup
+          Description: SSH from Bastion
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-app-sg"
+
+  # ═══════════════════════════════════════════════════════════════════════
+  # IAM — EC2 reads secrets, no stored credentials
+  # ═══════════════════════════════════════════════════════════════════════
+
+  EC2Role:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${EnvironmentName}-petolife-ec2"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: ec2.amazonaws.com }
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: ReadSecrets
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: secretsmanager:GetSecretValue
+                Resource:
+                  - !Ref AppEnvSecret
+                  - !Ref BackendEnvSecret
+        - PolicyName: SSMAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:UpdateInstanceInformation
+                  - ssmmessages:*
+                  - ec2messages:*
+                Resource: "*"
+        - PolicyName: CloudFrontInvalidation
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: cloudfront:CreateInvalidation
+                Resource: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
+
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles: [!Ref EC2Role]
+
+  # ═══════════════════════════════════════════════════════════════════════
+  # SECRETS MANAGER — .env files stored here, NOT in git or S3
+  # ═══════════════════════════════════════════════════════════════════════
+
+  AppEnvSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub "${EnvironmentName}/petolife/app-env"
+      Description: "Root .env for docker-compose (update after stack creation)"
+      SecretString: "PLACEHOLDER"
+      Tags:
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  BackendEnvSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub "${EnvironmentName}/petolife/backend-env"
+      Description: "Backend .env (update after stack creation)"
+      SecretString: "PLACEHOLDER"
+      Tags:
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  # ═══════════════════════════════════════════════════════════════════════
+  # BASTION HOST — SSH jump box (t3.micro, stop when not needed)
+  # ═══════════════════════════════════════════════════════════════════════
+
+  BastionHost:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t3.micro
+      ImageId: !Ref LatestAmiId
+      KeyName: !Ref KeyPairName
+      SubnetId: !Ref PublicSubnetA
+      SecurityGroupIds: [!Ref BastionSecurityGroup]
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-bastion"
+
+  # ═══════════════════════════════════════════════════════════════════════
+  # APPLICATION LOAD BALANCER — HTTP only (CloudFront handles HTTPS)
+  # ═══════════════════════════════════════════════════════════════════════
+
+  ApplicationLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: !Sub "${EnvironmentName}-petolife-alb"
+      Scheme: internet-facing
+      Type: application
+      Subnets:
+        - !Ref PublicSubnetA
+        - !Ref PublicSubnetB
+      SecurityGroups: [!Ref ALBSecurityGroup]
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-alb"
+
+  ALBTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: !Sub "${EnvironmentName}-petolife-tg"
+      Protocol: HTTP
+      Port: 80
+      VpcId: !Ref VPC
+      TargetType: instance
+      HealthCheckEnabled: true
+      HealthCheckPath: /
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 10
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 3
+      Matcher: { HttpCode: "200-399" }
+
+  # HTTP listener only — CloudFront terminates HTTPS upstream
+  ALBHTTPListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref ApplicationLoadBalancer
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref ALBTargetGroup
+
+  # ═══════════════════════════════════════════════════════════════════════
+  # COMPUTE — Launch Template + Auto Scaling Group
+  # ═══════════════════════════════════════════════════════════════════════
+
+  LaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: !Sub "${EnvironmentName}-petolife-lt"
+      LaunchTemplateData:
+        ImageId: !Ref LatestAmiId
+        InstanceType: !Ref InstanceType
+        KeyName: !Ref KeyPairName
+        IamInstanceProfile:
+          Arn: !GetAtt EC2InstanceProfile.Arn
+        SecurityGroupIds: [!Ref AppSecurityGroup]
+        BlockDeviceMappings:
+          - DeviceName: /dev/sda1
+            Ebs:
+              VolumeSize: 25
+              VolumeType: gp3
+              Encrypted: true
+              DeleteOnTermination: true
+        TagSpecifications:
+          - ResourceType: instance
+            Tags:
+              - Key: Name
+                Value: !Sub "${EnvironmentName}-petolife-app"
+              - Key: Environment
+                Value: !Ref EnvironmentName
+        # ── Bootstrap script (installs Docker, clones repo, pulls secrets) ──
+        UserData:
+          Fn::Base64: !Sub |
+            #!/bin/bash
+            set -euo pipefail
+            exec > /var/log/petolife-bootstrap.log 2>&1
+
+            echo "=== PetOLife Bootstrap $(date) ==="
+
+            # System packages
+            apt-get update -y
+            apt-get install -y docker.io docker-compose-v2 git unzip curl
+
+            # AWS CLI v2
+            curl -sS "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip
+            unzip -q /tmp/awscliv2.zip -d /tmp && /tmp/aws/install
+            rm -rf /tmp/awscliv2.zip /tmp/aws
+
+            # Docker
+            systemctl enable docker && systemctl start docker
+            usermod -aG docker ubuntu
+
+            # Clone repo using GitHub PAT for private repo access
+            REPO=/home/ubuntu/petolife
+            # Inject token into HTTPS URL: https://github.com/... -> https://<TOKEN>@github.com/...
+            AUTH_URL=$(echo "${GitRepoUrl}" | sed -e "s|https://|https://${GitHubToken}@|g")
+            git clone -b ${GitBranch} $AUTH_URL $REPO
+            cd $REPO
+
+            # Pull secrets from AWS Secrets Manager
+            REGION=${AWS::Region}
+            aws secretsmanager get-secret-value --secret-id "${AppEnvSecret}" --query SecretString --output text --region $REGION > .env
+            aws secretsmanager get-secret-value --secret-id "${BackendEnvSecret}" --query SecretString --output text --region $REGION > backend/.env
+
+            # Launch
+            chown -R ubuntu:ubuntu $REPO
+            docker compose up -d --build
+
+            echo "=== PetOLife Bootstrap COMPLETE $(date) ==="
+
+  # ASG: 1 instance normally, scales to 2 under load, scales back to 1
+  AutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    DependsOn: NatGateway
+    Properties:
+      AutoScalingGroupName: !Sub "${EnvironmentName}-petolife-asg"
+      LaunchTemplate:
+        LaunchTemplateId: !Ref LaunchTemplate
+        Version: !GetAtt LaunchTemplate.LatestVersionNumber
+      VPCZoneIdentifier:
+        - !Ref PrivateSubnetA
+        - !Ref PrivateSubnetB
+      TargetGroupARNs: [!Ref ALBTargetGroup]
+      MinSize: 1
+      DesiredCapacity: 1
+      MaxSize: 2
+      HealthCheckType: ELB
+      HealthCheckGracePeriod: 600
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-petolife-app"
+          PropagateAtLaunch: true
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MinInstancesInService: 1
+        MaxBatchSize: 1
+        PauseTime: PT10M
+
+  # Scale out at 60% CPU, scale in aggressively when load drops
+  ScalingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: !Ref AutoScalingGroup
+      PolicyType: TargetTrackingScaling
+      EstimatedInstanceWarmup: 300
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: 60.0
+        DisableScaleIn: false
+
+  # ═══════════════════════════════════════════════════════════════════════
+  # CLOUDFRONT CDN — HTTPS termination, edge caching, hides server IP
+  # ═══════════════════════════════════════════════════════════════════════
+
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-petolife-cdn"
+      DistributionConfig:
+        Enabled: true
+        Comment: !Sub "${EnvironmentName} PetOLife"
+        Aliases:
+          - !Sub "www.${DomainName}"
+        ViewerCertificate:
+          AcmCertificateArn: !Ref CloudFrontCertArn
+          SslSupportMethod: sni-only
+          MinimumProtocolVersion: TLSv1.2_2021
+        Origins:
+          - Id: alb-origin
+            DomainName: !GetAtt ApplicationLoadBalancer.DNSName
+            CustomOriginConfig:
+              OriginProtocolPolicy: http-only
+              HTTPPort: 80
+              OriginKeepaliveTimeout: 60
+              OriginReadTimeout: 60
+        # Static content — cached at CloudFront edge (respects Caddy headers)
+        DefaultCacheBehavior:
+          TargetOriginId: alb-origin
+          ViewerProtocolPolicy: redirect-to-https
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+          Compress: true
+          AllowedMethods: [GET, HEAD]
+          CachedMethods: [GET, HEAD]
+        # API routes — NEVER cached, all data forwarded to backend
+        CacheBehaviors:
+          - PathPattern: "/api/*"
+            TargetOriginId: alb-origin
+            ViewerProtocolPolicy: redirect-to-https
+            CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
+            OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3
+            AllowedMethods: [GET, HEAD, OPTIONS, PUT, PATCH, POST, DELETE]
+            CachedMethods: [GET, HEAD]
+        PriceClass: PriceClass_200
+        HttpVersion: http2and3
+        # Don't cache server errors
+        CustomErrorResponses:
+          - ErrorCode: 500
+            ErrorCachingMinTTL: 0
+          - ErrorCode: 502
+            ErrorCachingMinTTL: 0
+          - ErrorCode: 503
+            ErrorCachingMinTTL: 0
+          - ErrorCode: 504
+            ErrorCachingMinTTL: 0
+
+  # ═══════════════════════════════════════════════════════════════════════
+  # SNS — Email notifications for alarms
+  # ═══════════════════════════════════════════════════════════════════════
+
+  AlertsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub "${EnvironmentName}-petolife-alerts"
+
+  AlertsEmailSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref AlertsTopic
+      Protocol: email
+      Endpoint: !Ref AlertNotificationEmail
+
+  # ═══════════════════════════════════════════════════════════════════════
+  # CLOUDWATCH ALARMS (free tier: up to 10 alarms)
+  # ═══════════════════════════════════════════════════════════════════════
+
+  HighCPUAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${EnvironmentName}-high-cpu"
+      AlarmDescription: "App server CPU > 80% for 5 minutes"
+      Namespace: AWS/EC2
+      MetricName: CPUUtilization
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value: !Ref AutoScalingGroup
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 80
+      ComparisonOperator: GreaterThanThreshold
+      AlarmActions: [!Ref AlertsTopic]
+      OKActions: [!Ref AlertsTopic]
+
+  UnhealthyHostAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${EnvironmentName}-unhealthy-hosts"
+      AlarmDescription: "ALB has unhealthy targets"
+      Namespace: AWS/ApplicationELB
+      MetricName: UnHealthyHostCount
+      Dimensions:
+        - Name: TargetGroup
+          Value: !GetAtt ALBTargetGroup.TargetGroupFullName
+        - Name: LoadBalancer
+          Value: !GetAtt ApplicationLoadBalancer.LoadBalancerFullName
+      Statistic: Maximum
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 0
+      ComparisonOperator: GreaterThanThreshold
+      AlarmActions: [!Ref AlertsTopic]
+      OKActions: [!Ref AlertsTopic]
+
+  ALB5xxAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${EnvironmentName}-alb-5xx"
+      AlarmDescription: "ALB returning 5xx errors"
+      Namespace: AWS/ApplicationELB
+      MetricName: HTTPCode_ELB_5XX_Count
+      Dimensions:
+        - Name: LoadBalancer
+          Value: !GetAtt ApplicationLoadBalancer.LoadBalancerFullName
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 10
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlertsTopic]
+      OKActions: [!Ref AlertsTopic]
+
+# ═════════════════════════════════════════════════════════════════════════════
+#  OUTPUTS
+# ═════════════════════════════════════════════════════════════════════════════
+Outputs:
+  CloudFrontURL:
+    Description: "Add CNAME in Squarespace: www → this value"
+    Value: !GetAtt CloudFrontDistribution.DomainName
+
+  CloudFrontDistributionId:
+    Description: "For cache invalidation after deploy"
+    Value: !Ref CloudFrontDistribution
+
+  BastionPublicIP:
+    Description: "SSH: ssh -i key.pem ubuntu@<this-ip>"
+    Value: !GetAtt BastionHost.PublicIp
+
+  ALBDNSName:
+    Description: "ALB internal DNS (CloudFront origin — not for public DNS)"
+    Value: !GetAtt ApplicationLoadBalancer.DNSName
+
+  AppEnvSecretId:
+    Description: "Root .env secret ID"
+    Value: !Ref AppEnvSecret
+
+  BackendEnvSecretId:
+    Description: "Backend .env secret ID"
+    Value: !Ref BackendEnvSecret
+
+  SSHViaBastion:
+    Description: "SSH to app server through Bastion"
+    Value: !Sub "ssh -J ubuntu@${BastionHost.PublicIp} -i key.pem ubuntu@<app-private-ip>"

@@ -30,12 +30,20 @@ function Step1({ goNext, onNavigateBack, petData }) {
   const [photoUploaded, setPhotoUploaded] = useState(
     !!petData?.petPhotoPreview
   );
+  
+  const [errorMsg, setErrorMsg] = useState("");
   const progress = photoUploaded ? 25 : 0;
 
   const handleImageUpload = (e) => {
+    setErrorMsg("");
     const file = e.target.files[0];
 
     if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setErrorMsg("Max size to photo upload is 5mb");
+        return;
+      }
+      
       const preview = URL.createObjectURL(file);
 
       setImage(preview);
@@ -62,7 +70,7 @@ function Step1({ goNext, onNavigateBack, petData }) {
         <div className="pet-photo-wrap">
           <div className={`pet-photo-ring${!photoUploaded ? " pet-photo-ring--pulse" : ""}`}>
             <div className="pet-photo-ring-inner">
-              <PetAvatar src={image} petType={petData?.petType} alt="pet" size={70} className="step1-avatar-fallback" />
+              <PetAvatar src={image} petType={petData?.petType} alt="pet" size={56} className="step1-avatar-fallback" />
             </div>
           </div>
 
@@ -81,6 +89,7 @@ function Step1({ goNext, onNavigateBack, petData }) {
         <p className="subtitle">
           Help veterinarians and caregivers identify your furry friend quickly.
         </p>
+        {errorMsg && <p style={{ color: 'red', marginTop: '10px', fontSize: '0.9rem', fontWeight: '500' }}>{errorMsg}</p>}
       </div>
 
       <div className="photo-tips-card d-flex flex-column gap-2 mb-4">
@@ -93,21 +102,7 @@ function Step1({ goNext, onNavigateBack, petData }) {
         ))}
       </div>
 
-      <div className="mt-auto d-flex flex-column gap-2">
-        <button
-          type="button"
-          className="skip-btn"
-          onClick={() =>
-            goNext({
-              petPhotoFile: null,
-              petPhotoPreview: null,
-            })
-          }
-        >
-          <FiSkipForward />
-          Skip for Now
-        </button>
-
+      <div className="button-group">
         <button
           className="next-btn next-btn--animated"
           onClick={() =>
@@ -120,6 +115,18 @@ function Step1({ goNext, onNavigateBack, petData }) {
           Next
           <FiArrowRight />
         </button>
+
+        <span
+          className="skip-link"
+          onClick={() =>
+            goNext({
+              petPhotoFile: null,
+              petPhotoPreview: null,
+            })
+          }
+        >
+          Skip for now
+        </span>
       </div>
     </div>
   );

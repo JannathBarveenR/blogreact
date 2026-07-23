@@ -401,67 +401,27 @@ ol {
 .hero {
   position: relative;
   width: 100%;
+  height: 100dvh;
+  min-height: 560px;
   overflow: hidden;
+  background-color: #e8f5ed;
 }
 
 .hero-bg {
-  position: relative;
-  padding-top: 65px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
 }
 
 .hero-bg-image {
   display: block;
   width: 100%;
-  height: auto;
-}
-
-.hero-overlay-actions {
-  position: absolute;
-  left: 20px;
-  bottom: 24px;
-  z-index: 10;
-
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 12px;
-
-  width: 165px;
-}
-
-.hero-overlay-actions .btn {
-  width: 100%;
-}
-
-.hero-overlay-actions .btn-primary {
-  background: #0d4e4c;
-  color: white;
-  border: none;
-}
-
-.hero-overlay-actions .btn-primary:hover {
-  background: #0a4a4a;
-}
-
-.hero-overlay-actions .btn-secondary {
-  background: rgb(255, 255, 255);
-  color: #0d5c5c;
-  border: 2px solid #0d5c5c;
-  height: 43px;
-}
-
-.hero-overlay-actions .btn-secondary:hover {
-  background: #e8f4e8;
-}
-
-@media (min-width: 768px) {
-  .hero {
-    aspect-ratio: 16 / 9;
-  }
-  .hero-overlay-actions {
-    flex-direction: row;
-    max-width: 460px;
-  }
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
 }
 
 /* Solution component styles */
@@ -3146,3 +3106,145 @@ BACKGROUND
 .trust-cta-actions .btn-secondary:hover {
   background-color: #f0f7f2;
 }
+
+/* --- Hero Text Overlay --- */
+.hero-text-overlay {
+  position: absolute;
+  top: 95px; /* Tighter padding at top on mobile */
+  left: 20px;
+  right: 20px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 8px; /* Tighter gap between text parts */
+  max-width: 500px;
+}
+
+.hero-title-typewriter {
+  font-size: 1.7rem; /* Slightly smaller size on mobile for better wrapping */
+  font-weight: 800;
+  color: #0c2d2c;
+  line-height: 1.2; /* Tighter line-height */
+  margin: 0;
+  text-shadow: 0 1px 4px rgba(255, 255, 255, 0.8);
+  min-height: 4.8rem; /* Tighter min-height */
+}
+
+@keyframes blink-caret {
+  from, to { color: transparent }
+  50% { color: #0d5c5c; }
+}
+
+.typewriter-cursor {
+  font-weight: 300;
+  color: #0d5c5c;
+  animation: blink-caret 0.75s step-end infinite;
+  margin-left: 2px;
+}
+
+.text-green-accent {
+  color: #548e6c; /* Sage green color matching the mockup */
+}
+
+.hero-subtitle-fadein {
+  font-size: 0.9rem; /* Tighter font size */
+  font-weight: 500;
+  color: #2b4f4e;
+  line-height: 1.4; /* Tighter line height */
+  margin: 0;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+  text-shadow: 0 1px 4px rgba(255, 255, 255, 0.8);
+}
+
+.hero-subtitle-fadein.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* --- Hero Bottom Actions (Vertical on Mobile) --- */
+.hero-bottom-actions {
+  position: absolute;
+  bottom: 24px; /* Centered stack at the bottom of the device viewport */
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 40px);
+  max-width: 340px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hero-bottom-actions .btn {
+  width: 100%;
+  height: 48px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 1rem;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.hero-bottom-actions .btn-primary {
+  background: #0d4e4c;
+  color: white;
+}
+
+.hero-bottom-actions .btn-primary:hover {
+  background: #0a4a4a;
+  transform: translateY(-1px);
+}
+
+.hero-bottom-actions .btn-secondary {
+  background: white;
+  color: #0d4e4c;
+  border: 2px solid #0d4e4c;
+}
+
+.hero-bottom-actions .btn-secondary:hover {
+  background: #f4faf6;
+  transform: translateY(-1px);
+}
+
+@media (min-width: 768px) {
+  .hero-text-overlay {
+    top: 20%;
+    left: 8%;
+    max-width: 600px;
+    gap: 12px;
+  }
+  
+  .hero-title-typewriter {
+    font-size: 3.2rem;
+    line-height: 1.15;
+    min-height: 7.5rem;
+  }
+  
+  .hero-subtitle-fadein {
+    font-size: 1.15rem;
+    line-height: 1.5;
+  }
+  
+  .hero-bottom-actions {
+    flex-direction: row;
+    max-width: none;
+    width: auto;
+    left: 8%;
+    transform: none;
+    bottom: 8%;
+    gap: 16px;
+  }
+
+  .hero-bottom-actions .btn {
+    width: auto;
+    padding: 0 36px;
+  }
+}
+

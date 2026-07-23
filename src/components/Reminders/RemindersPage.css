@@ -1,0 +1,368 @@
+.rem-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: #f4f8f1;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.rem-page-header {
+  background: #ffffff;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #e2ece0;
+  box-shadow: 0 4px 12px rgba(0, 75, 73, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.rem-page-header__left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.rem-page-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: #004b23;
+}
+
+.rem-back-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  border: none;
+  color: #004b23;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.rem-pet-select {
+  height: 36px;
+  border-radius: 12px;
+  border: 1.5px solid #84b662;
+  padding: 0 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #004b23;
+  background: #eaf5e5;
+  outline: none;
+}
+
+.rem-page-body {
+  max-width: 500px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-sizing: border-box;
+}
+
+.rem-tabs {
+  display: flex;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 4px;
+  border: 1px solid #cfe3c9;
+}
+
+.rem-tab {
+  flex: 1;
+  height: 40px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.rem-tab--active {
+  background: #004b23;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 75, 73, 0.2);
+}
+
+.rem-new-btn {
+  width: 100%;
+  height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(90deg, #84b662 0%, #004b23 100%);
+  color: #ffffff;
+  border: none;
+  font-size: 14px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(0, 75, 73, 0.16);
+}
+
+.rem-quick-form {
+  background: #ffffff;
+  border: 1.5px solid #84b662;
+  border-radius: 20px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 10px 24px rgba(0, 75, 73, 0.08);
+}
+
+.rem-quick-form h3 {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #004b23;
+}
+
+.rem-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rem-field label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #53755b;
+}
+
+.rem-field input {
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid #cbd5e1;
+  padding: 0 12px;
+  font-size: 14px;
+}
+
+.rem-field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.rem-submit-btn {
+  height: 44px;
+  border-radius: 12px;
+  background: #004b23;
+  color: #ffffff;
+  border: none;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.rem-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rem-card-item {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1.5px solid #cfe3c9;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(0, 75, 73, 0.05);
+}
+
+.rem-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #f0f4ee;
+  padding-bottom: 6px;
+}
+
+.rem-pet-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rem-pet-avatar {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  object-fit: cover !important;
+  flex-shrink: 0 !important;
+}
+
+.rem-pet-name {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #004b23;
+}
+
+.rem-slot-badge {
+  font-size: 11.5px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.rem-slot-badge--morning {
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #ffedd5;
+}
+
+.rem-slot-badge--afternoon {
+  background: #fefce8;
+  color: #a16207;
+  border: 1px solid #fef08a;
+}
+
+.rem-slot-badge--night {
+  background: #f0f9ff;
+  color: #0369a1;
+  border: 1px solid #e0f2fe;
+}
+
+.rem-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rem-item-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  color: #004b23;
+}
+
+.rem-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.rem-item-meta span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rem-item-notes {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: #475569;
+  background: #f8faf7;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px stroke #e2ece0;
+}
+
+/* ── TWO ACTION BUTTONS ONLY: DONE OR FORGOT ── */
+.rem-card-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.rem-option-btn {
+  height: 46px;
+  border-radius: 14px;
+  border: none;
+  font-size: 15px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.rem-option-btn--done {
+  background: linear-gradient(90deg, #84b662 0%, #004b23 100%);
+  color: #ffffff;
+  box-shadow: 0 6px 16px rgba(0, 75, 73, 0.2);
+}
+
+.rem-option-btn--forgot {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+}
+
+.rem-option-btn:active {
+  transform: scale(0.97);
+}
+
+.rem-history-status {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.rem-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.rem-status-pill--done {
+  background: #eaf5e5;
+  color: #004b23;
+}
+
+.rem-status-pill--forgot {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.rem-loading-box,
+.rem-empty-box {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 30px 20px;
+  text-align: center;
+  border: 1.5px dashed #cfe3c9;
+}
+
+.rem-empty-emoji {
+  font-size: 36px;
+}
+
+.rem-empty-box h3 {
+  margin: 10px 0 4px;
+  font-size: 17px;
+  color: #004b23;
+}
+
+.rem-empty-box p {
+  margin: 0;
+  font-size: 13px;
+  color: #64748b;
+}

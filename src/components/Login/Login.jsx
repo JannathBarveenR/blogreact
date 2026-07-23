@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Login.css";
-import logoImg from "../../assets/login-logo.png";
+import logoImg from "../../assets/login-logo.webp";
+import { supabase } from "../../utils/supabaseClient";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 
@@ -427,9 +428,13 @@ function RegistrationScreen({ onLogin, onSuccess }) {
         className="btn-google"
         onClick={async () => {
           try {
-            const res = await fetch(`${API_BASE}/api/auth/google`);
-            const data = await res.json();
-            if (data.url) window.location.href = data.url;
+            const { error } = await supabase.auth.signInWithOAuth({
+              provider: "google",
+              options: {
+                redirectTo: `${window.location.origin}/auth/callback`,
+              },
+            });
+            if (error) setError("Google signup is not available yet.");
           } catch {
             setError("Google signup is not available yet.");
           }
@@ -592,9 +597,13 @@ function LoginScreen({ onSignUp, onSuccess }) {
         className="btn-google"
         onClick={async () => {
           try {
-            const res = await fetch(`${API_BASE}/api/auth/google`);
-            const data = await res.json();
-            if (data.url) window.location.href = data.url;
+            const { error } = await supabase.auth.signInWithOAuth({
+              provider: "google",
+              options: {
+                redirectTo: `${window.location.origin}/auth/callback`,
+              },
+            });
+            if (error) setError("Google login is not available yet.");
           } catch {
             setError("Google login is not available yet.");
           }

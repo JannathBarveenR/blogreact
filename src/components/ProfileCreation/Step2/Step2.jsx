@@ -2,12 +2,14 @@ import React, { useState } from "react";
 import StepProgress from "../StepProgress/StepProgress";
 import StepHeaderBar from "../StepHeaderBar/StepHeaderBar";
 import { breedData, petTypes } from "../constants";
+import PetDatePicker from "../PetDatePicker/PetDatePicker";
+import { FiCalendar } from "react-icons/fi";
 import "./Step2.css";
 
 function Step2({ goNext, goBack, petData }) {
   const [selectedPet, setSelectedPet] = useState(petData.petType || "");
   const [selectedPetCard, setSelectedPetCard] = useState(
-    petData.petType && ["Dog", "Cat", "Bird", "Rabbit"].includes(petData.petType)
+    petData.petType && ["Dog", "Cat", "Bird", "Rabbit", "Parrot"].includes(petData.petType)
       ? petData.petType
       : petData.petType
       ? "Other"
@@ -21,6 +23,7 @@ function Step2({ goNext, goBack, petData }) {
   const [petName, setPetName] = useState(petData.petName || "");
   const [showOtherPopup, setShowOtherPopup] = useState(false);
   const [showOtherBreedPopup, setShowOtherBreedPopup] = useState(false);
+  const [showDatePickerModal, setShowDatePickerModal] = useState(false);
   const [customPetType, setCustomPetType] = useState("");
   const [customBreed, setCustomBreed] = useState("");
   const [localError, setLocalError] = useState("");
@@ -30,12 +33,30 @@ function Step2({ goNext, goBack, petData }) {
     petData.petIds?.length ? petData.petIds : [{ idName: "", idNumber: "" }]
   );
 
-  const progress = 50;
+  const [knowDOB, setKnowDOB] = useState(!!petData.birthDate);
+  const [dob, setDob] = useState(petData.birthDate || "");
+  const getApproxYears = () => {
+    if (!petData.approxAge) return "";
+    const match = petData.approxAge.match(/(\d+)y/);
+    return match ? match[1] : "";
+  };
+  const getApproxMonths = () => {
+    if (!petData.approxAge) return "";
+    const match = petData.approxAge.match(/(\d+)m/);
+    return match ? match[1] : "";
+  };
+  const [years, setYears] = useState(getApproxYears());
+  const [months, setMonths] = useState(getApproxMonths());
+  const maxDate = new Date().toISOString().split("T")[0];
 
-  const filteredBreeds =
+  const progress = 66;
+
+  const rawFiltered =
     breedData[selectedPet]?.filter((breed) =>
-      breed.toLowerCase().includes(breedSearch.toLowerCase())
+      breed.toLowerCase().includes(breedSearch.toLowerCase()) &&
+      breed !== "Other"
     ) || [];
+  const filteredBreeds = [...rawFiltered, "Other"];
 
   React.useEffect(() => {
     const handleClickOutside = (e) => {
@@ -51,7 +72,16 @@ function Step2({ goNext, goBack, petData }) {
     if (!selectedPet) { setLocalError("Please select a pet type."); return; }
     if (!petName.trim()) { setLocalError("Please enter pet name."); return; }
     setLocalError("");
-    goNext({ petType: selectedPet, breed: selectedBreed, gender: selectedGender, petName, petIds });
+    goNext({
+      petType: selectedPet,
+      breed: selectedBreed,
+      gender: selectedGender,
+      petName,
+      petIds,
+      knowDOB,
+      birthDate: knowDOB ? dob : "",
+      approxAge: !knowDOB ? `${years || 0}y ${months || 0}m` : "",
+    });
   };
 
   return (
@@ -87,7 +117,7 @@ function Step2({ goNext, goBack, petData }) {
                 <span>
                   {pet.name === "Other" &&
                   selectedPet &&
-                  !["Dog", "Cat", "Bird", "Rabbit"].includes(selectedPet)
+                  !["Dog", "Cat", "Bird", "Rabbit", "Parrot"].includes(selectedPet)
                     ? selectedPet
                     : pet.name}
                 </span>
@@ -108,94 +138,20 @@ function Step2({ goNext, goBack, petData }) {
         </div>
 
         {/* BREED */}
-{/* BREED */}
-<div className="form-group">
-  <label>Breed</label>
-  <button
-    type="button"
-    className="breed-selector"
-    onClick={() => {
-      if (!selectedPet) { alert("Please select a pet type first"); return; }
-      setBreedSearch("");
-      setShowBreedDropdown(true);
-    }}
-  >
-    <span>{selectedBreed || "Search or select breed"}</span>
-    
-  </button>
-</div>
-
-{/* BREED POPUP */}
-{showBreedDropdown && (
-  <div className="other-popup-overlay" onClick={() => setShowBreedDropdown(false)}>
-    <div className="breed-popup" onClick={(e) => e.stopPropagation()}>
-      <div className="breed-popup-header">
-        <h3>Select breed</h3>
-        <button
-          type="button"
-          className="breed-popup-close"
-          onClick={() => setShowBreedDropdown(false)}
-        >
-          ×
-        </button>
-      </div>
-
-      <div className="breed-popup-search">
-        <input
-          type="text"
-          autoFocus
-          placeholder="Type to search breed..."
-          value={breedSearch}
-          onChange={(e) => setBreedSearch(e.target.value)}
-        />
-      </div>
-
-      {breedData[selectedPet] ? (
-        <div className="breed-popup-list">
-          {filteredBreeds.length > 0 ? (
-            filteredBreeds.map((breed) => (
-              <button
-                type="button"
-                key={breed}
-                className={`breed-dropdown-item ${selectedBreed === breed ? "active" : ""}`}
-                onClick={() => {
-                  if (breed === "Other") {
-                    setShowBreedDropdown(false);
-                    setShowOtherBreedPopup(true);
-                  } else {
-                    setSelectedBreed(breed);
-                    setShowBreedDropdown(false);
-                    setBreedSearch("");
-                  }
-                }}
-              >
-                {breed}
-              </button>
-            ))
-          ) : (
-            <div className="breed-dropdown-empty">No breeds found</div>
-          )}
-        </div>
-      ) : (
-        <div className="custom-breed-box">
-          <input
-            type="text"
-            placeholder="Enter breed..."
-            value={selectedBreed}
-            onChange={(e) => setSelectedBreed(e.target.value)}
-          />
+        <div className="form-group">
+          <label>Breed</label>
           <button
             type="button"
-            className="save-breed-btn"
-            onClick={() => setShowBreedDropdown(false)}
+            className="breed-selector"
+            onClick={() => {
+              if (!selectedPet) { alert("Please select a pet type first"); return; }
+              setBreedSearch("");
+              setShowBreedDropdown(true);
+            }}
           >
-            Save Breed
+            <span>{selectedBreed || "Search or select breed"}</span>
           </button>
         </div>
-      )}
-    </div>
-  </div>
-)}
 
         {/* GENDER */}
         <div className="form-group">
@@ -215,12 +171,198 @@ function Step2({ goNext, goBack, petData }) {
           </div>
         </div>
 
+        {/* AGE / DOB */}
+        <div className="form-group">
+          <label>Date of Birth or Age</label>
+          <div className="age-toggle-row">
+            <button
+              type="button"
+              className={`age-toggle-btn ${knowDOB ? "active" : ""}`}
+              onClick={() => setKnowDOB(true)}
+            >
+              I know the DOB
+            </button>
+            <button
+              type="button"
+              className={`age-toggle-btn ${!knowDOB ? "active" : ""}`}
+              onClick={() => setKnowDOB(false)}
+            >
+              Approximate age
+            </button>
+          </div>
+
+          {knowDOB ? (
+            <div
+              className="dob-trigger-wrapper"
+              onClick={() => setShowDatePickerModal(true)}
+            >
+              <input
+                type="text"
+                readOnly
+                placeholder="Select Date of Birth"
+                value={
+                  dob
+                    ? new Date(dob).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })
+                    : ""
+                }
+                className="dob-trigger-input"
+              />
+              <FiCalendar className="dob-calendar-icon" />
+            </div>
+          ) : (
+            <div className="age-row">
+              <div className="age-field">
+                <label>Years</label>
+                <input
+                  type="number"
+                  placeholder="e.g. 3"
+                  value={years}
+                  min="0"
+                  max="100"
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (v === "") { setYears(""); return; }
+                    const num = Number(v);
+                    if (num >= 0 && num <= 100) setYears(num);
+                  }}
+                />
+              </div>
+              <div className="age-field">
+                <label>Months</label>
+                <input
+                  type="number"
+                  placeholder="e.g. 6"
+                  value={months}
+                  min="0"
+                  max="11"
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (v === "") { setMonths(""); return; }
+                    const num = Number(v);
+                    if (num >= 0 && num <= 11) setMonths(num);
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
         {localError && <div className="submit-error">{localError}</div>}
 
         <div className="submit-section">
           <button className="next-btn" onClick={handleNext}>Next</button>
         </div>
       </div>
+
+      {/* DATE PICKER POPUP MODAL */}
+      {showDatePickerModal && (
+        <div
+          className="other-popup-overlay date-picker-overlay"
+          onClick={() => setShowDatePickerModal(false)}
+        >
+          <div
+            className="date-picker-popup"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="date-picker-popup-header">
+              <h3>Select Date of Birth</h3>
+              <button
+                type="button"
+                className="breed-popup-close"
+                onClick={() => setShowDatePickerModal(false)}
+              >
+                ×
+              </button>
+            </div>
+            <PetDatePicker
+              value={dob}
+              onChange={(newDob) => {
+                setDob(newDob);
+                if (newDob) {
+                  setShowDatePickerModal(false);
+                }
+              }}
+              maxDate={maxDate}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* BREED POPUP */}
+      {showBreedDropdown && (
+        <div className="other-popup-overlay" onClick={() => setShowBreedDropdown(false)}>
+          <div className="breed-popup" onClick={(e) => e.stopPropagation()}>
+            <div className="breed-popup-header">
+              <h3>Select breed</h3>
+              <button
+                type="button"
+                className="breed-popup-close"
+                onClick={() => setShowBreedDropdown(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="breed-popup-search">
+              <input
+                type="text"
+                autoFocus
+                placeholder="Type to search breed..."
+                value={breedSearch}
+                onChange={(e) => setBreedSearch(e.target.value)}
+              />
+            </div>
+
+            {breedData[selectedPet] ? (
+              <div className="breed-popup-list">
+                {filteredBreeds.length > 0 ? (
+                  filteredBreeds.map((breed) => (
+                    <button
+                      type="button"
+                      key={breed}
+                      className={`breed-dropdown-item ${selectedBreed === breed ? "active" : ""}`}
+                      onClick={() => {
+                        if (breed === "Other") {
+                          setShowBreedDropdown(false);
+                          setShowOtherBreedPopup(true);
+                        } else {
+                          setSelectedBreed(breed);
+                          setShowBreedDropdown(false);
+                          setBreedSearch("");
+                        }
+                      }}
+                    >
+                      {breed}
+                    </button>
+                  ))
+                ) : (
+                  <div className="breed-dropdown-empty">No breeds found</div>
+                )}
+              </div>
+            ) : (
+              <div className="custom-breed-box">
+                <input
+                  type="text"
+                  placeholder="Enter breed..."
+                  value={selectedBreed}
+                  onChange={(e) => setSelectedBreed(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className="save-breed-btn"
+                  onClick={() => setShowBreedDropdown(false)}
+                >
+                  Save Breed
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* OTHER PET TYPE POPUP */}
       {showOtherPopup && (

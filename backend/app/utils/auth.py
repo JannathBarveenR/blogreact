@@ -53,3 +53,24 @@ async def get_user_supabase(authorization: Optional[str] = Header(None)) -> Clie
     except Exception as e:
         print(f"[Auth Dependency] Client creation error: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
+
+async def get_current_user(authorization: Optional[str] = Header(None)) -> dict:
+    """
+    FastAPI dependency that returns a dictionary like {"id": user_id, "email": user_email}
+    for V2 compatibility.
+    """
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authorization header is required")
+
+    token = authorization.replace("Bearer ", "") if authorization.startswith("Bearer ") else authorization
+
+    try:
+        result = supabase.auth.get_user(token)
+        if result.user is None:
+            raise HTTPException(status_code=401, detail="Invalid or expired token")
+        return {"id": result.user.id, "email": result.user.email}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[Auth Dependency] Token validation error: {e}")
+        raise HTTPException(status_code=401, detail="Invalid or expired token")

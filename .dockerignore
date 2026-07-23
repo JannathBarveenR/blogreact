@@ -1,0 +1,44 @@
+# Root .dockerignore — applies when building from project root
+# (used by Dockerfile.frontend and docker-compose build context)
+
+# Version control
+.git/
+.gitignore
+.github/
+
+# Backend (handled by its own context)
+backend/venv/
+backend/__pycache__/
+backend/.env
+backend/.env.*
+backend/supabase/
+
+# Frontend dev artifacts
+node_modules/
+dist/
+.cache/
+
+# Editor / OS
+.DS_Store
+*.swp
+*.swo
+Thumbs.db
+.vscode/
+.idea/
+
+# Docs & config not needed in image
+*.md
+README*
+docs/
+
+# Deployment artifacts (not needed in build context)
+.env
+.env.*
+vercel.json
+nginx/
+
+# Test / CI
+*.test.js
+*.spec.js
+coverage/
+.github/
