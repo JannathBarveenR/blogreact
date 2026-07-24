@@ -20,10 +20,11 @@
 
 .pets-stories-container {
   display: flex;
+  align-items: center;
   overflow-x: auto;
   scroll-behavior: smooth;
   padding: 8px 16px;
-  gap: 16px;
+  gap: 14px;
   -webkit-overflow-scrolling: touch;
   box-sizing: border-box;
   
@@ -36,28 +37,124 @@
   display: none;
 }
 
+/* ── Expanded Selected Pet Capsule Pill ── */
+.pet-capsule-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f2f9ef;
+  border: 2px solid #004b49;
+  border-radius: 40px;
+  padding: 6px 14px 6px 6px;
+  height: 64px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 75, 73, 0.1);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: capsuleExpand 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes capsuleExpand {
+  from { opacity: 0.7; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.pet-capsule-card:hover {
+  background: #eaf5e5;
+  box-shadow: 0 6px 18px rgba(0, 75, 73, 0.16);
+}
+
+.pet-capsule-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 2px solid #84b662;
+  overflow: hidden;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pet-capsule-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pet-capsule-img-default {
+  width: 75%;
+  height: 75%;
+  object-fit: contain;
+}
+
+.pet-capsule-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 70px;
+}
+
+.pet-capsule-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: #004b49;
+  line-height: 1.15;
+}
+
+.pet-capsule-age {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #84b662;
+  margin-top: 1px;
+}
+
+.pet-capsule-arrow-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: #84b662;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-left: 2px;
+  transition: transform 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+
+.pet-capsule-arrow-btn:hover {
+  color: #004b49;
+  background: rgba(132, 182, 98, 0.15);
+  transform: scale(1.1);
+}
+
+/* ── Compact Unselected Pets & Add Button ── */
 .pet-story-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   cursor: pointer;
   flex-shrink: 0;
-  width: 76px;
+  width: 58px;
   transition: transform 0.2s ease;
   box-sizing: border-box;
 }
 
 .pet-story-item:active {
-  transform: scale(0.95);
+  transform: scale(0.92);
 }
 
 .story-ring {
-  width: 72px;
-  height: 72px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
-  padding: 2.5px;
-  background: #e2e8f0; /* Default border for inactive pets */
+  padding: 2px;
+  background: #cbd5e1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -66,7 +163,7 @@
 }
 
 .story-ring.active {
-  background: linear-gradient(135deg, #004b49 0%, #86c540 100%);
+  background: linear-gradient(135deg, #004b49 0%, #84b662 100%);
   box-shadow: 0 4px 10px rgba(0, 75, 73, 0.15);
 }
 
@@ -99,19 +196,19 @@
 
 /* Add Pet Story Styling */
 .add-ring {
-  background: #edf2f7;
-  border: 1.5px dashed #cbd5e0;
-  padding: 0; /* No padding needed for dashed ring */
+  background: #f1f5f9;
+  border: 1.5px dashed #94a3b8;
+  padding: 0;
 }
 
 .add-inner {
-  background: #f7fafc;
+  background: #f8fafc;
   width: 100%;
   height: 100%;
 }
 
 .add-plus-icon {
-  color: #4a5568;
+  color: #64748b;
   transition: color 0.2s ease;
 }
 
@@ -124,24 +221,15 @@
   color: #004b49;
 }
 
-/* Story Name - supporting up to 2 lines */
 .story-name {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: normal;
-  word-break: break-word;
+  white-space: nowrap;
   text-align: center;
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.25;
-  color: #4a5568;
-  max-width: 80px;
-  height: 30px; /* Enforces uniform space for 2 lines */
-}
-
-.active-story .story-name {
-  color: #004b49;
+  font-size: 11px;
   font-weight: 600;
+  color: #64748b;
+  max-width: 58px;
 }

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiArrowLeft, FiCheck, FiX, FiCalendar, FiClock, FiPlus, FiAlertTriangle, FiFilter } from "react-icons/fi";
+import { FiArrowLeft, FiCheck, FiX, FiCalendar, FiClock, FiPlus, FiAlertTriangle, FiFilter, FiBell } from "react-icons/fi";
 import useAuth from "../../hooks/useAuth";
 import { usePets } from "../../hooks/usePetsQuery";
-import { useReminders, useCreateReminder, useCompleteReminder } from "../../hooks/useTimelineQueries";
+import { useReminders, useCreateReminder, useCompleteReminder, useSnoozeReminder } from "../../hooks/useTimelineQueries";
 import { PetAvatar } from "../common/PetAvatar";
 import CustomDatePicker from "../Timeline/Forms/shared/CustomDatePicker";
 import CustomSelect from "../Timeline/Forms/shared/CustomSelect";
@@ -32,6 +32,7 @@ export default function RemindersPage() {
   const { data: remindersData, isLoading: loading } = useReminders(activePetId);
   const createReminderMutation = useCreateReminder(activePetId);
   const completeReminderMutation = useCompleteReminder(activePetId);
+  const snoozeReminderMutation = useSnoozeReminder(activePetId);
 
   const reminders = Array.isArray(remindersData) ? remindersData : (remindersData?.reminders || []);
   const [activeTab, setActiveTab] = useState("active"); // "active" | "history"
@@ -44,6 +45,10 @@ export default function RemindersPage() {
   const [dueDate, setDueDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // Snooze Modal state
+  const [snoozeModalReminder, setSnoozeModalReminder] = useState(null);
+  const [customSnoozeDate, setCustomSnoozeDate] = useState("");
 
   useEffect(() => {
     if (!pets.length || !user?.id) return;
@@ -61,6 +66,38 @@ export default function RemindersPage() {
     if (newStatus === "completed") {
       completeReminderMutation.mutate(reminderId);
     }
+  };
+
+  const handleSnoozeSelect = (presetKey) => {
+    if (!snoozeModalReminder || !activePetId) return;
+
+    let targetDate = new Date();
+    if (presetKey === "1h") {
+      targetDate.setHours(targetDate.getHours() + 1);
+    } else if (presetKey === "3h") {
+      targetDate.setHours(targetDate.getHours() + 3);
+    } else if (presetKey === "tomorrow") {
+      targetDate.setDate(targetDate.getDate() + 1);
+    } else if (presetKey === "1w") {
+      targetDate.setDate(targetDate.getDate() + 7);
+    } else if (presetKey === "custom" && customSnoozeDate) {
+      targetDate = new Date(customSnoozeDate);
+    }
+
+    const formattedDate = targetDate.toISOString().split("T")[0];
+
+    snoozeReminderMutation.mutate(
+      { reminderId: snoozeModalReminder.id, newDate: formattedDate },
+      {
+        onSuccess: () => {
+          setSnoozeModalReminder(null);
+        },
+        onError: (err) => {
+          console.error("Snooze mutation failed:", err);
+          setSnoozeModalReminder(null);
+        },
+      }
+    );
   };
 
   const handleCreateReminder = async (e) => {
@@ -246,7 +283,7 @@ export default function RemindersPage() {
                   {rem.notes && <p className="rem-item-notes">{rem.notes}</p>}
                 </div>
 
-                {/* ONLY TWO OPTIONS: DONE OR FORGOT */}
+                {/* THREE ACTIONS: DONE, SNOOZE, OR FORGOT */}
                 {activeTab === "active" ? (
                   <div className="rem-card-options">
                     <button
@@ -254,7 +291,15 @@ export default function RemindersPage() {
                       className="rem-option-btn rem-option-btn--done"
                       onClick={() => handleAction(rem.id, "completed")}
                     >
-                      <FiCheck size={18} /> Done
+                      <FiCheck size={16} /> Done
+                    </button>
+
+                    <button
+                      type="button"
+                      className="rem-option-btn rem-option-btn--snooze"
+                      onClick={() => setSnoozeModalReminder(rem)}
+                    >
+                      <FiClock size={16} /> Snooze
                     </button>
 
                     <button
@@ -262,7 +307,7 @@ export default function RemindersPage() {
                       className="rem-option-btn rem-option-btn--forgot"
                       onClick={() => handleAction(rem.id, "forgot")}
                     >
-                      <FiX size={18} /> Forgot
+                      <FiX size={16} /> Forgot
                     </button>
                   </div>
                 ) : (
@@ -279,6 +324,57 @@ export default function RemindersPage() {
           </div>
         )}
       </main>
+
+      {/* Snooze Modal Sheet */}
+      {snoozeModalReminder && (
+        <div className="rem-snooze-backdrop" onClick={() => setSnoozeModalReminder(null)}>
+          <div className="rem-snooze-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="rem-snooze-header">
+              <h3><FiClock size={18} /> Snooze Reminder</h3>
+              <button className="rem-snooze-close" onClick={() => setSnoozeModalReminder(null)}>
+                <FiX size={18} />
+              </button>
+            </div>
+
+            <p className="rem-snooze-subtitle">
+              Snooze <strong>"{snoozeModalReminder.title}"</strong> until:
+            </p>
+
+            <div className="rem-snooze-options">
+              <button className="rem-snooze-opt-btn" onClick={() => handleSnoozeSelect("1h")}>
+                <span>⏱️</span> 1 Hour
+              </button>
+              <button className="rem-snooze-opt-btn" onClick={() => handleSnoozeSelect("3h")}>
+                <span>🕒</span> 3 Hours
+              </button>
+              <button className="rem-snooze-opt-btn" onClick={() => handleSnoozeSelect("tomorrow")}>
+                <span>☀️</span> Tomorrow
+              </button>
+              <button className="rem-snooze-opt-btn" onClick={() => handleSnoozeSelect("1w")}>
+                <span>🗓️</span> 1 Week
+              </button>
+            </div>
+
+            <div className="rem-snooze-custom">
+              <label>Custom Date:</label>
+              <div className="rem-snooze-custom-row">
+                <CustomDatePicker
+                  value={customSnoozeDate || new Date().toISOString().split("T")[0]}
+                  onChange={setCustomSnoozeDate}
+                />
+                <button
+                  type="button"
+                  className="rem-snooze-apply-btn"
+                  disabled={!customSnoozeDate}
+                  onClick={() => handleSnoozeSelect("custom")}
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

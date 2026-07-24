@@ -36,9 +36,6 @@ export default function Home({ pets: propPets, activePetId: propActivePetId, onP
     if (typeof onPetSelect === "function") {
       onPetSelect(pet);
     }
-    if (typeof onNavigate === "function") {
-      onNavigate("timeline");
-    }
   };
 
   const handleAddPet = () => {
@@ -51,6 +48,7 @@ export default function Home({ pets: propPets, activePetId: propActivePetId, onP
       selectedPet={selectedPet}
       setSelectedPet={handleSelect}
       onAddPet={onAddPet || handleAddPet}
+      onNavigateTab={onNavigate}
     />
   );
 }

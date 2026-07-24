@@ -1,0 +1,124 @@
+.upload-records-action-card {
+  width: 100%;
+  min-height: 165px;
+  flex-shrink: 0;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #004b49 0%, #00695c 60%, #003634 100%);
+  color: #ffffff;
+  padding: 22px 20px;
+  box-sizing: border-box;
+  margin: 8px 0 12px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 75, 73, 0.18);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.upload-records-action-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(0, 75, 73, 0.22);
+}
+
+.upload-records-action-card:active {
+  transform: translateY(0);
+}
+
+.upload-records-action-card::before {
+  content: "";
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: rgba(132, 182, 98, 0.18);
+  pointer-events: none;
+}
+
+.upload-card-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.upload-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.upload-card-icon-wrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+}
+
+.upload-card-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #84b662;
+  background: rgba(132, 182, 98, 0.15);
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(132, 182, 98, 0.3);
+}
+
+.upload-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.upload-card-title {
+  margin: 0;
+  font-size: 1.08rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
+
+.upload-card-desc {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.upload-card-footer {
+  margin-top: 4px;
+}
+
+.upload-card-btn {
+  width: 100%;
+  padding: 11px 18px;
+  background: #84b662;
+  color: #003634;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.88rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.upload-card-btn:hover {
+  background: #95cc6e;
+}

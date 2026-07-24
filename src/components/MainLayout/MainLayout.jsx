@@ -48,13 +48,13 @@ const MainLayout = () => {
   };
 
   const handleUploadRecords = () => {
-    navigate("/records");
+    navigate("/records", { state: { openUpload: true } });
   };
 
-  const handleNavigateTab = (tabKey) => {
+  const handleNavigateTab = (tabKey, extraState) => {
     if (tabKey === "home") navigate("/home");
     else if (tabKey === "timeline" || tabKey === "checklist") navigate("/timeline/home");
-    else if (tabKey === "medicalrecords" || tabKey === "docs") navigate("/records");
+    else if (tabKey === "medicalrecords" || tabKey === "docs") navigate("/records", { state: extraState });
     else if (tabKey === "profile") navigate("/profile");
   };
 
@@ -118,10 +118,14 @@ const MainLayout = () => {
           activePetId={activePetId}
           onPetSelect={handlePetSelect}
           onAddPet={handleAddPet}
-          onNavigate={(target) => handleNavigateTab(target)}
+          onNavigate={(target, state) => handleNavigateTab(target, state)}
         />
       </div>
     );
+  };
+
+  const handleAddPetNote = () => {
+    navigate("/timeline/home", { state: { openAddNote: true } });
   };
 
   return (
@@ -130,6 +134,7 @@ const MainLayout = () => {
       <BottomNav
         active={activeTab}
         onNavigate={handleNavigateTab}
+        onAddPetNote={handleAddPetNote}
         onAddPet={handleAddPet}
         onUploadRecords={handleUploadRecords}
       />

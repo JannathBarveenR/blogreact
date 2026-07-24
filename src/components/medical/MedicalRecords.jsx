@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import "./MedicalRecords.css";
 import fetchWithAuth from "../../utils/fetchWithAuth";
@@ -28,6 +29,7 @@ import {
   Stethoscope,
   HelpCircle,
   FileQuestion,
+  Sparkles,
 } from "lucide-react";
 import heroImage from "../../assets/medical-banner.webp";
 import emptyDog from "../../assets/empty-dog.webp";
@@ -50,8 +52,16 @@ export default function MedicalRecords({
   onPetSelect,
   onAddPet,
 }) {
+  const location = useLocation();
   const [activeCategory, setActiveCategory] = useState("All");
   const [showUploadSheet, setShowUploadSheet] = useState(false);
+
+  useEffect(() => {
+    if (location.state?.openUpload) {
+      setShowUploadSheet(true);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
   const imageInputRef = useRef(null);
   const pdfInputRef = useRef(null);
   const cameraInputRef = useRef(null);
@@ -252,16 +262,17 @@ export default function MedicalRecords({
 
   return (
     <div className="medical-records">
-      {/* HEADER */}
-      <header className="mr-header">
-        <h1>Medical Records</h1>
-      </header>
       <ProfileCard
         pets={pets}
         selectedPet={selectedPet}
         handlePetSelect={onPetSelect}
         onAddPet={onAddPet}
       />
+
+      {/* HEADER */}
+      <header className="mr-header" style={{ marginTop: '12px', marginBottom: '8px' }}>
+        <h1>Medical Records</h1>
+      </header>
 
       {/* HERO IMAGE */}
       <section className="hero-banner">
@@ -374,6 +385,24 @@ export default function MedicalRecords({
           )}
         </div>
       </section>
+
+      {/* AI ANALYSIS COMING SOON CARD */}
+      <div className="ai-analysis-card">
+        <div className="ai-analysis-header">
+          <div className="ai-analysis-icon-bg">
+            <Sparkles size={20} className="ai-sparkle-icon" />
+          </div>
+          <span className="ai-coming-soon-badge">
+            <Sparkles size={11} /> Coming Soon
+          </span>
+        </div>
+        <div className="ai-analysis-body">
+          <h4 className="ai-analysis-title">AI Medical Record Analysis</h4>
+          <p className="ai-analysis-desc">
+            Our intelligent AI engine will automatically scan lab reports, extract key vitals, detect prescription anomalies, and generate instant summaries for your vet.
+          </p>
+        </div>
+      </div>
 
       {/* UPLOADING RECORD SCREEN */}
       {showUploadProgress && (

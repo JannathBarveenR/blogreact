@@ -60,6 +60,17 @@ const NAV_ITEMS = [
 // parent's onFabOptionSelect callback to decide where to navigate.
 const FAB_OPTIONS = [
   {
+    key: "addPetNote",
+    title: "Add Pet Note",
+    subtitle: "Log symptoms, vaccinations, or daily notes",
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#004b49" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 20h9" />
+        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+      </svg>
+    ),
+  },
+  {
     key: "addPet",
     title: "Add a Pet",
     subtitle: "Create a new profile for your pet",
@@ -70,19 +81,6 @@ const FAB_OPTIONS = [
         <ellipse cx="43" cy="32" rx="4" ry="5" />
         <ellipse cx="26.5" cy="24" rx="3.4" ry="4.5" />
         <ellipse cx="37.5" cy="24" rx="3.4" ry="4.5" />
-      </svg>
-    ),
-  },
-  {
-    key: "familyAccess",
-    title: "Add Family Access",
-    subtitle: "Invite family members to co-manage",
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#004b49" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
       </svg>
     ),
   },
@@ -105,6 +103,7 @@ const BottomNav = ({
   active = "home",
   onNavigate,
   onFabOptionSelect,
+  onAddPetNote,
   onAddPet,          // same prop shape as AddPetCard's onAddPet — pass the same function to both
   onAddFamilyAccess,
   onUploadRecords,
@@ -118,6 +117,10 @@ const BottomNav = ({
   const handleOptionClick = (optionKey) => {
     setSheetOpen(false);
 
+    if (optionKey === "addPetNote" && onAddPetNote) {
+      onAddPetNote();
+      return;
+    }
     if (optionKey === "addPet" && onAddPet) {
       onAddPet();
       return;

@@ -34,7 +34,7 @@ export default function SaveConfirmation({ petName, categoryLabel, summary, onVi
 
       {/* Card Summary */}
       <div className="save-conf__card">
-        <div className="save-conf__badge">{categoryLabel || "Paw Note"}</div>
+        <div className="save-conf__badge">{categoryLabel || "Pet Note"}</div>
         <h3 className="save-conf__card-title">{summary?.title || "Health Note Recorded"}</h3>
         <p className="save-conf__card-date">{summary?.date || "Today"}</p>
 
@@ -57,7 +57,7 @@ export default function SaveConfirmation({ petName, categoryLabel, summary, onVi
         </button>
         <button className="save-conf__btn save-conf__btn--secondary" onClick={onAddAnother}>
           <span className="material-symbols-outlined" style={{ fontSize: 18 }}>add_circle</span>
-          Add Another Paw Note
+          Add Another Pet Note
         </button>
       </div>
     </div>

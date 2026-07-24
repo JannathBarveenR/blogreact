@@ -404,6 +404,9 @@ body {
   width: 100%;
   max-width: 480px;
   margin: 0 auto;
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 20px 48px rgba(0, 75, 73, 0.15);
 }
 
 .success-icon-wrap { margin-bottom: 20px; }
@@ -471,6 +474,7 @@ body {
   max-width: 960px;
   max-height: 90vh;
   max-height: 90dvh;
+  background: #ffffff;
   border-radius: 28px;
   overflow-y: auto;
   box-shadow: 0 24px 64px rgba(0, 75, 73, 0.28);

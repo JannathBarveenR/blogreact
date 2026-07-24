@@ -136,7 +136,7 @@ export default function OtherForm({ petId, petName, onClose, onSaved }) {
 
         <button type="submit" className="pn-submit-btn" disabled={submitting || !title.trim()}>
           <span className="material-symbols-outlined">save</span>
-          {submitting ? "Saving Note..." : "Save Paw Note"}
+          {submitting ? "Saving Note..." : "Save Pet Note"}
         </button>
       </form>
     </div>

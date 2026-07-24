@@ -27,40 +27,42 @@ const HeroSection = ({ openModal }) => (
           </span>
         </h1>
 
-        <div className="hero-mobile-image-frame">
-          <img
-            src={heroPetsImg}
-            alt="Happy dog and cat with digital Pet Health ID"
-            className="hero-mobile-image-src"
-          />
-        </div>
-
         <p className="hero-subtitle">
           Your pet depends on you for everything. PetOlife helps you remember
           every vaccination, prescription, lab report, and milestone—so your pet
           never misses the care they deserve.
         </p>
 
-        <div className="hero-trust-bullets">
-          <div className="trust-item">
-            <div className="trust-icon-wrapper teal"><Sparkles size={16} /></div>
-            <div className="trust-text">
-              <span className="trust-title">AI-Powered Health Timeline</span>
-              <span className="trust-desc">Automated records sorting &amp; extraction</span>
-            </div>
+        <div className="hero-mobile-visual-block">
+          <div className="hero-mobile-image-frame">
+            <img
+              src={heroPetsImg}
+              alt="Happy dog and cat with digital Pet Health ID"
+              className="hero-mobile-image-src"
+            />
           </div>
-          <div className="trust-item">
-            <div className="trust-icon-wrapper amber"><Clock size={16} /></div>
-            <div className="trust-text">
-              <span className="trust-title">Smart Reminders</span>
-              <span className="trust-desc">Vaccines, meds &amp; checkup alerts</span>
+
+          <div className="hero-trust-bullets">
+            <div className="trust-item">
+              <div className="trust-icon-wrapper teal"><Sparkles size={16} /></div>
+              <div className="trust-text">
+                <span className="trust-title">AI-Powered Health Timeline</span>
+                <span className="trust-desc">Automated records sorting &amp; extraction</span>
+              </div>
             </div>
-          </div>
-          <div className="trust-item">
-            <div className="trust-icon-wrapper emerald"><ShieldCheck size={16} /></div>
-            <div className="trust-text">
-              <span className="trust-title">Secure Medical Records</span>
-              <span className="trust-desc">Lifelong health history digital pass</span>
+            <div className="trust-item">
+              <div className="trust-icon-wrapper amber"><Clock size={16} /></div>
+              <div className="trust-text">
+                <span className="trust-title">Smart Reminders</span>
+                <span className="trust-desc">Vaccines, meds &amp; checkup alerts</span>
+              </div>
+            </div>
+            <div className="trust-item">
+              <div className="trust-icon-wrapper emerald"><ShieldCheck size={16} /></div>
+              <div className="trust-text">
+                <span className="trust-title">Secure Medical Records</span>
+                <span className="trust-desc">Lifelong health history digital pass</span>
+              </div>
             </div>
           </div>
         </div>
