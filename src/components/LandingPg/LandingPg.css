@@ -1456,30 +1456,12 @@ a { text-decoration: none; }
   .product-container { padding: 0; }
   .product-2x2-grid { grid-template-columns: 1fr; gap: 14px; }
   .feature-card-2x2 { grid-template-columns: 1fr; gap: 10px; padding: 16px; border-radius: 16px; }
+  .feature-card-media { display: none; }
   .feature-card-badge { font-size: 0.68rem; margin-bottom: 4px; }
   .feature-card-title { font-size: 1.05rem; margin-bottom: 6px; line-height: 1.25; }
   .feature-card-desc { font-size: 0.82rem; line-height: 1.4; margin-bottom: 8px; }
   .feature-card-points { display: flex; flex-direction: column; gap: 4px; }
   .feature-card-point-item { font-size: 0.76rem; }
-  .feature-card-img-frame {
-    height: auto;
-    max-width: 65%;
-    margin: 0 auto;
-    border-radius: 12px;
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    overflow: hidden;
-  }
-  .feature-card-img {
-    width: 100%;
-    max-height: 140px;
-    object-fit: contain;
-    display: block;
-    margin: 0 auto;
-    border-radius: 12px;
-    box-shadow: 0 4px 14px rgba(0, 75, 73, 0.08);
-  }
 
   /* 4. Founder Section Mobile Flow */
   .founder-section {

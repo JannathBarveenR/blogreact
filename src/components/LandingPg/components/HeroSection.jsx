@@ -4,7 +4,7 @@ import {
   Heart, Sparkles, Clock, ShieldCheck,
   ArrowRight, Stethoscope, CheckCircle2
 } from "lucide-react";
-import heroPetsMainImg from "../../../assets/hero-pets-clean.jpg";
+import heroPetsMainImg from "../../../assets/heronew.png";
 
 const HeroSection = ({ openModal }) => (
   <section id="hero" className="hero-section">
