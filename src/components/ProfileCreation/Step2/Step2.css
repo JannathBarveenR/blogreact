@@ -11,9 +11,12 @@
 .cpp {
   display: flex;
   justify-content: center;
-  padding: 18px 16px 26px;
-  height: 100vh;
+  padding: 18px 16px 80px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  height: auto;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   background: var(--bg-page);
   box-sizing: border-box;
 }

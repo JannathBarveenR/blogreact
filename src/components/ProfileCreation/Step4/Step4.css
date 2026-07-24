@@ -10,9 +10,12 @@
 .confirm-container {
   max-width: 430px;
   margin: 0 auto;
-  padding: 14px 16px 90px;
-  height: 100vh;
+  padding: 14px 16px 100px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  height: auto;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   background: var(--bg-page);
   box-sizing: border-box;
   position: relative;

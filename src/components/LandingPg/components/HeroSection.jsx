@@ -4,7 +4,7 @@ import {
   Heart, Sparkles, Clock, ShieldCheck,
   ArrowRight, Stethoscope, CheckCircle2
 } from "lucide-react";
-import heroPetsImg from "../../../assets/hero-pets-desk.webp";
+import heroPetsMainImg from "../../../assets/hero-pets-clean.jpg";
 
 const HeroSection = ({ openModal }) => (
   <section id="hero" className="hero-section">
@@ -36,33 +36,40 @@ const HeroSection = ({ openModal }) => (
         <div className="hero-mobile-visual-block">
           <div className="hero-mobile-image-frame">
             <img
-              src={heroPetsImg}
-              alt="Happy dog and cat with digital Pet Health ID"
+              src={heroPetsMainImg}
+              alt="Happy dog, smartphone app UI, and cat"
               className="hero-mobile-image-src"
             />
           </div>
+        </div>
 
-          <div className="hero-trust-bullets">
-            <div className="trust-item">
-              <div className="trust-icon-wrapper teal"><Sparkles size={16} /></div>
-              <div className="trust-text">
-                <span className="trust-title">AI-Powered Health Timeline</span>
-                <span className="trust-desc">Automated records sorting &amp; extraction</span>
-              </div>
+        <div className="hero-trust-bullets">
+          <div className="trust-item">
+            <div className="trust-icon-wrapper teal"><Sparkles size={16} /></div>
+            <div className="trust-text">
+              <span className="trust-title">AI Health Timeline</span>
+              <span className="trust-desc">Automated records sorting &amp; extraction</span>
             </div>
-            <div className="trust-item">
-              <div className="trust-icon-wrapper amber"><Clock size={16} /></div>
-              <div className="trust-text">
-                <span className="trust-title">Smart Reminders</span>
-                <span className="trust-desc">Vaccines, meds &amp; checkup alerts</span>
-              </div>
+          </div>
+          <div className="trust-item">
+            <div className="trust-icon-wrapper amber"><Clock size={16} /></div>
+            <div className="trust-text">
+              <span className="trust-title">Smart Reminders</span>
+              <span className="trust-desc">Vaccines, meds &amp; checkup alerts</span>
             </div>
-            <div className="trust-item">
-              <div className="trust-icon-wrapper emerald"><ShieldCheck size={16} /></div>
-              <div className="trust-text">
-                <span className="trust-title">Secure Medical Records</span>
-                <span className="trust-desc">Lifelong health history digital pass</span>
-              </div>
+          </div>
+          <div className="trust-item">
+            <div className="trust-icon-wrapper emerald"><ShieldCheck size={16} /></div>
+            <div className="trust-text">
+              <span className="trust-title">Secure Records</span>
+              <span className="trust-desc">Lifelong health history digital pass</span>
+            </div>
+          </div>
+          <div className="trust-item">
+            <div className="trust-icon-wrapper teal"><Stethoscope size={16} /></div>
+            <div className="trust-text">
+              <span className="trust-title">Instant Vet Access</span>
+              <span className="trust-desc">Share QR pass with clinics instantly</span>
             </div>
           </div>
         </div>
@@ -87,7 +94,7 @@ const HeroSection = ({ openModal }) => (
       >
         <div className="hero-image-frame" data-image-id="HERO_PETS_MAIN">
           <img
-            src={heroPetsImg}
+            src={heroPetsMainImg}
             alt="Happy dog and cat with digital Pet Health ID"
             className="hero-image-src"
             loading="eager"
