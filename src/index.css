@@ -21,11 +21,10 @@
   }
 }
 html, body, #root {
-  min-height: 100vh;
-  min-height: 100dvh;
+  height: 100%;
   width: 100%;
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
 }
 
