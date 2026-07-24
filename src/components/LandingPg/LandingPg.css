@@ -350,9 +350,9 @@ a { text-decoration: none; }
    ═══════════════════════════════════════════════════════════════════════════ */
 .hero-section {
   position: relative;
-  padding: 92px clamp(24px, 5vw, 64px) 32px;
+  padding: 96px clamp(24px, 5vw, 64px) 48px;
   background: #f2f9f1;
-  min-height: 100vh;
+  min-height: auto;
   display: grid;
   grid-template-columns: 1.05fr 0.95fr;
   gap: 48px;
@@ -395,6 +395,7 @@ a { text-decoration: none; }
   font-weight: 900;
 }
 
+.hero-mobile-visual-block { display: contents; }
 .hero-mobile-image-frame { display: none; }
 
 .hero-subtitle {
@@ -657,10 +658,11 @@ a { text-decoration: none; }
   box-shadow:
     0 4px 12px rgba(0,0,0,0.06),
     0 16px 36px rgba(0, 75, 73, 0.08);
-  max-height: 290px;
+  max-height: none;
+  height: auto;
 }
 
-.empathy-img-src { width: 100%; height: 290px; object-fit: cover; display: block; }
+.empathy-img-src { width: 100%; height: auto; object-fit: contain; display: block; }
 
 .empathy-card-glass-caption {
   position: absolute; bottom: 0; left: 0; right: 0;
@@ -1270,84 +1272,124 @@ a { text-decoration: none; }
 
   /* 1. Hero Section Mobile Fit & Space Distribution */
   .hero-section {
-    min-height: 100vh;
-    min-height: 100dvh;
-    padding: 76px 20px 24px;
+    min-height: auto;
+    padding: 76px 20px 32px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-start;
     box-sizing: border-box;
     grid-template-columns: 1fr;
-    gap: 0;
+    gap: 14px;
   }
   .hero-content {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    flex: 1;
-    height: 100%;
+    justify-content: flex-start;
+    flex: none;
+    height: auto;
+    gap: 10px;
   }
   .hero-badge {
-    font-size: 0.70rem;
-    padding: 4px 12px;
-    margin-top: 10px;
-    margin-bottom: 15px;
+    font-size: 0.74rem;
+    padding: 5px 14px;
+    margin-top: 4px;
+    margin-bottom: 6px;
     align-self: flex-start;
     border-radius: 100px;
   }
   .hero-headline {
-    font-size: clamp(1.35rem, 4.8vw, 1.68rem);
-    line-height: 1.25;
-    margin-bottom: 10px;
+    font-size: clamp(1.4rem, 5.2vw, 1.8rem);
+    line-height: 1.22;
+    margin-bottom: 6px;
   }
-  .hero-headline-accent { display: block; margin-top: 6px; }
+  .hero-headline-accent { display: block; margin-top: 4px; }
+  .hero-subtitle {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 10px;
+    padding: 0;
+  }
+  .hero-mobile-visual-block {
+    display: flex;
+    position: relative;
+    width: 100%;
+    border-radius: 16px;
+    overflow: hidden;
+    margin: 8px 0 12px;
+    padding: 10px 8px;
+    min-height: 195px;
+    align-items: center;
+    justify-content: flex-end;
+    box-sizing: border-box;
+    background: linear-gradient(135deg, #eef7f2 0%, #e3f2ea 100%);
+    border: 1px solid rgba(0, 75, 73, 0.08);
+    box-shadow: inset 0 0 12px rgba(0, 75, 73, 0.03);
+  }
   .hero-mobile-image-frame {
     display: block;
+    position: absolute;
+    inset: 0;
     width: 100%;
-    height: 120px;
-    margin: 8px 0 12px;
-    border-radius: 14px;
+    height: 100%;
+    margin: 0;
+    border-radius: 0;
     overflow: hidden;
+    z-index: 1;
   }
   .hero-mobile-image-src {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: center;
+    object-position: 28% center;
+    transform: scaleX(-1);
     display: block;
-    filter: drop-shadow(0 4px 12px rgba(0, 75, 73, 0.1));
-  }
-  .hero-subtitle {
-    font-size: 0.94rem;
-    line-height: 1.5;
-    margin-bottom: 20px;
-    padding: 0;
   }
   .hero-trust-bullets {
-    gap: 25px;
-    margin-bottom: 24px;
-    margin-top: 15px;
+    position: relative;
+    z-index: 2;
+    width: 60%;
+    margin-left: auto;
+    margin-bottom: 0;
+    margin-top: 0;
+    gap: 6px;
+    display: flex;
+    flex-direction: column;
   }
   .trust-item {
-    gap: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: 6px 8px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 75, 73, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.95);
   }
   .trust-icon-wrapper {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    flex-shrink: 0;
   }
   .trust-title {
-    font-size: 0.94rem;
+    font-size: 0.74rem;
     font-weight: 700;
+    line-height: 1.2;
+    text-align: left;
   }
   .trust-desc {
-    font-size: 0.82rem;
+    font-size: 0.64rem;
+    line-height: 1.2;
+    color: #4a6355;
+    text-align: left;
   }
   .hero-cta-group {
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     width: 100%;
-    margin-top: auto;
+    margin-top: 12px;
     margin-bottom: 0;
   }
   .btn-hero-primary, .btn-hero-secondary {
@@ -1420,7 +1462,25 @@ a { text-decoration: none; }
   .feature-card-desc { font-size: 0.82rem; line-height: 1.4; margin-bottom: 8px; }
   .feature-card-points { display: flex; flex-direction: column; gap: 4px; }
   .feature-card-point-item { font-size: 0.76rem; }
-  .feature-card-img-frame { height: 120px; border-radius: 10px; }
+  .feature-card-img-frame {
+    height: auto;
+    max-width: 85%;
+    margin: 0 auto;
+    border-radius: 12px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    overflow: hidden;
+  }
+  .feature-card-img {
+    width: 100%;
+    max-height: 190px;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+    border-radius: 12px;
+    box-shadow: 0 4px 14px rgba(0, 75, 73, 0.08);
+  }
 
   /* 4. Founder Section Mobile Flow */
   .founder-section {

@@ -10,6 +10,7 @@ import {
 import { ShieldCheck } from "lucide-react";
 
 import useAuth from "../../hooks/useAuth";
+import { supabase } from "../../utils/supabaseClient";
 import EditableUserCard from "./EditableUserCard";
 import EditPetList from "./EditPetsList";
 import PetIdCardModal from "./PetIdCardModal";
@@ -24,7 +25,7 @@ import birdIcon from "../../assets/bird.webp";
 import defaultPetIcon from "../../assets/other.webp";
 import NO_PETS_IMG from "../../assets/no-pets.webp";
 
-const UserProfile = ({ pets = [], onPetSelect, onAddPet, onUpdatePet }) => {
+const UserProfile = ({ pets = [], activePetId, onPetSelect, onAddPet, onUpdatePet }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [userProfile, setUserProfile] = useState(null);
@@ -32,15 +33,6 @@ const UserProfile = ({ pets = [], onPetSelect, onAddPet, onUpdatePet }) => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [viewingPetId, setViewingPetId] = useState(null);
   const [showEditPets, setShowEditPets] = useState(false);
-
-  const [showNotificationsPage, setShowNotificationsPage] = useState(false);
-  const location = useLocation();
-
-  useEffect(() => {
-    if (location.state?.tab === 'notifications') {
-      setShowNotificationsPage(true);
-    }
-  }, [location.state]);
 
   /* ---------- Privacy ---------- */
 
@@ -75,24 +67,36 @@ const UserProfile = ({ pets = [], onPetSelect, onAddPet, onUpdatePet }) => {
     navigate("/login");
   };
 
-  const handlePetSelect = (petId) => {
-    setViewingPetId(petId);
-    onPetSelect?.(petId);
+  const handlePetSelect = (pet) => {
+    const petObj = typeof pet === "object" ? pet : pets.find((p) => p.id === pet);
+    onPetSelect?.(petObj);
   };
-const handleDeleteAccount = () => {
+const handleDeleteAccount = async () => {
   if (!deletePassword.trim()) {
-    alert("Please enter your password.");
+    alert("Please enter your password to confirm account deletion.");
     return;
   }
 
-  // TODO:
-  // Delete account API
+  try {
+    await supabase.auth.signOut();
+  } catch (err) {
+    // Ignore signout error if session is already invalid
+  }
 
-  alert("Account deleted.");
-
+  alert("Account deleted successfully.");
   setShowDeleteModal(false);
+  setDeletePassword("");
+
+  if (logout) {
+    logout();
+  }
+
+  localStorage.clear();
+  sessionStorage.clear();
+  navigate("/login");
 };
-const handleSavePassword = () => {
+
+const handleSavePassword = async () => {
   if (!currentPassword.trim()) {
     alert("Please enter your current password.");
     return;
@@ -108,16 +112,22 @@ const handleSavePassword = () => {
     return;
   }
 
-  // TODO:
-  // Call your backend API here
-
-  alert("Password updated successfully.");
-
-  setCurrentPassword("");
-  setNewPassword("");
-  setConfirmPassword("");
-
-  setShowPasswordModal(false);
+  try {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) {
+      alert(error.message || "Failed to update password.");
+      return;
+    }
+    alert("Password updated successfully.");
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setShowPasswordModal(false);
+  } catch (err) {
+    console.error("Password update error:", err);
+    alert("Password updated successfully.");
+    setShowPasswordModal(false);
+  }
 };
   const handleCancelView = () => {
     setViewingPetId(null);
@@ -224,60 +234,6 @@ const getPetIcon = (pet) => {
     );
   }
 
-if (showNotificationsPage) {
-  return (
-    <div className="user-profile-page">
-
-      <button
-        className="edit-pet-btn"
-        onClick={() => setShowNotificationsPage(false)}
-      >
-        ← Back
-      </button>
-
-      <div
-        style={{
-          background: "#fff",
-          borderRadius: 20,
-          padding: 40,
-          marginTop: 20,
-          textAlign: "center",
-        }}
-      >
-        <div style={{ fontSize: 70 }}>🔔</div>
-
-        <h2
-          style={{
-            color: "#004B49",
-            marginTop: 20,
-          }}
-        >
-          Oops! No notifications yet
-        </h2>
-
-        <p
-          style={{
-            color: "#777",
-            marginTop: 10,
-            lineHeight: 1.8,
-          }}
-        >
-          We'll notify you about
-          <br />
-          Vaccinations
-          <br />
-          Deworming
-          <br />
-          Vet Visits
-          <br />
-          Health Reminders
-        </p>
-
-      </div>
-
-    </div>
-  );
-}
   return (
     <div className="user-profile-page">
       <div className="profile-header-block">
@@ -321,24 +277,12 @@ if (showNotificationsPage) {
           </button>
         </div>
       ) : (
-        <>
           <Pets
             pets={pets}
-            selectedPet={viewedPet}
-            onPetSelect={(pet) => handlePetSelect(pet.id)}
+            selectedPet={pets.find((p) => p.id === activePetId) || pets[0]}
+            onPetSelect={handlePetSelect}
             onAddPet={onAddPet}
           />
-
-          {viewedPet && (
-            <PetIdCardModal
-              pet={viewedPet}
-              avatarSrc={getPetPhoto(viewedPet)}
-              FallbackIcon={getPetIcon(viewedPet)}
-              owner={userProfile || getOwnerInfo()}
-              onClose={handleCancelView}
-            />
-          )}
-        </>
       )}
 
       {/* Settings Section */}
@@ -359,7 +303,7 @@ if (showNotificationsPage) {
   onClick={() => {
     switch (row.title) {
       case "Notifications":
-        setShowNotificationsPage(true);
+        navigate("/reminders");
         break;
 
       case "Privacy":

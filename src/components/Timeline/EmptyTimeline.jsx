@@ -90,7 +90,7 @@ export default function EmptyTimeline({
 
       <button className="empty-tl__cta" onClick={onAddNote}>
         <span className="material-symbols-outlined" style={{ fontSize: 20 }}>add_circle</span>
-        Add First Paw Note
+        Add First Pet Note
       </button>
 
       <div className="empty-tl__features">

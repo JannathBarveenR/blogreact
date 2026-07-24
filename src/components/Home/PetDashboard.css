@@ -45,7 +45,7 @@ body {
 .pet-home {
   width: 100%;
   max-width: 420px;
-  height: 100dvh;
+  min-height: 100dvh;
   margin: 0 auto;
   padding: 16px;
 
@@ -60,6 +60,10 @@ body {
 
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+}
+
+.pet-home > * {
+  flex-shrink: 0;
 }
 
 .pet-home::-webkit-scrollbar {

@@ -5,15 +5,10 @@ import "./PetDashboard.css";
 import HealthBanner from "./HealthBanner/HealthBanner";
 import QuickActions from "./QuickActions/QuickActions";
 import "./QuickActions/QuickActions.css";
-import ReminderCard from "./ReminderCard/ReminderCard";
-import "./ReminderCard/ReminderCard.css";
-import NoRecordsCard from "./NoRecordsCard/NoRecordsCard";
-import "./NoRecordsCard/NoRecordsCard.css";
 import HeroSection from "./HeroSection/HeroSection";
 import AddPetCard from "./AddPetCard/AddPetCard";
-import Banner from "./Banner/Banner";
+import UploadRecordsCard from "./UploadRecordsCard/UploadRecordsCard";
 import Pets from "./Pets/Pets";
-import fetchWithAuth from "../../utils/fetchWithAuth";
 
 import polLogo from "../../assets/logo.webp";
 import educationBannerImg from "../../assets/education-banner.png";
@@ -62,11 +57,11 @@ export default function PetHome({
   selectedPet: propSelectedPet,
   setSelectedPet,
   onAddPet,
+  onNavigateTab,
 }) {
   const navigate = useNavigate();
   const [showPetDropdown, setShowPetDropdown] = useState(false);
   const dropdownRef = useRef(null);
-  const [hasReminders, setHasReminders] = useState(false);
 
   const selectedPet = propSelectedPet || (pets.length > 0 ? pets[0] : null);
 
@@ -76,26 +71,6 @@ export default function PetHome({
     }
     setShowPetDropdown(false);
   };
-
-  // Check if medical records exist to toggle reminders card forwarding
-  useEffect(() => {
-    if (!selectedPet?.id) {
-      setHasReminders(false);
-      return;
-    }
-    const checkReminders = async () => {
-      try {
-        const res = await fetchWithAuth(`/api/medical-records/${selectedPet.id}`);
-        if (res.ok) {
-          const data = await res.json();
-          setHasReminders(data && data.length > 0);
-        }
-      } catch (err) {
-        console.error("Error checking reminders:", err);
-      }
-    };
-    checkReminders();
-  }, [selectedPet?.id]);
 
   // Checklist State Management
   const todayStr = new Date().toISOString().split("T")[0];
@@ -161,6 +136,8 @@ export default function PetHome({
           onToggleTask={null}
         />
 
+        <UploadRecordsCard onNavigateTab={onNavigateTab} />
+
         <div className="education-section" style={{ marginTop: '8px' }}>
           <h3 className="education-title">Be the Best Pet Parent</h3>
           <div 
@@ -205,7 +182,7 @@ export default function PetHome({
         onToggleTask={toggleTask}
       />
 
-      {hasReminders && <ReminderCard />}
+      <UploadRecordsCard onNavigateTab={onNavigateTab} />
 
       <div className="education-section" style={{ marginTop: '8px', marginBottom: '16px' }}>
         <h3 className="education-title">Be the Best Pet Parent</h3>
@@ -225,10 +202,7 @@ export default function PetHome({
       </div>
 
       <div style={{ marginTop: '16px' }}>
-        <Banner />
-      </div>
-      <div style={{ marginTop: '16px' }}>
-        <QuickActions  />
+        <QuickActions onNavigateTab={onNavigateTab} />
       </div>
     </div>
   );

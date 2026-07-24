@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { FiArrowLeft, FiCalendar, FiClock, FiFileText, FiUser, FiPhone, FiCheckCircle, FiShield, FiDownload, FiTrash2 } from "react-icons/fi";
 import { getMedicalEvent, deleteMedicalEvent } from "../../../api/timelineApi";
 import useAuth from "../../../hooks/useAuth";
@@ -11,6 +11,8 @@ import "./EventDetailPage.css";
 export default function EventDetailPage() {
   const { eventId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const statePetId = location.state?.petId;
   const { user } = useAuth();
   const { data: pets = [] } = usePets(user?.id);
 
@@ -24,13 +26,27 @@ export default function EventDetailPage() {
       if (!eventId) return;
       try {
         setLoading(true);
-        if (pets.length > 0) {
-          try {
-            const data = await Promise.any(
-              pets.map((pet) => getMedicalEvent(pet.id, eventId))
-            );
-            setEventData(data);
-          } catch (aggErr) {
+        const targetPet = statePetId
+          ? pets.find((p) => p.id === statePetId)
+          : null;
+
+        const orderedPets = targetPet
+          ? [targetPet, ...pets.filter((p) => p.id !== targetPet.id)]
+          : pets;
+
+        if (orderedPets.length > 0) {
+          let foundData = null;
+          for (const pet of orderedPets) {
+            try {
+              foundData = await getMedicalEvent(pet.id, eventId);
+              if (foundData) break;
+            } catch (err) {
+              // try next pet if not found
+            }
+          }
+          if (foundData) {
+            setEventData(foundData);
+          } else {
             setError("Medical record not found.");
           }
         } else {
@@ -44,7 +60,7 @@ export default function EventDetailPage() {
       }
     }
     fetchDetails();
-  }, [eventId, pets]);
+  }, [eventId, pets, statePetId]);
 
   const handleDeleteRecord = async () => {
     if (!window.confirm("Are you sure you want to delete this medical record? This action cannot be undone.")) {

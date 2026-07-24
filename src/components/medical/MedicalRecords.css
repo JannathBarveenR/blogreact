@@ -1344,3 +1344,87 @@ body {
   max-width: 340px;
   margin: 0 auto;
 }
+
+/* AI ANALYSIS COMING SOON CARD AT BOTTOM OF MEDICAL RECORDS TAB */
+.ai-analysis-card {
+  width: 100%;
+  margin: 20px 0 24px;
+  padding: 20px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #004b49 0%, #00695c 60%, #003634 100%);
+  color: #ffffff;
+  box-shadow: 0 8px 24px rgba(0, 75, 73, 0.16);
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.ai-analysis-card::before {
+  content: "";
+  position: absolute;
+  top: -35px;
+  right: -35px;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: rgba(132, 182, 98, 0.16);
+  pointer-events: none;
+}
+
+.ai-analysis-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.ai-analysis-icon-bg {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+}
+
+.ai-sparkle-icon {
+  color: #84b662;
+}
+
+.ai-coming-soon-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #84b662;
+  background: rgba(132, 182, 98, 0.15);
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(132, 182, 98, 0.3);
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.ai-analysis-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ai-analysis-title {
+  margin: 0;
+  font-size: 1.08rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.ai-analysis-desc {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.85);
+}

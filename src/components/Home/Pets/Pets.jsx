@@ -1,5 +1,7 @@
-import React from "react";
-import { FiPlus } from "react-icons/fi";
+import React, { useState } from "react";
+import { FiPlus, FiArrowUpRight } from "react-icons/fi";
+import useAuth from "../../../hooks/useAuth";
+import PetIdCardModal from "../../UserProfile/PetIdCardModal";
 import "./Pets.css";
 
 import dogIcon from "../../../assets/dog.webp";
@@ -9,10 +11,13 @@ import birdIcon from "../../../assets/bird.webp";
 import defaultPetIcon from "../../../assets/other.webp";
 
 export default function Pets({ pets = [], selectedPet, onPetSelect, onAddPet }) {
-  const getPetPhoto = (pet) => pet.pet_photo_url || pet.image || null;
+  const { user } = useAuth();
+  const [viewingIdCardPet, setViewingIdCardPet] = useState(null);
+
+  const getPetPhoto = (pet) => pet?.pet_photo_url || pet?.image || null;
 
   const getPetIcon = (pet) => {
-    const type = (pet.pet_type || pet.type || "").toLowerCase().trim();
+    const type = (pet?.pet_type || pet?.type || "").toLowerCase().trim();
     switch (type) {
       case "dog":
         return dogIcon;
@@ -29,71 +34,129 @@ export default function Pets({ pets = [], selectedPet, onPetSelect, onAddPet }) 
     }
   };
 
-  // Build the list of story items
-  const items = [];
+  const getPetBreed = (pet) => {
+    if (!pet) return "";
+    const breed = pet.breed || pet.pet_breed || pet.breed_name;
+    if (breed && typeof breed === "string" && breed.trim()) {
+      return breed.trim();
+    }
+    const type = pet.pet_type || pet.type;
+    if (type && typeof type === "string" && type.trim()) {
+      return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
+    }
+    return "Pet";
+  };
 
-  // Add all pets
-  pets.forEach((pet) => {
-    items.push({
-      id: pet.id,
-      name: pet.pet_name || pet.name || "Pet",
-      photo: getPetPhoto(pet),
-      defaultIcon: getPetIcon(pet),
-      isAdd: false,
-      petData: pet,
-    });
-  });
+  if (!pets || pets.length === 0) {
+    return (
+      <div className="pets-stories-wrapper">
+        <div className="pets-stories-container">
+          <div className="pet-story-item add-pet-story" onClick={onAddPet}>
+            <div className="story-ring add-ring">
+              <div className="story-inner add-inner">
+                <FiPlus size={28} className="add-plus-icon" />
+              </div>
+            </div>
+            <span className="story-name">Add a pet</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  // Always show "Add a pet" at the end (or as the sole circle if no pets)
-  items.push({
-    id: "add_pet_btn",
-    name: "Add a pet",
-    isAdd: true,
-  });
+  // Selected pet comes first
+  const activeSelected = selectedPet && pets.some((p) => p.id === selectedPet.id)
+    ? selectedPet
+    : pets[0];
+
+  const orderedPets = [
+    activeSelected,
+    ...pets.filter((p) => p.id !== activeSelected.id),
+  ];
 
   return (
     <div className="pets-stories-wrapper">
       <div className="pets-stories-container">
-        {items.map((item) => {
-          const isSelected = selectedPet && selectedPet.id === item.id;
+        {orderedPets.map((pet, idx) => {
+          const isSelected = idx === 0;
+          const photo = getPetPhoto(pet);
+          const defaultIcon = getPetIcon(pet);
+          const name = pet.pet_name || pet.name || "Pet";
 
-          if (item.isAdd) {
+          if (isSelected) {
             return (
               <div
-                key={item.id}
-                className="pet-story-item add-pet-story"
-                onClick={onAddPet}
+                key={pet.id}
+                className="pet-capsule-card"
+                onClick={() => onPetSelect?.(pet)}
               >
-                <div className="story-ring add-ring">
-                  <div className="story-inner add-inner">
-                    <FiPlus size={28} className="add-plus-icon" />
-                  </div>
+                <div className="pet-capsule-avatar">
+                  {photo ? (
+                    <img src={photo} alt={name} className="pet-capsule-img" />
+                  ) : (
+                    <img src={defaultIcon} alt={name} className="pet-capsule-img-default" />
+                  )}
                 </div>
-                <span className="story-name">{item.name}</span>
+
+                <div className="pet-capsule-text">
+                  <span className="pet-capsule-name">{name}</span>
+                  <span className="pet-capsule-age">{getPetBreed(pet)}</span>
+                </div>
+
+                <button
+                  type="button"
+                  className="pet-capsule-arrow-btn"
+                  title="View Pet Health ID Card"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setViewingIdCardPet(pet);
+                  }}
+                >
+                  <FiArrowUpRight size={24} className="pet-capsule-arrow-icon" />
+                </button>
               </div>
             );
           }
 
           return (
             <div
-              key={item.id}
-              className={`pet-story-item${isSelected ? " active-story" : ""}`}
-              onClick={() => onPetSelect(item.petData)}
+              key={pet.id}
+              className="pet-story-item unselected-story"
+              onClick={() => onPetSelect?.(pet)}
             >
-              <div className={`story-ring${isSelected ? " active" : ""}`}>
+              <div className="story-ring">
                 <div className="story-inner">
-                  {item.photo ? (
-                    <img src={item.photo} alt={item.name} className="story-img" />
+                  {photo ? (
+                    <img src={photo} alt={name} className="story-img" />
                   ) : (
-                    <img src={item.defaultIcon} alt={item.name} className="story-img-default" />
+                    <img src={defaultIcon} alt={name} className="story-img-default" />
                   )}
                 </div>
               </div>
-              <span className="story-name">{item.name}</span>
+              <span className="story-name">{name}</span>
             </div>
           );
         })}
+
+        {/* Add Pet Story */}
+        <div className="pet-story-item add-pet-story" onClick={onAddPet}>
+          <div className="story-ring add-ring">
+            <div className="story-inner add-inner">
+              <FiPlus size={24} className="add-plus-icon" />
+            </div>
+          </div>
+          <span className="story-name">Add a pet</span>
+        </div>
       </div>
+
+      {/* Pet Health ID Card Modal with Download Button */}
+      {viewingIdCardPet && (
+        <PetIdCardModal
+          pet={viewingIdCardPet}
+          owner={user}
+          onClose={() => setViewingIdCardPet(null)}
+        />
+      )}
     </div>
   );
 }

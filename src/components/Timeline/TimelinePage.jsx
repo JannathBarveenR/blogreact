@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import "./TimelinePage.css";
 
 import Pets from "../Home/Pets/Pets";
@@ -44,9 +44,17 @@ export default function TimelinePage({
   onAddPet,
 }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [filter, setFilter] = useState("all");
   const [showAddNote, setShowAddNote] = useState(false);
   const [previewDoc, setPreviewDoc] = useState(null);
+
+  useEffect(() => {
+    if (location.state?.openAddNote) {
+      setShowAddNote(true);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const selectedPet = pets.find((p) => p.id === activePetId) || pets[0] || null;
   const petName = selectedPet?.pet_name || selectedPet?.name || "";
@@ -72,8 +80,9 @@ export default function TimelinePage({
 
   const handleCardClick = (entry) => {
     const targetId = entry.event_id || entry.medical_event_id || entry.id || entry.visit_group_id;
+    const petId = entry.pet_id || selectedPet?.id;
     if (targetId) {
-      navigate(`/timeline/event/${targetId}`);
+      navigate(`/timeline/event/${targetId}`, { state: { petId } });
     }
   };
 
@@ -184,7 +193,7 @@ export default function TimelinePage({
       {events.length > 0 && (
         <button className="tl-page__fab" onClick={handleAddNote}>
           <span className="material-symbols-outlined tl-page__fab-icon">add</span>
-          <span className="tl-page__fab-text">Add Paw Note</span>
+          <span className="tl-page__fab-text">Add Pet Note</span>
         </button>
       )}
 
