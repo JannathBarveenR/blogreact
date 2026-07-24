@@ -1,15 +1,40 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Login.css";
-import logoImg from "../../assets/login-logo.webp";
+import brandLogo from "../../assets/logo-with-tagline.webp";
+import heroPets from "../../assets/hero-pets-desk.webp";
+import { CheckCircle2, ShieldCheck, Heart, Sparkles, X } from "lucide-react";
 import { supabase } from "../../utils/supabaseClient";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 
-function Logo() {
+function LeftBrandSidebar({ isLogin }) {
   return (
-    <div className="logo-wrap">
-      <img src={logoImg} alt="PetOLife" className="logo-img" />
+    <div className="login-left-banner">
+      <div className="left-banner-header">
+        <img src={brandLogo} alt="PetOlife Logo" className="left-banner-logo" />
+      </div>
+
+      <div className="left-banner-hero-wrap">
+        <img src={heroPets} alt="Pet Health Identity" className="left-banner-hero-img" />
+      </div>
+
+      <div className="left-banner-footer">
+        <h3 className="left-banner-title">
+          {isLogin ? "Welcome Back to PetOlife" : "One Identity For Your Pet's Life"}
+        </h3>
+        <p className="left-banner-sub">
+          {isLogin
+            ? "Access your pet's complete health history & vet passes in one click."
+            : "Join pet parents & vets safeguarding health records & preventive care."}
+        </p>
+
+        <ul className="left-banner-features">
+          <li><CheckCircle2 size={15} className="feature-check" /> 256-bit Encrypted Medical Vault</li>
+          <li><CheckCircle2 size={15} className="feature-check" /> Instant Clinic QR Pass</li>
+          <li><CheckCircle2 size={15} className="feature-check" /> Automated Vaccine & Care Alerts</li>
+        </ul>
+      </div>
     </div>
   );
 }
@@ -39,53 +64,16 @@ function GoogleIcon() {
 
 function EyeIcon({ open }) {
   return open ? (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="#999"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
       <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
       <line x1="1" y1="1" x2="23" y2="23" />
     </svg>
   ) : (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="#999"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
       <circle cx="12" cy="12" r="3" />
     </svg>
-  );
-}
-
-function BackBtn({ onClick }) {
-  return (
-    <button className="back-btn" onClick={onClick} aria-label="Go back">
-      <svg
-        width="22"
-        height="22"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="#1a1a1a"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M19 12H5M12 5l-7 7 7 7" />
-      </svg>
-    </button>
   );
 }
 
@@ -110,16 +98,7 @@ export function SuccessScreen({ type, userName, onContinue }) {
     <div className="screen success-screen">
       <div className="success-icon-wrap">
         <div className="success-circle">
-          <svg
-            width="48"
-            height="48"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#fff"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="20 6 9 17 4 12" />
           </svg>
         </div>
@@ -129,11 +108,11 @@ export function SuccessScreen({ type, userName, onContinue }) {
       </h2>
       <p className="success-sub">
         {isSignup
-          ? `Hey ${userName || "there"} 👋 Your PetOLife account is all set. Let's get started!`
+          ? `Hey ${userName || "there"} 👋 Your PetOlife account is all set. Let's get started!`
           : `Great to see you again ${userName || ""}! Your pets are waiting for you.`}
       </p>
       <div className="success-badge">
-        <span>PetOLife Member</span>
+        <span>PetOlife Member</span>
       </div>
 
       <p className="success-redirect-note">
@@ -277,7 +256,6 @@ function RegistrationScreen({ onLogin, onSuccess }) {
           },
         };
         localStorage.setItem("user", JSON.stringify(enrichedUser));
-        // Save city to its own key — survives all future logins
         localStorage.setItem("user_city", form.city);
       }
 
@@ -290,165 +268,161 @@ function RegistrationScreen({ onLogin, onSuccess }) {
   };
 
   return (
-    <div className="screen auth-screen">
-      <Logo />
-      <h2 className="auth-title" style={{ marginTop: 0 }}>
-        "Create your pet's lifelong digital health identity today!"
-      </h2>
-      {error && <p className="auth-error">{error}</p>}
+    <div className="login-card-2col">
+      <LeftBrandSidebar isLogin={false} />
 
-      <div className="form-group">
-        <label>Pet Parent Name</label>
-        <input
-          type="text"
-          placeholder="Enter your full name"
-          value={form.name}
-          onChange={set("name")}
-          autoComplete="name"
-        />
-      </div>
-
-      <div className="form-group">
-        <label>Email Address</label>
-        <input
-          type="email"
-          placeholder="Enter your email"
-          value={form.email}
-          onChange={set("email")}
-          autoComplete="email"
-        />
-      </div>
-
-      <div className="form-group">
-        <label>Mobile Number</label>
-        <div className="phone-input-group">
-          <span className="phone-prefix">+91</span>
-          <input
-            type="tel"
-            placeholder="Enter 10-digit mobile number"
-            value={form.mobile}
-            onChange={(e) => {
-              const val = e.target.value.replace(/\D/g, "").slice(0, 10);
-              setForm((prev) => ({ ...prev, mobile: val }));
-            }}
-            inputMode="numeric"
-            maxLength={10}
-          />
+      <div className="login-right-form">
+        <div className="form-header">
+          <h2 className="form-title">Create Pet Parent Account</h2>
+          <p className="form-subtitle">Start your pet's digital health identity today</p>
         </div>
-      </div>
 
-      <div className="form-group">
-        <label>Password</label>
-        <div className="input-with-icon">
-          <input
-            type={showPass ? "text" : "password"}
-            placeholder="Create a password (min 6 chars)"
-            value={form.password}
-            onChange={(e) =>
-              setForm((prev) => ({ ...prev, password: e.target.value }))
-            }
-            autoComplete="new-password"
-          />
-          <button
-            className="eye-btn"
-            type="button"
-            onClick={() => setShowPass(!showPass)}
-          >
-            <EyeIcon open={showPass} />
-          </button>
+        {error && <p className="auth-error">{error}</p>}
+
+        <div className="form-grid-2col">
+          <div className="form-group">
+            <label>Pet Parent Name</label>
+            <input
+              type="text"
+              placeholder="Enter full name"
+              value={form.name}
+              onChange={set("name")}
+              autoComplete="name"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Email Address</label>
+            <input
+              type="email"
+              placeholder="Enter email address"
+              value={form.email}
+              onChange={set("email")}
+              autoComplete="email"
+            />
+          </div>
         </div>
-      </div>
 
-      <div className="form-group">
-        <label>Pincode {pincodeLoading && <SmallSpinner />}</label>
-        <input
-          type="text"
-          placeholder="Enter 6-digit pincode"
-          value={form.pincode}
-          onChange={(e) => {
-            const val = e.target.value.replace(/\D/g, "").slice(0, 6);
-            setForm((prev) => ({ ...prev, pincode: val }));
-            if (val.length < 6) {
-              setForm((prev) => ({
-                ...prev,
-                pincode: val,
-                city: "",
-                state: "",
-              }));
-              setPincodeError("");
+        <div className="form-grid-2col">
+          <div className="form-group">
+            <label>Mobile Number</label>
+            <div className="phone-input-group">
+              <span className="phone-prefix">+91</span>
+              <input
+                type="tel"
+                placeholder="10-digit mobile"
+                value={form.mobile}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                  setForm((prev) => ({ ...prev, mobile: val }));
+                }}
+                inputMode="numeric"
+                maxLength={10}
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label>Password</label>
+            <div className="input-with-icon">
+              <input
+                type={showPass ? "text" : "password"}
+                placeholder="Min 6 chars"
+                value={form.password}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, password: e.target.value }))
+                }
+                autoComplete="new-password"
+              />
+              <button
+                className="eye-btn"
+                type="button"
+                onClick={() => setShowPass(!showPass)}
+              >
+                <EyeIcon open={showPass} />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="form-grid-2col">
+          <div className="form-group">
+            <label>Pincode {pincodeLoading && <SmallSpinner />}</label>
+            <input
+              type="text"
+              placeholder="Enter 6-digit pincode"
+              value={form.pincode}
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, "").slice(0, 6);
+                setForm((prev) => ({ ...prev, pincode: val }));
+                if (val.length < 6) {
+                  setForm((prev) => ({
+                    ...prev,
+                    pincode: val,
+                    city: "",
+                    state: "",
+                  }));
+                  setPincodeError("");
+                }
+              }}
+              inputMode="numeric"
+              maxLength={6}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>City & State</label>
+            <input
+              type="text"
+              placeholder="Auto-filled from pincode"
+              value={form.city ? `${form.city}${form.state ? ", " + form.state : ""}` : ""}
+              readOnly
+              className={
+                form.city ? "field-readonly field-filled" : "field-readonly"
+              }
+            />
+          </div>
+        </div>
+        {pincodeError && <span className="field-error">{pincodeError}</span>}
+
+        <button
+          className="btn-primary-gradient"
+          onClick={handleRegister}
+          disabled={loading}
+        >
+          {loading ? "Creating Account…" : "Create Account"}
+        </button>
+
+        <div className="or-divider">
+          <span>OR</span>
+        </div>
+
+        <button
+          className="btn-google-pill"
+          onClick={async () => {
+            try {
+              const { error } = await supabase.auth.signInWithOAuth({
+                provider: "google",
+                options: {
+                  redirectTo: `${window.location.origin}/auth/callback`,
+                },
+              });
+              if (error) setError("Google signup is not available yet.");
+            } catch {
+              setError("Google signup is not available yet.");
             }
           }}
-          inputMode="numeric"
-          maxLength={6}
-        />
-        {pincodeError && <span className="field-error">{pincodeError}</span>}
+        >
+          <GoogleIcon /> Sign up with Google
+        </button>
+
+        <p className="auth-footer-text">
+          Already have an account?{" "}
+          <span className="link-green-bold" onClick={onLogin}>
+            Login
+          </span>
+        </p>
       </div>
-
-      <div className="pincode-row">
-        <div className="form-group">
-          <label>City</label>
-          <input
-            type="text"
-            placeholder="Auto-filled"
-            value={form.city}
-            readOnly
-            className={
-              form.city ? "field-readonly field-filled" : "field-readonly"
-            }
-          />
-        </div>
-        <div className="form-group">
-          <label>State</label>
-          <input
-            type="text"
-            placeholder="Auto-filled"
-            value={form.state}
-            readOnly
-            className={
-              form.state ? "field-readonly field-filled" : "field-readonly"
-            }
-          />
-        </div>
-      </div>
-
-      <button
-        className="btn-primary"
-        style={{ marginTop: 8 }}
-        onClick={handleRegister}
-        disabled={loading}
-      >
-        {loading ? "Creating Account…" : "Create Account"}
-      </button>
-
-      <div className="or-divider">
-        <span>OR</span>
-      </div>
-
-      <button
-        className="btn-google"
-        onClick={async () => {
-          try {
-            const { error } = await supabase.auth.signInWithOAuth({
-              provider: "google",
-              options: {
-                redirectTo: `${window.location.origin}/auth/callback`,
-              },
-            });
-            if (error) setError("Google signup is not available yet.");
-          } catch {
-            setError("Google signup is not available yet.");
-          }
-        }}
-      >
-        <GoogleIcon /> Sign up with Google
-      </button>
-
-      <p className="auth-footer" style={{ marginTop: 16 }}>
-        Already have an account?{" "}
-        <span className="link-green" onClick={onLogin}>
-          Login
-        </span>
-      </p>
     </div>
   );
 }
@@ -497,8 +471,6 @@ function LoginScreen({ onSignUp, onSuccess }) {
         localStorage.setItem("refresh_token", data.refresh_token);
 
       if (data.user) {
-        // city is now in Supabase user_metadata (saved during signup)
-        // so data.user.user_metadata.city is always available
         const city = data.user.user_metadata?.city;
         const enrichedUser = {
           ...data.user,
@@ -506,16 +478,13 @@ function LoginScreen({ onSignUp, onSuccess }) {
         };
         localStorage.setItem("user", JSON.stringify(enrichedUser));
 
-        // Save to dedicated key — never lost even if localStorage.user gets refreshed
         if (city) {
           localStorage.setItem("user_city", city);
         } else {
-          // Fallback for old accounts created before the backend fix:
-          // fetch city from user_profiles table
           try {
             const profileRes = await fetch(
               `${API_BASE}/api/user-profile/${data.user.id}`,
-              { headers: { Authorization: `Bearer ${data.access_token}` } },
+              { headers: { Authorization: `Bearer ${data.access_token}` } }
             );
             if (profileRes.ok) {
               const profileData = await profileRes.json();
@@ -543,81 +512,92 @@ function LoginScreen({ onSignUp, onSuccess }) {
   };
 
   return (
-    <div className="screen auth-screen">
-      <BackBtn onClick={onSignUp} />
-      <Logo />
-      <h2 className="auth-title-log" style={{ marginTop: 0 }}>
-        Welcome back! Your pet's health journey continues here.
-      </h2>
+    <div className="login-card-2col">
+      <LeftBrandSidebar isLogin={true} />
 
-      {error && <p className="auth-error">{error}</p>}
-
-      <div className="form-group">
-        <label>Email or Phone Number</label>
-        <input
-          type="text"
-          placeholder="Enter your email or phone"
-          value={identifier}
-          onChange={(e) => setIdentifier(e.target.value)}
-        />
-      </div>
-
-      <div className="form-group">
-        <label>Password</label>
-        <div className="input-with-icon">
-          <input
-            type={showPass ? "text" : "password"}
-            placeholder="Enter your password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <button className="eye-btn" onClick={() => setShowPass(!showPass)}>
-            <EyeIcon open={showPass} />
-          </button>
+      <div className="login-right-form">
+        <div className="form-header">
+          <h2 className="form-title">Welcome Back to PetOlife</h2>
+          <p className="form-subtitle">Access your pet's complete digital health timeline</p>
         </div>
+
+        {error && <p className="auth-error">{error}</p>}
+
+        <div className="form-group">
+          <label>Email or Phone Number</label>
+          <input
+            type="text"
+            placeholder="Enter email or phone"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Password</label>
+          <div className="input-with-icon">
+            <input
+              type={showPass ? "text" : "password"}
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <button
+              className="eye-btn"
+              type="button"
+              onClick={() => setShowPass(!showPass)}
+            >
+              <EyeIcon open={showPass} />
+            </button>
+          </div>
+        </div>
+
+        <div className="forgot-row">
+          <span className="link-green-bold" onClick={() => setShowForgot(true)}>
+            Forgot Password?
+          </span>
+        </div>
+
+        {showForgot && <ForgotPasswordForm onBack={() => setShowForgot(false)} />}
+
+        <button
+          className="btn-primary-gradient"
+          onClick={handleLogin}
+          disabled={loading}
+        >
+          {loading ? "Logging in…" : "Login"}
+        </button>
+
+        <div className="or-divider">
+          <span>OR</span>
+        </div>
+
+        <button
+          className="btn-google-pill"
+          onClick={async () => {
+            try {
+              const { error } = await supabase.auth.signInWithOAuth({
+                provider: "google",
+                options: {
+                  redirectTo: `${window.location.origin}/auth/callback`,
+                },
+              });
+              if (error) setError("Google login is not available yet.");
+            } catch {
+              setError("Google login is not available yet.");
+            }
+          }}
+        >
+          <GoogleIcon /> Continue with Google
+        </button>
+
+        <p className="auth-footer-text">
+          New user?{" "}
+          <span className="link-green-bold" onClick={onSignUp}>
+            Create Account
+          </span>
+        </p>
       </div>
-
-      <div className="forgot-row">
-        <span className="link-green" onClick={() => setShowForgot(true)}>
-          Forgot Password?
-        </span>
-      </div>
-
-      {showForgot && <ForgotPasswordForm onBack={() => setShowForgot(false)} />}
-
-      <button className="btn-primary" onClick={handleLogin} disabled={loading}>
-        {loading ? "Logging in…" : "Login"}
-      </button>
-
-      <div className="or-divider">
-        <span>OR</span>
-      </div>
-
-      <button
-        className="btn-google"
-        onClick={async () => {
-          try {
-            const { error } = await supabase.auth.signInWithOAuth({
-              provider: "google",
-              options: {
-                redirectTo: `${window.location.origin}/auth/callback`,
-              },
-            });
-            if (error) setError("Google login is not available yet.");
-          } catch {
-            setError("Google login is not available yet.");
-          }
-        }}
-      >
-        <GoogleIcon /> Continue with Google
-      </button>
-
-      <p className="auth-footer">
-        New user?{" "}
-        <span className="link-green" onClick={onSignUp}>
-          Create Account
-        </span>
-      </p>
     </div>
   );
 }
@@ -653,30 +633,16 @@ function ForgotPasswordForm({ onBack }) {
 
   if (sent) {
     return (
-      <div
-        style={{
-          marginTop: 12,
-          padding: "16px",
-          background: "#f0faf3",
-          borderRadius: "12px",
-        }}
-      >
-        <p style={{ color: "#138a36", fontWeight: 600, marginBottom: 4 }}>
+      <div style={{ marginTop: 12, padding: "14px", background: "#f0faf0", borderRadius: "12px" }}>
+        <p style={{ color: "#004b49", fontWeight: 700, marginBottom: 4 }}>
           ✓ Reset email sent!
         </p>
-        <p style={{ color: "#555", fontSize: "13px" }}>
+        <p style={{ color: "#4a6355", fontSize: "13px" }}>
           Check your inbox for a password reset link.
         </p>
         <button
           onClick={onBack}
-          style={{
-            marginTop: 8,
-            cursor: "pointer",
-            border: "none",
-            background: "none",
-            color: "#138a36",
-            fontWeight: 600,
-          }}
+          style={{ marginTop: 8, cursor: "pointer", border: "none", background: "none", color: "#004b49", fontWeight: 700 }}
         >
           Back to Login
         </button>
@@ -685,61 +651,94 @@ function ForgotPasswordForm({ onBack }) {
   }
 
   return (
-    <div
-      style={{
-        marginTop: 12,
-        padding: "16px",
-        background: "#f8f9fa",
-        borderRadius: "12px",
-      }}
-    >
-      <h4 style={{ margin: "0 0 8px", fontSize: "15px", color: "#333" }}>
+    <div style={{ marginTop: 12, padding: "14px", background: "#f8fbf7", borderRadius: "12px", border: "1px solid #d4e8cf" }}>
+      <h4 style={{ margin: "0 0 8px", fontSize: "14px", color: "#004b49", fontWeight: 800 }}>
         Reset Password
       </h4>
-      {error && (
-        <p className="auth-error" style={{ fontSize: "13px", marginBottom: 8 }}>
-          {error}
-        </p>
-      )}
+      {error && <p className="auth-error" style={{ fontSize: "12px", marginBottom: 8 }}>{error}</p>}
       <input
         type="email"
         placeholder="Enter your email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         style={{
-          width: "100%",
-          padding: "10px 14px",
-          border: "1px solid #ddd",
-          borderRadius: "8px",
-          fontSize: "14px",
-          marginBottom: 10,
-          boxSizing: "border-box",
+          width: "100%", padding: "10px 14px", border: "1px solid #d4e8cf",
+          borderRadius: "10px", fontSize: "14px", marginBottom: 10, boxSizing: "border-box", outline: "none"
         }}
       />
       <div style={{ display: "flex", gap: "8px" }}>
         <button
-          className="btn-primary"
+          className="btn-primary-gradient"
           onClick={handleReset}
           disabled={loading}
-          style={{ flex: 1, fontSize: "14px", padding: "10px" }}
+          style={{ flex: 1, fontSize: "13px", padding: "10px", height: "40px", marginTop: 0 }}
         >
           {loading ? "Sending…" : "Send Reset Link"}
         </button>
         <button
           onClick={onBack}
           style={{
-            flex: 0,
-            padding: "10px 16px",
-            border: "1px solid #ddd",
-            borderRadius: "8px",
-            background: "#fff",
-            cursor: "pointer",
-            fontSize: "14px",
-            color: "#555",
+            flex: 0, padding: "10px 16px", border: "1px solid #d4e8cf",
+            borderRadius: "10px", background: "#fff", cursor: "pointer", fontSize: "13px", color: "#555"
           }}
         >
           Cancel
         </button>
+      </div>
+    </div>
+  );
+}
+
+export function LoginModal({ isOpen, onClose, initialScreen = "register" }) {
+  const navigate = useNavigate();
+  const [screen, setScreen] = useState(initialScreen);
+  const [successData, setSuccessData] = useState(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setScreen(initialScreen || "register");
+    }
+  }, [initialScreen, isOpen]);
+
+  if (!isOpen) return null;
+
+  const handleSuccess = (data) => {
+    setSuccessData(data);
+    setScreen("success");
+  };
+
+  const handleSuccessContinue = () => {
+    navigate("/home");
+    setSuccessData(null);
+    if (onClose) onClose();
+  };
+
+  return (
+    <div className="login-modal-overlay" onClick={onClose}>
+      <div className="login-modal-container" onClick={(e) => e.stopPropagation()}>
+        <button className="login-modal-close-btn" onClick={onClose} aria-label="Close modal">
+          <X size={18} />
+        </button>
+
+        {screen === "register" && (
+          <RegistrationScreen
+            onLogin={() => setScreen("login")}
+            onSuccess={handleSuccess}
+          />
+        )}
+        {screen === "login" && (
+          <LoginScreen
+            onSignUp={() => setScreen("register")}
+            onSuccess={handleSuccess}
+          />
+        )}
+        {screen === "success" && (
+          <SuccessScreen
+            type={successData?.type}
+            userName={successData?.name}
+            onContinue={handleSuccessContinue}
+          />
+        )}
       </div>
     </div>
   );
@@ -762,27 +761,25 @@ export default function Login() {
 
   return (
     <div className="login-root">
-      <div className="login-card">
-        {screen === "register" && (
-          <RegistrationScreen
-            onLogin={() => setScreen("login")}
-            onSuccess={handleSuccess}
-          />
-        )}
-        {screen === "login" && (
-          <LoginScreen
-            onSignUp={() => setScreen("register")}
-            onSuccess={handleSuccess}
-          />
-        )}
-        {screen === "success" && (
-          <SuccessScreen
-            type={successData?.type}
-            userName={successData?.name}
-            onContinue={handleSuccessContinue}
-          />
-        )}
-      </div>
+      {screen === "register" && (
+        <RegistrationScreen
+          onLogin={() => setScreen("login")}
+          onSuccess={handleSuccess}
+        />
+      )}
+      {screen === "login" && (
+        <LoginScreen
+          onSignUp={() => setScreen("register")}
+          onSuccess={handleSuccess}
+        />
+      )}
+      {screen === "success" && (
+        <SuccessScreen
+          type={successData?.type}
+          userName={successData?.name}
+          onContinue={handleSuccessContinue}
+        />
+      )}
     </div>
   );
 }
