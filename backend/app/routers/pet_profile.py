@@ -23,8 +23,9 @@ class PetProfileUpdate(BaseModel):
     pet_name: Optional[str] = None
     breed: Optional[str] = None
     gender: Optional[str] = None
-    birth_date: Optional[str] = None
-    weight: Optional[float] = None
+    birth_date: Optional[str] = Form(None),
+    approx_age: Optional[str] = Form(None),
+    weight: Optional[str] = Form(None),
     blood_group: Optional[str] = None
 
 from app.supabase_client import supabase as global_supabase
@@ -111,6 +112,7 @@ async def create_pet_profile(
         "breed": breed or None,
         "gender": gender or None,
         "birth_date": birth_date or None,
+        "approx_age": approx_age or None,
         "weight": float(weight) if weight else None,
         "blood_group": blood_group or None,
         "identification_marks": identification_marks or None,
@@ -185,7 +187,7 @@ async def get_pets_by_user(
 @router.get("/by-petolife-id/{petolife_id:path}")
 async def get_by_petolife_id_redirect(petolife_id: str):
     """QR scan endpoint — redirects browser to the frontend pet profile UI. (Public)"""
-    frontend_base = FRONTEND_URL or "http://localhost:5173"
+    frontend_base = FRONTEND_URL or "https://www.petolife.com"
     redirect_url = f"{frontend_base}/pet/{petolife_id.lower()}"
     return RedirectResponse(url=redirect_url, status_code=302)
 
