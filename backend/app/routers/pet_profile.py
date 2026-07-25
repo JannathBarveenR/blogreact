@@ -202,37 +202,32 @@ async def create_pet_profile(
 
     pet_photo_url = None
     if pet_photo and pet_photo.filename:
-        ensure_pet_photos_bucket_exists()
-        clean_filename = sanitize_filename(pet_photo.filename)
-        file_name = f"{int(time.time() * 1000)}-{clean_filename}"
-        file_bytes = await pet_photo.read()
-        print(f"Uploading photo: {file_name}")
-
         try:
-            # Upload using supabase_admin to bypass storage RLS permission issues in production
-            supabase_admin.storage.from_("pet-photos").upload(
-                file_name,
-                file_bytes,
-                file_options={"content-type": pet_photo.content_type or "image/jpeg", "upsert": "true"},
-            )
-        except Exception as upload_err:
-            print(f"Photo upload error via admin, retrying user client: {upload_err}")
+            ensure_pet_photos_bucket_exists()
+            clean_filename = sanitize_filename(pet_photo.filename)
+            file_name = f"{int(time.time() * 1000)}-{clean_filename}"
+            file_bytes = await pet_photo.read()
+            print(f"Uploading photo: {file_name}")
+
             try:
+                supabase_admin.storage.from_("pet-photos").upload(
+                    file_name,
+                    file_bytes,
+                    file_options={"content-type": pet_photo.content_type or "image/jpeg", "upsert": "true"},
+                )
+            except Exception as upload_err:
+                print(f"Photo upload error via admin, retrying user client: {upload_err}")
                 supabase.storage.from_("pet-photos").upload(
                     file_name,
                     file_bytes,
                     file_options={"content-type": pet_photo.content_type or "image/jpeg", "upsert": "true"},
                 )
-            except Exception as retry_err:
-                print(f"Photo upload failed completely: {retry_err}")
-                raise HTTPException(
-                    status_code=500,
-                    detail=f"Photo upload failed: {str(retry_err)}",
-                )
 
-        url_data = supabase_admin.storage.from_("pet-photos").get_public_url(file_name)
-        pet_photo_url = url_data
-        print(f"Photo URL: {pet_photo_url}")
+            url_data = supabase_admin.storage.from_("pet-photos").get_public_url(file_name)
+            pet_photo_url = url_data
+            print(f"Photo URL: {pet_photo_url}")
+        except Exception as photo_err:
+            print(f"Non-fatal photo upload warning: {photo_err}")
 
     # Auto-calculate bidirectional birth_date <-> approx_age
     calc_birth_date = birth_date or None
@@ -259,7 +254,6 @@ async def create_pet_profile(
         "blood_group": blood_group or None,
         "identification_marks": identification_marks or None,
         "pet_photo_url": pet_photo_url,
-        "pet_health_id": petolife_id,
         "identification_ids": valid_ids,
     }
 
