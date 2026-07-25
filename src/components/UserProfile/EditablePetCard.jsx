@@ -43,24 +43,6 @@ const EditablePetCard = ({ pet, onUpdate, onClose }) => {
     }
   }, [pet]);
 
-  useEffect(() => {
-    if (profile.birth_date) {
-      const dob = new Date(profile.birth_date);
-      const today = new Date();
-      let y = today.getFullYear() - dob.getFullYear();
-      let m = today.getMonth() - dob.getMonth();
-      if (m < 0) {
-        y--;
-        m += 12;
-      }
-      if (y >= 0 && m >= 0) {
-        setProfile((prev) => ({
-          ...prev,
-          approx_age: `${y}y ${m}m`,
-        }));
-      }
-    }
-  }, [profile.birth_date]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

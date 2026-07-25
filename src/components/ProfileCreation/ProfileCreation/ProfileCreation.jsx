@@ -80,12 +80,18 @@ function ProfileCreation({ onNavigateBack, onNavigateToPetHome }) {
           submitError={submitError}
           setSubmitError={setSubmitError}
           onNavigateToPetHome={(data) => {
-             // Extract data in the shape PostIdScreen expects
+             // Extract data in the shape PostIdScreen expects, preserving all fields
+             const p = data.newPet || {};
              const createdPet = {
-               petName: data.newPet?.name || data.newPet?.pet_name || '',
-               petolifeId: data.newPet?.petolife_id || '',
-               petPhotoUrl: data.newPet?.image || data.newPet?.pet_photo_url || '',
-               petProfileId: data.newPet?.id || '',
+               ...p,
+               petName: p.pet_name || p.name || '',
+               petolifeId: p.petolife_id || '',
+               petPhotoUrl: p.pet_photo_url || p.image || '',
+               petProfileId: p.id || '',
+               birthDate: p.birth_date || p.birthDate || '',
+               approxAge: p.approx_age || p.approxAge || p.age || '',
+               owner_name: p.owner_name || p.pet_parent || '',
+               owner_phone: p.owner_phone || '',
              };
              setPetData(prev => ({...prev, createdPet}));
              setStep(5);

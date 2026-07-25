@@ -307,25 +307,11 @@ def generate_pet_health_id(city_name: str, pet_type: str) -> str:
 
 def store_pet_health_id(health_id: str, pet_profile_id: str) -> bool:
     try:
-        # health_id looks like: PET-CBE-DOG-000001
-        parts = health_id.split("-")
-        city_code = parts[1]
-        pet_type_code = parts[2]
-        sequence_number = int(parts[3])
-        result = (
-            supabase.table("pet_health_ids")
-            .insert({
-                "health_id": health_id,
-                "pet_profile_id": pet_profile_id,
-                "city_code": city_code,
-                "pet_type_code": pet_type_code,
-                "sequence_number": sequence_number,
-            })
-            .execute()
-        )
-        return bool(result.data)
+        # health_id is already saved directly inside pet_profiles.petolife_id
+        print(f"[PetHealthID] ID {health_id} associated with profile {pet_profile_id}")
+        return True
     except Exception as e:
-        print(f"[PetHealthID] Store error: {e}")
+        print(f"[PetHealthID] Note: {e}")
         return False
 
 

@@ -20,31 +20,36 @@ export default function PostIdScreen({ inlineData }) {
   const dataToUse = inlineData || location.state || {};
 
   const {
-    petName = 'Pet',
-    petolifeId = 'ID',
-    petPhotoUrl = '',
-    petType = '',
-    breed = '',
-    birthDate = '',
-    approxAge = '',
+    petName = dataToUse.pet_name || dataToUse.name || 'Pet',
+    petolifeId = dataToUse.petolife_id || dataToUse.pet_id || 'ID',
+    petPhotoUrl = dataToUse.pet_photo_url || dataToUse.image || '',
+    petType = dataToUse.pet_type || '',
+    breed = dataToUse.breed || '',
+    birthDate = dataToUse.birth_date || dataToUse.dob || '',
+    approxAge = dataToUse.approx_age || dataToUse.age || '',
   } = dataToUse;
 
-  // Parse owner name & phone from user metadata
+  // Parse owner name & phone from dataToUse or user metadata
   const getOwnerInfo = () => {
-    const storedUserData = localStorage.getItem("user");
-    let name = 'Pet Parent';
-    let phone = '';
-    if (storedUserData) {
-      try {
-        const userObj = JSON.parse(storedUserData);
-        name = userObj.user_metadata?.full_name || userObj.user_metadata?.first_name || 'Pet Parent';
-        if (userObj.user_metadata?.last_name) {
-          name += ` ${userObj.user_metadata.last_name}`;
-        }
-        phone = userObj.phone || userObj.user_metadata?.phone || '';
-      } catch {}
+    let name = dataToUse.owner_name || dataToUse.pet_parent || dataToUse.owner_info?.full_name || '';
+    let phone = dataToUse.owner_phone || dataToUse.owner_info?.phone || '';
+    if (!name || name === 'Pet Parent') {
+      const storedUserData = localStorage.getItem("user");
+      if (storedUserData) {
+        try {
+          const userObj = JSON.parse(storedUserData);
+          const fullName = userObj.user_metadata?.full_name || userObj.user_metadata?.first_name || userObj.full_name;
+          if (fullName) {
+            name = fullName;
+            if (userObj.user_metadata?.last_name && !name.includes(userObj.user_metadata.last_name)) {
+              name += ` ${userObj.user_metadata.last_name}`;
+            }
+          }
+          phone = phone || userObj.phone || userObj.user_metadata?.phone || '';
+        } catch {}
+      }
     }
-    return { name, phone };
+    return { name: name || 'Pet Parent', phone };
   };
 
   const ownerInfo = getOwnerInfo();
@@ -59,6 +64,7 @@ export default function PostIdScreen({ inlineData }) {
     birth_date: birthDate,
     approx_age: approxAge,
     owner_name: ownerInfo.name,
+    pet_parent: ownerInfo.name,
     owner_phone: ownerInfo.phone,
   };
 
@@ -113,50 +119,52 @@ export default function PostIdScreen({ inlineData }) {
   }
 
   return (
-    <div className="page">
-      <PawWatermarks />
+    <div className="postid-screen-container">
+      <div className="page">
+        <PawWatermarks />
 
-      {/* ── Celebration header ── */}
-      <header className="postid-hero">
-        <div className="hero-check-badge">
-          <Check size={18} strokeWidth={3} color="#ffffff" />
-        </div>
-        <h1 className="title">Pet Health ID Created</h1>
-        <p className="ribbon">
-          <PawPrint size={14} />
-          <span><strong>{petName}</strong> is now part of PetoLife</span>
-          <Heart size={14} />
-        </p>
-      </header>
+        {/* ── Celebration header ── */}
+        <header className="postid-hero">
+          <div className="hero-check-badge">
+            <Check size={18} strokeWidth={3} color="#ffffff" />
+          </div>
+          <h1 className="title">Pet Health ID Created</h1>
+          <p className="ribbon">
+            <PawPrint size={14} />
+            <span><strong>{petName}</strong> is now part of PetoLife</span>
+            <Heart size={14} />
+          </p>
+        </header>
 
-      {/* ── ID Card body (Rendered via Konva at 9:16 Story Aspect Ratio) ── */}
-      <main className="postid-konva-card-container" style={{ display: 'flex', justifyContent: 'center', margin: '12px 0 20px' }}>
-        <PetKonvaCard ref={konvaCardRef} petData={petDataForKonva} containerWidth={Math.min(350, window.innerWidth - 32)} />
-      </main>
+        {/* ── ID Card body (Rendered via Konva at 9:16 Story Aspect Ratio) ── */}
+        <main className="postid-konva-card-container" style={{ display: 'flex', justifyContent: 'center', margin: '12px 0 20px' }}>
+          <PetKonvaCard ref={konvaCardRef} petData={petDataForKonva} containerWidth={Math.min(350, window.innerWidth - 32)} />
+        </main>
 
-      {/* ── Action buttons ── */}
-      <nav className="actions" aria-label="Next steps">
-        <ActionButton
-          tone="primary"
-          icon={<Download size={18} strokeWidth={2.2} />}
-          label="Download ID Card"
-          onClick={handleDownloadCard}
-        />
-        <div className="action-row-2">
+        {/* ── Action buttons ── */}
+        <nav className="actions" aria-label="Next steps">
           <ActionButton
-            tone="secondary"
-            icon={<Home size={18} strokeWidth={2.2} />}
-            label="Home"
-            onClick={() => navigate('/home')}
+            tone="primary"
+            icon={<Download size={18} strokeWidth={2.2} />}
+            label="Download ID Card"
+            onClick={handleDownloadCard}
           />
-          <ActionButton
-            tone="secondary"
-            icon={<FilePlus2 size={18} strokeWidth={2.2} />}
-            label="Records"
-            onClick={() => navigate('/home', { state: { tab: 'medicalrecords' } })}
-          />
-        </div>
-      </nav>
+          <div className="action-row-2">
+            <ActionButton
+              tone="secondary"
+              icon={<Home size={18} strokeWidth={2.2} />}
+              label="Home"
+              onClick={() => navigate('/home')}
+            />
+            <ActionButton
+              tone="secondary"
+              icon={<FilePlus2 size={18} strokeWidth={2.2} />}
+              label="Records"
+              onClick={() => navigate('/home', { state: { tab: 'medicalrecords' } })}
+            />
+          </div>
+        </nav>
+      </div>
     </div>
   );
 }

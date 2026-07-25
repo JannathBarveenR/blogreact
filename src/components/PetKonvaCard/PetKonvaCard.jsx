@@ -43,14 +43,27 @@ const PetKonvaCard = forwardRef(({ petData = {}, containerWidth = 360 }, ref) =>
   const petName = petData.pet_name || petData.petName || petData.name || "Pet";
   const petolifeId = petData.petolife_id || petData.petolifeId || petData.pet_id || petData.id || "PET-ID-000000";
 
-  // DOB / Age formatting
+  // Timezone-safe DOB formatting (e.g. '2024-07-25' -> '25 Jul 2024')
+  const formatDate = (dateStr) => {
+    if (!dateStr || typeof dateStr !== "string") return null;
+    const parts = dateStr.split("T")[0].split("-");
+    if (parts.length === 3) {
+      const year = parts[0];
+      const monthIdx = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      if (monthIdx >= 0 && monthIdx < 12 && !isNaN(day)) {
+        return `${day} ${months[monthIdx]} ${year}`;
+      }
+    }
+    return dateStr;
+  };
+
   const rawDob = petData.birth_date || petData.birthDate || petData.dob;
-  const dobFormatted = rawDob
-    ? new Date(rawDob).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
-    : petData.approx_age || petData.approxAge || petData.age || "Not specified";
+  const dobFormatted = formatDate(rawDob) || petData.approx_age || petData.approxAge || petData.age || "Not specified";
 
   // Owner details
-  const ownerName = petData.owner_name || petData.ownerName || petData.owner_info?.full_name || "Pet Parent";
+  const ownerName = petData.owner_name || petData.pet_parent || petData.ownerName || petData.owner_info?.full_name || "Pet Parent";
   const rawPhone = petData.owner_phone || petData.ownerPhone || petData.owner_info?.phone || "+91 9XXXX XXXXX";
   
   const formatPhoneMask = (phone) => {
