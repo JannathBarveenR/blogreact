@@ -257,7 +257,15 @@ async def create_pet_profile(
         "identification_ids": valid_ids,
     }
 
-    result = supabase.table("pet_profiles").insert(insert_data).execute()
+    try:
+        result = supabase.table("pet_profiles").insert(insert_data).execute()
+    except Exception as insert_err:
+        print(f"Profile insert via user client failed, retrying admin: {insert_err}")
+        try:
+            result = supabase_admin.table("pet_profiles").insert(insert_data).execute()
+        except Exception as admin_insert_err:
+            print(f"Profile insert error via admin: {admin_insert_err}")
+            raise HTTPException(status_code=500, detail=f"Failed to create pet profile: {str(admin_insert_err)}")
 
     if not result.data:
         print(f"Profile insert error: {result}")
