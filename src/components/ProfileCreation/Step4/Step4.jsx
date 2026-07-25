@@ -121,11 +121,17 @@ function Step4({ goBack, petData, setStep, isSubmitting, setIsSubmitting, submit
         body: formData,
       });
 
-      const profileData = await response.json();
+      let profileData = {};
+      const responseText = await response.text();
+      try {
+        profileData = JSON.parse(responseText);
+      } catch (err) {
+        profileData = { detail: responseText || "Server error occurred during profile creation." };
+      }
 
       if (!response.ok) {
         throw new Error(
-          profileData.detail || profileData.error || "Failed to create pet profile."
+          profileData.detail || profileData.message || profileData.error || "Failed to create pet profile."
         );
       }
 

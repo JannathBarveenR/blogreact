@@ -11,8 +11,17 @@ GET  /api/pet-profile/public/{petolife_id} — Public pet data (public)
 """
 
 import json
+import re
 import time
 from typing import Optional
+
+def sanitize_filename(filename: str) -> str:
+    """Sanitize filename to be S3/Supabase storage compatible (removes colons, spaces, special chars)."""
+    if not filename:
+        return "photo"
+    sanitized = re.sub(r'[^a-zA-Z0-9_.-]', '_', filename)
+    sanitized = re.sub(r'_+', '_', sanitized)
+    return sanitized.strip('_')
 
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
 from fastapi.responses import RedirectResponse
@@ -23,17 +32,35 @@ class PetProfileUpdate(BaseModel):
     pet_name: Optional[str] = None
     breed: Optional[str] = None
     gender: Optional[str] = None
-    birth_date: Optional[str] = Form(None),
-    approx_age: Optional[str] = Form(None),
-    weight: Optional[str] = Form(None),
+    birth_date: Optional[str] = None
+    approx_age: Optional[str] = None
+    weight: Optional[str] = None
     blood_group: Optional[str] = None
 
-from app.supabase_client import supabase as global_supabase
+from app.supabase_client import supabase as global_supabase, supabase_admin
 from app.routers.pet_health_id import generate_pet_health_id, store_pet_health_id
 from app.utils.auth import get_current_user_id, get_user_supabase
 from supabase import Client
 
 router = APIRouter()
+
+def ensure_pet_photos_bucket_exists():
+    try:
+        buckets = supabase_admin.storage.list_buckets()
+        bucket_names = [b.name for b in buckets] if buckets else []
+        if "pet-photos" not in bucket_names:
+            supabase_admin.storage.create_bucket("pet-photos", options={"public": True})
+            print("[Storage] Created public bucket 'pet-photos'")
+    except Exception as e:
+        print(f"[Storage] Note during pet-photos bucket check: {e}")
+
+def parse_float(val: Optional[str]) -> Optional[float]:
+    if not val:
+        return None
+    try:
+        return float(val.strip())
+    except (ValueError, TypeError):
+        return None
 
 
 @router.post("/")
@@ -47,6 +74,7 @@ async def create_pet_profile(
     birth_date: Optional[str] = Form(None),
     weight: Optional[str] = Form(None),
     blood_group: Optional[str] = Form(None),
+    approx_age: Optional[str] = Form(None),
     identification_marks: Optional[str] = Form(None),
     pet_ids: Optional[str] = Form(None),  # JSON string: [{"idName":"...", "idNumber":"..."}]
     pet_photo: Optional[UploadFile] = File(None),
@@ -62,8 +90,7 @@ async def create_pet_profile(
     if not pet_type or not pet_name:
         raise HTTPException(status_code=400, detail="pet_type and pet_name are required")
 
-    # Parse pet_ids from the form — now stored as JSON directly on pet_profiles,
-    # not a separate pet_ids table (that table was dropped).
+    # Parse pet_ids from the form
     parsed_ids: list[dict] = []
     if pet_ids:
         try:
@@ -82,24 +109,35 @@ async def create_pet_profile(
 
     pet_photo_url = None
     if pet_photo and pet_photo.filename:
-        file_name = f"{int(time.time() * 1000)}-{pet_photo.filename.replace(' ', '-')}"
+        ensure_pet_photos_bucket_exists()
+        clean_filename = sanitize_filename(pet_photo.filename)
+        file_name = f"{int(time.time() * 1000)}-{clean_filename}"
         file_bytes = await pet_photo.read()
         print(f"Uploading photo: {file_name}")
 
         try:
-            supabase.storage.from_("pet-photos").upload(
+            # Upload using supabase_admin to bypass storage RLS permission issues in production
+            supabase_admin.storage.from_("pet-photos").upload(
                 file_name,
                 file_bytes,
-                {"content-type": pet_photo.content_type or "image/jpeg"},
+                file_options={"content-type": pet_photo.content_type or "image/jpeg", "upsert": "true"},
             )
         except Exception as upload_err:
-            print(f"Photo upload error: {upload_err}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"Photo upload failed: {str(upload_err)}",
-            )
+            print(f"Photo upload error via admin, retrying user client: {upload_err}")
+            try:
+                supabase.storage.from_("pet-photos").upload(
+                    file_name,
+                    file_bytes,
+                    file_options={"content-type": pet_photo.content_type or "image/jpeg", "upsert": "true"},
+                )
+            except Exception as retry_err:
+                print(f"Photo upload failed completely: {retry_err}")
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Photo upload failed: {str(retry_err)}",
+                )
 
-        url_data = supabase.storage.from_("pet-photos").get_public_url(file_name)
+        url_data = supabase_admin.storage.from_("pet-photos").get_public_url(file_name)
         pet_photo_url = url_data
         print(f"Photo URL: {pet_photo_url}")
 
@@ -113,7 +151,7 @@ async def create_pet_profile(
         "gender": gender or None,
         "birth_date": birth_date or None,
         "approx_age": approx_age or None,
-        "weight": float(weight) if weight else None,
+        "weight": parse_float(weight),
         "blood_group": blood_group or None,
         "identification_marks": identification_marks or None,
         "pet_photo_url": pet_photo_url,

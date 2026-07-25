@@ -13,6 +13,7 @@ from app.supabase_client import supabase as global_supabase, supabase_admin
 from app.utils.auth import get_current_user_id, get_user_supabase
 from supabase import Client
 import time
+import re
 
 router = APIRouter()
 
@@ -152,7 +153,8 @@ async def upload_avatar(
         ensure_avatars_bucket_exists()
         
         timestamp = int(time.time() * 1000)
-        safe_filename = file.filename.replace(" ", "_") if file.filename else "avatar"
+        raw_filename = file.filename if file.filename else "avatar"
+        safe_filename = re.sub(r'[^a-zA-Z0-9_.-]', '_', raw_filename)
         storage_path = f"{user_id}/{timestamp}-{safe_filename}"
         
         file_bytes = await file.read()
