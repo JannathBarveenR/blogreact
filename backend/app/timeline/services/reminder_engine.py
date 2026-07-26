@@ -1,7 +1,7 @@
 # backend/app/timeline/services/reminder_engine.py
 from datetime import date, timedelta
 from dateutil.relativedelta import relativedelta   # pip install python-dateutil
-from app.supabase_client import supabase
+from app.supabase_client import supabase_admin as supabase
 
 DEWORMING_DAYS = 90
 ANTI_TICK_DAYS = 30

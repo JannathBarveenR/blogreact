@@ -65,38 +65,18 @@ function Step4({ goBack, petData, setStep, isSubmitting, setIsSubmitting, submit
     ) || [];
   const filteredBreeds = [...rawFiltered, "Other"];
 
-  React.useEffect(() => {
-    if (localPetData.birthDate) {
-      const computed = calculateAgeString(localPetData.birthDate);
-      if (computed) {
-        setLocalPetData((prev) => ({
-          ...prev,
-          approxAge: computed,
-        }));
-      }
-    }
-  }, [localPetData.birthDate]);
-
   const handleGenerate = async () => {
     setIsSubmitting(true);
     setSubmitError("");
 
     try {
-      // Single source of truth for the display age, computed once here.
-      // We no longer blank this out when birthDate exists — we resolve it
-      // to a concrete string up front so nothing downstream has to guess.
-      const resolvedAge =
-        (localPetData.birthDate && calculateAgeString(localPetData.birthDate)) ||
-        localPetData.approxAge ||
-        "";
-
       const formData = new FormData();
       formData.append("pet_type", localPetData.petType || "");
       formData.append("pet_name", (localPetData.petName || "").trim());
-      if (localPetData.breed)      formData.append("breed", localPetData.breed);
-      if (localPetData.gender)     formData.append("gender", localPetData.gender);
-      if (localPetData.birthDate)  formData.append("birth_date", localPetData.birthDate);
-      if (resolvedAge)             formData.append("approx_age", resolvedAge);
+      if (localPetData.breed)        formData.append("breed", localPetData.breed);
+      if (localPetData.gender)       formData.append("gender", localPetData.gender);
+      if (localPetData.birthDate)    formData.append("birth_date", localPetData.birthDate);
+      if (localPetData.approxAge)    formData.append("approx_age", localPetData.approxAge);
       if (localPetData.petPhotoFile) formData.append("pet_photo", localPetData.petPhotoFile);
 
       const storedUserData = localStorage.getItem("user");
@@ -121,11 +101,17 @@ function Step4({ goBack, petData, setStep, isSubmitting, setIsSubmitting, submit
         body: formData,
       });
 
-      const profileData = await response.json();
+      let profileData = {};
+      const responseText = await response.text();
+      try {
+        profileData = JSON.parse(responseText);
+      } catch (err) {
+        profileData = { detail: responseText || "Server error occurred during profile creation." };
+      }
 
       if (!response.ok) {
         throw new Error(
-          profileData.detail || profileData.error || "Failed to create pet profile."
+          profileData.detail || profileData.message || profileData.error || "Failed to create pet profile."
         );
       }
 
@@ -139,36 +125,22 @@ function Step4({ goBack, petData, setStep, isSubmitting, setIsSubmitting, submit
       // newPet: shape stored in localStorage (used to seed the dashboard
       // list on reload). `approx_age` is ALWAYS populated now — we don't
       // rely on `birth_date` surviving downstream to recompute it.
+      const returnedPet = profileData.data || {};
       const newPet = {
+        ...returnedPet,
         id: petProfileId,
         petolife_id: petolifeId,
         pet_name: (localPetData.petName || "").trim(),
-        pet_type: localPetData.petType,
-        breed: localPetData.breed,
-        gender: localPetData.gender,
-        birth_date: localPetData.birthDate || "",
-        approx_age: resolvedAge,
-        age: resolvedAge, // duplicate under `age` too, since PetIdCardModal checks this key first
-        pet_photo_url: profileData.data?.pet_photo_url,
+        name: (localPetData.petName || "").trim(),
+        image: returnedPet.pet_photo_url || "",
       };
 
       const existingPetsStr = localStorage.getItem(storageKey);
       const existingPets    = existingPetsStr ? JSON.parse(existingPetsStr) : [];
       localStorage.setItem(storageKey, JSON.stringify([newPet, ...existingPets]));
 
-      // petForHome: shape passed directly in-memory to the dashboard via
-      // onNavigateToPetHome. Also always populated now.
       const petForHome = {
-        id: petProfileId,
-        petolife_id: petolifeId,
-        name: (localPetData.petName || "").trim(),
-        pet_type: localPetData.petType || "",
-        breed: localPetData.breed || "Not added",
-        gender: localPetData.gender || "Male",
-        birth_date: localPetData.birthDate || "",
-        age: resolvedAge || "Not added",
-        image: profileData.data?.pet_photo_url ||
-               (localPetData.petPhotoFile ? URL.createObjectURL(localPetData.petPhotoFile) : ""),
+        ...newPet,
         pet_ids: validIds,
       };
 
@@ -350,7 +322,11 @@ function Step4({ goBack, petData, setStep, isSubmitting, setIsSubmitting, submit
                 </div>
               </div>
             ) : (
-              <strong>{localPetData.birthDate || localPetData.approxAge || "[Not Added]"}</strong>
+              <strong>
+                {localPetData.birthDate
+                  ? new Date(localPetData.birthDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+                  : localPetData.approxAge || "[Not Added]"}
+              </strong>
             )}
           </div>
         </div>

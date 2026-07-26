@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { MessageSquare, Dog, Cat, AlertTriangle, Heart } from "lucide-react";
-import problemImg from "../../../assets/problem-solution.webp";
+import empthyImg from "../../../assets/empthy.png";
 
 const bubbles = [
   { id: 1, Icon: Dog,  tag: "Prescription",    quote: "My prescription is somewhere in WhatsApp...",             sub: "Lost medical files during emergencies" },
@@ -86,7 +86,7 @@ const EmpathySection = ({ openModal }) => (
         >
           <div className="empathy-image-card" data-image-id="DOG_OWNER_PAPERS">
             <img
-              src={problemImg}
+              src={empthyImg}
               alt="Pet parent sorting through scattered health records"
               className="empathy-img-src"
             />

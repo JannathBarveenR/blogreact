@@ -395,7 +395,7 @@ a { text-decoration: none; }
   font-weight: 900;
 }
 
-.hero-mobile-visual-block { display: contents; }
+.hero-mobile-visual-block { display: none; }
 .hero-mobile-image-frame { display: none; }
 
 .hero-subtitle {
@@ -505,18 +505,17 @@ a { text-decoration: none; }
   position: relative;
   border-radius: 20px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  background: #FFFFFF;
-  box-shadow: 0 16px 36px rgba(0, 75, 73, 0.1);
+  box-shadow: 0 16px 40px rgba(0, 75, 73, 0.12);
   width: 100%;
+  height: 520px;
 }
 
 .hero-image-src {
   width: 100%;
-  height: auto;
-  max-height: 420px;
+  height: 100%;
   display: block;
   object-fit: cover;
+  object-position: center;
   border-radius: 20px;
 }
 
@@ -653,16 +652,20 @@ a { text-decoration: none; }
 
 .empathy-image-card {
   position: relative;
-  border-radius: 18px;
+  border-radius: 24px;
   overflow: hidden;
-  box-shadow:
-    0 4px 12px rgba(0,0,0,0.06),
-    0 16px 36px rgba(0, 75, 73, 0.08);
-  max-height: none;
-  height: auto;
+  box-shadow: 0 20px 48px rgba(0, 75, 73, 0.15);
+  height: 440px;
+  width: 100%;
 }
 
-.empathy-img-src { width: 100%; height: auto; object-fit: contain; display: block; }
+.empathy-img-src {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 85% center;
+  display: block;
+}
 
 .empathy-card-glass-caption {
   position: absolute; bottom: 0; left: 0; right: 0;
@@ -821,9 +824,9 @@ a { text-decoration: none; }
 
 .feature-card-img-frame {
   position: relative;
-  border-radius: 14px;
+  border-radius: 12px;
   overflow: hidden;
-  height: 175px;
+  height: 155px;
   width: 100%;
   box-shadow: 0 4px 14px rgba(0, 75, 73, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.9);
@@ -833,9 +836,9 @@ a { text-decoration: none; }
 .feature-card-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
-  border-radius: 14px;
+  border-radius: 12px;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -1310,67 +1313,54 @@ a { text-decoration: none; }
     padding: 0;
   }
   .hero-mobile-visual-block {
-    display: flex;
+    display: block;
     position: relative;
     width: 100%;
     border-radius: 16px;
     overflow: hidden;
     margin: 8px 0 12px;
-    padding: 10px 8px;
-    min-height: 195px;
-    align-items: center;
-    justify-content: flex-end;
+    padding: 0;
+    height: 280px;
     box-sizing: border-box;
-    background: linear-gradient(135deg, #eef7f2 0%, #e3f2ea 100%);
-    border: 1px solid rgba(0, 75, 73, 0.08);
-    box-shadow: inset 0 0 12px rgba(0, 75, 73, 0.03);
+    box-shadow: 0 8px 24px rgba(0, 75, 73, 0.08);
   }
   .hero-mobile-image-frame {
     display: block;
-    position: absolute;
-    inset: 0;
     width: 100%;
     height: 100%;
     margin: 0;
-    border-radius: 0;
+    border-radius: 16px;
     overflow: hidden;
-    z-index: 1;
   }
   .hero-mobile-image-src {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: 28% center;
-    transform: scaleX(-1);
+    object-position: center;
     display: block;
   }
   .hero-trust-bullets {
-    position: relative;
-    z-index: 2;
-    width: 60%;
-    margin-left: auto;
-    margin-bottom: 0;
-    margin-top: 0;
-    gap: 6px;
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+    margin: 4px 0 14px;
+    padding: 0;
   }
   .trust-item {
     display: flex;
     align-items: center;
     gap: 8px;
-    background: rgba(255, 255, 255, 0.92);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    padding: 6px 8px;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 75, 73, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.95);
+    background: #ffffff;
+    padding: 9px 10px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 75, 73, 0.05);
+    border: 1px solid rgba(0, 75, 73, 0.08);
   }
   .trust-icon-wrapper {
-    width: 26px;
-    height: 26px;
-    border-radius: 7px;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
     flex-shrink: 0;
   }
   .trust-title {
@@ -1378,12 +1368,10 @@ a { text-decoration: none; }
     font-weight: 700;
     line-height: 1.2;
     text-align: left;
+    color: #004b49;
   }
   .trust-desc {
-    font-size: 0.64rem;
-    line-height: 1.2;
-    color: #4a6355;
-    text-align: left;
+    display: none;
   }
   .hero-cta-group {
     flex-direction: column;
@@ -1422,6 +1410,17 @@ a { text-decoration: none; }
   .section-title { font-size: 1.45rem; line-height: 1.25; margin: 6px 0 8px; }
   .section-description { font-size: 0.84rem; line-height: 1.45; }
   .empathy-grid { grid-template-columns: 1fr; gap: 10px; margin-bottom: 20px; }
+  .empathy-image-card {
+    height: 280px;
+    border-radius: 18px;
+    margin-top: 10px;
+  }
+  .empathy-img-src {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 85% center;
+  }
   .speech-bubbles-column { gap: 8px; }
   .speech-bubble-card { padding: 10px 14px; gap: 10px; border-radius: 12px; }
   .bubble-avatar { width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0; }
@@ -1457,30 +1456,12 @@ a { text-decoration: none; }
   .product-container { padding: 0; }
   .product-2x2-grid { grid-template-columns: 1fr; gap: 14px; }
   .feature-card-2x2 { grid-template-columns: 1fr; gap: 10px; padding: 16px; border-radius: 16px; }
+  .feature-card-media { display: none; }
   .feature-card-badge { font-size: 0.68rem; margin-bottom: 4px; }
   .feature-card-title { font-size: 1.05rem; margin-bottom: 6px; line-height: 1.25; }
   .feature-card-desc { font-size: 0.82rem; line-height: 1.4; margin-bottom: 8px; }
   .feature-card-points { display: flex; flex-direction: column; gap: 4px; }
   .feature-card-point-item { font-size: 0.76rem; }
-  .feature-card-img-frame {
-    height: auto;
-    max-width: 85%;
-    margin: 0 auto;
-    border-radius: 12px;
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    overflow: hidden;
-  }
-  .feature-card-img {
-    width: 100%;
-    max-height: 190px;
-    object-fit: contain;
-    display: block;
-    margin: 0 auto;
-    border-radius: 12px;
-    box-shadow: 0 4px 14px rgba(0, 75, 73, 0.08);
-  }
 
   /* 4. Founder Section Mobile Flow */
   .founder-section {

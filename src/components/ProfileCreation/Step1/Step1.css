@@ -9,13 +9,14 @@
 .petphoto-container {
   width: 100%;
   max-width: 430px;
-  min-height: 100vh;
+  height: 100dvh;
   margin: 0 auto;
-  padding: 24px 20px 24px;
+  padding: 24px 20px 80px;
   background: #ffffff;
   position: relative;
   overflow-x: hidden;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* slide-in animation (replaces framer-motion) */
