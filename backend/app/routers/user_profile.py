@@ -81,7 +81,7 @@ async def update_user_profile(
     if user_id != auth_user_id:
         raise HTTPException(status_code=403, detail="You can only update your own profile")
     try:
-        update_data = {k: v for k, v in profile.dict().items() if v is not None}
+        update_data = {k: v for k, v in profile.model_dump().items() if v is not None}
         if not update_data:
             return {"message": "No data to update"}
         
