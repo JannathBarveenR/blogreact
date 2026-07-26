@@ -1,0 +1,389 @@
+/* ── ReminderBellSheet.css ── */
+
+/* Backdrop */
+.bell-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: bdFadeIn 0.22s ease;
+}
+
+@keyframes bdFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Sheet */
+.bell-sheet {
+  width: 100%;
+  max-width: 480px;
+  background: #ffffff;
+  border-radius: 28px 28px 0 0;
+  max-height: 82dvh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 -12px 48px rgba(0, 75, 73, 0.18);
+  border-top: 1.5px solid #d8eecd;
+  animation: sheetUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes sheetUp {
+  from { transform: translateY(100%); opacity: 0.4; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* Handle */
+.bell-sheet__handle {
+  width: 40px;
+  height: 4px;
+  border-radius: 99px;
+  background: #d1d5db;
+  margin: 12px auto 0;
+  flex-shrink: 0;
+}
+
+/* Header */
+.bell-sheet__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid #eef2ea;
+  flex-shrink: 0;
+}
+
+.bell-sheet__header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.bell-sheet__bell-badge {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #eaf5e5, #d5edca);
+  color: #004b23;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.bell-sheet__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #004b23;
+  line-height: 1.2;
+}
+
+.bell-sheet__subtitle {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #84b662;
+}
+
+.bell-sheet__close {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: #f3f4f6;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #374151;
+  transition: background 0.18s ease;
+  flex-shrink: 0;
+}
+
+.bell-sheet__close:hover {
+  background: #e5e7eb;
+}
+
+/* Summary */
+.bell-sheet__summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #f9fdf6;
+  border-bottom: 1px solid #eef2ea;
+  flex-shrink: 0;
+}
+
+.bell-sheet__summary-count {
+  font-size: 13px;
+  font-weight: 700;
+  color: #004b23;
+}
+
+.bell-sheet__missed-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  padding: 3px 8px;
+  border-radius: 99px;
+}
+
+/* Body */
+.bell-sheet__body {
+  overflow-y: auto;
+  padding: 12px 16px 24px;
+  flex: 1;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Loading */
+.bell-sheet__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 40px 20px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.bell-sheet__spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid #d1fae5;
+  border-top-color: #004b23;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Empty */
+.bell-sheet__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.bell-sheet__empty-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #f0fdf4;
+  color: #84b662;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bell-sheet__empty h4 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  color: #004b23;
+}
+
+.bell-sheet__empty p {
+  margin: 0;
+  font-size: 13.5px;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+/* Time slot groups */
+.bell-sheet__slot-group {
+  margin-bottom: 16px;
+}
+
+.bell-sheet__slot-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px;
+  margin-bottom: 8px;
+}
+
+.bell-sheet__slot-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.bell-sheet__slot-dot--morning   { background: #f59e0b; }
+.bell-sheet__slot-dot--afternoon { background: #f97316; }
+.bell-sheet__slot-dot--night     { background: #6366f1; }
+
+.bell-sheet__slot-label {
+  font-size: 13px;
+  font-weight: 800;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.bell-sheet__slot-time {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9ca3af;
+  margin-left: auto;
+}
+
+/* Individual reminder items */
+.bell-sheet__slot-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bell-sheet__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: #f9fafb;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 12px 14px;
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+
+.bell-sheet__item--missed {
+  background: #fef9f9;
+  border-color: #fca5a5;
+}
+
+.bell-sheet__item--snoozed {
+  background: #fefce8;
+  border-color: #fde68a;
+}
+
+.bell-sheet__item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.bell-sheet__item-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.bell-sheet__item-type-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #84b662;
+  flex-shrink: 0;
+}
+
+.bell-sheet__item-type-dot[data-type="vaccination"] { background: #0ea5e9; }
+.bell-sheet__item-type-dot[data-type="medication"]  { background: #84b662; }
+.bell-sheet__item-type-dot[data-type="medication_end"] { background: #84b662; }
+.bell-sheet__item-type-dot[data-type="deworming"]   { background: #8b5cf6; }
+.bell-sheet__item-type-dot[data-type="vet_visit"]   { background: #004b23; }
+.bell-sheet__item-type-dot[data-type="grooming"]    { background: #ec4899; }
+
+.bell-sheet__item-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.3;
+}
+
+.bell-sheet__status-pill {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 99px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.bell-sheet__status-pill--missed {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.bell-sheet__status-pill--snoozed {
+  background: #fefce8;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.bell-sheet__item-notes {
+  margin: 5px 0 0;
+  font-size: 12px;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+.bell-sheet__item-date {
+  margin: 5px 0 0;
+  font-size: 11px;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Done button */
+.bell-sheet__done-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 12px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #004b23, #1a7a43);
+  color: #ffffff;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 4px 12px rgba(0, 75, 35, 0.2);
+}
+
+.bell-sheet__done-btn:hover:not(:disabled) {
+  transform: scale(1.03);
+  box-shadow: 0 6px 16px rgba(0, 75, 35, 0.28);
+}
+
+.bell-sheet__done-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.bell-sheet__done-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.bell-sheet__btn-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}

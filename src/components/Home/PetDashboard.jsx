@@ -8,7 +8,7 @@ import "./QuickActions/QuickActions.css";
 import HeroSection from "./HeroSection/HeroSection";
 import AddPetCard from "./AddPetCard/AddPetCard";
 import UploadRecordsCard from "./UploadRecordsCard/UploadRecordsCard";
-import Pets from "./Pets/Pets";
+import ProfileCard from "./ProfileCard/ProfileCard";
 
 import polLogo from "../../assets/logo.webp";
 import educationBannerImg from "../../assets/education-banner.png";
@@ -60,8 +60,6 @@ export default function PetHome({
   onNavigateTab,
 }) {
   const navigate = useNavigate();
-  const [showPetDropdown, setShowPetDropdown] = useState(false);
-  const dropdownRef = useRef(null);
 
   const selectedPet = propSelectedPet || (pets.length > 0 ? pets[0] : null);
 
@@ -69,8 +67,10 @@ export default function PetHome({
     if (typeof setSelectedPet === "function") {
       setSelectedPet(pet);
     }
-    setShowPetDropdown(false);
   };
+
+  const [showPetDropdown, setShowPetDropdown] = useState(false);
+  const dropdownRef = useRef(null);
 
   // Checklist State Management
   const todayStr = new Date().toISOString().split("T")[0];
@@ -121,10 +121,9 @@ export default function PetHome({
         </div>
 
         <div style={{ marginTop: '2px' }}>
-          <Pets
+          <ProfileCard
             pets={[]}
             selectedPet={null}
-            onPetSelect={handlePetSelect}
             onAddPet={onAddPet}
           />
         </div>
@@ -162,17 +161,14 @@ export default function PetHome({
 
   return (
     <div className="pet-home">
-      <div className="dashboard-section-header" style={{ padding: '0 4px', margin: '20px 0 4px 0' }}>
-        <h3 className="dashboard-section-title">
-          {pets.length === 1 ? "Your Pet" : "Your Pets"}
-        </h3>
-      </div>
-
-      <Pets
+      <ProfileCard
         pets={pets}
         selectedPet={selectedPet}
-        onPetSelect={handlePetSelect}
+        handlePetSelect={handlePetSelect}
         onAddPet={onAddPet}
+        showPetDropdown={showPetDropdown}
+        setShowPetDropdown={setShowPetDropdown}
+        dropdownRef={dropdownRef}
       />
 
       <HeroSection

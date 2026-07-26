@@ -20,6 +20,7 @@ CREATE TABLE public.pet_profiles (
   health_conditions jsonb DEFAULT '[]'::jsonb,
   pet_attributes jsonb DEFAULT '[]'::jsonb,
   identification_ids jsonb DEFAULT '[]'::jsonb,
+  approx_age text,
   CONSTRAINT pet_profiles_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.user_profiles (
