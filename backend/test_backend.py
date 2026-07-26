@@ -49,8 +49,12 @@ TIMEOUT = 15.0
 # ==============================================================================
 results = []
 
-def record(name: str, passed: bool, detail: str = ""):
+def record(name: str, passed: bool, detail: str = "", resp=None):
     status = "[PASS]" if passed else "[FAIL]"
+    
+    if not passed and resp and hasattr(resp, 'status_code') and resp.status_code != 200:
+        detail = f"status={resp.status_code} body={resp.text[:500]} {detail}"
+        
     results.append({"name": name, "passed": passed, "detail": detail})
     print(f"  {status} | {name}" + (f" -- {detail}" if detail and not passed else ""))
 
@@ -63,6 +67,8 @@ async def safe_request(client: httpx.AsyncClient, method: str, url: str, **kwarg
     try:
         kwargs.setdefault("follow_redirects", True)
         resp = await client.request(method, url, timeout=TIMEOUT, **kwargs)
+        if resp.status_code >= 400:
+            print(f"[ERROR] {method} {url} returned {resp.status_code}: {resp.text[:500]}")
         return resp, None
     except Exception as e:
         err_msg = str(e) or repr(e) or f"Exception of type {type(e).__name__}"

@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from typing import Optional
 from app.supabase_client import supabase as global_supabase, supabase_admin
 from app.utils.auth import get_current_user_id, get_user_supabase
+from app.s3_client import upload_public_file, AWS_AVATARS_BUCKET
 from supabase import Client
 import time
 import re
@@ -26,15 +27,7 @@ class UserProfileUpdate(BaseModel):
     pincode: Optional[str] = None
     address: Optional[str] = None
 
-def ensure_avatars_bucket_exists():
-    try:
-        buckets = supabase_admin.storage.list_buckets()
-        bucket_names = [b.name for b in buckets] if buckets else []
-        if "avatars" not in bucket_names:
-            supabase_admin.storage.create_bucket("avatars", options={"public": True})
-            print("[Storage] Created public bucket 'avatars'")
-    except Exception as e:
-        print(f"[Storage] Note during bucket check: {e}")
+# Avatars bucket now on AWS S3
 
 @router.get("/{user_id}")
 async def get_user_profile(
@@ -150,8 +143,6 @@ async def upload_avatar(
     if user_id != auth_user_id:
         raise HTTPException(status_code=403, detail="You can only update your own avatar")
     try:
-        ensure_avatars_bucket_exists()
-        
         timestamp = int(time.time() * 1000)
         raw_filename = file.filename if file.filename else "avatar"
         safe_filename = re.sub(r'[^a-zA-Z0-9_.-]', '_', raw_filename)
@@ -161,13 +152,12 @@ async def upload_avatar(
         if len(file_bytes) > 5 * 1024 * 1024:
              raise HTTPException(status_code=400, detail="File too large. Maximum size is 5MB.")
 
-        supabase.storage.from_("avatars").upload(
-            storage_path,
-            file_bytes,
-            {"content-type": file.content_type}
+        public_url = upload_public_file(
+            file_bytes=file_bytes,
+            bucket=AWS_AVATARS_BUCKET,
+            filename=storage_path,
+            content_type=file.content_type or "image/jpeg"
         )
-
-        public_url = supabase.storage.from_("avatars").get_public_url(storage_path)
         
         # Update user_profiles with new avatar_url
         supabase.table("user_profiles").update({"avatar_url": public_url}).eq("id", user_id).execute()

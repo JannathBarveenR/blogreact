@@ -3,36 +3,32 @@
 and V2 documents.py. Keeps bucket logic in ONE place."""
 
 import uuid, mimetypes
-from app.supabase_client import supabase
-
-MEDICAL_BUCKET = "medical-docs"   # matches your existing V1 bucket name
+from app.s3_client import upload_private_file, get_presigned_url, delete_file as s3_delete_file, AWS_MEDICAL_DOCS_BUCKET
 
 
 class MedicalRecordService:
     @staticmethod
     def ensure_bucket():
-        try:
-            buckets = [b.name for b in supabase.storage.list_buckets()]
-            if MEDICAL_BUCKET not in buckets:
-                supabase.storage.create_bucket(MEDICAL_BUCKET, options={"public": True})
-        except Exception:
-            pass  # bucket already exists / race — safe to ignore
+        # AWS bucket exists and is managed via infrastructure
+        pass
 
     @staticmethod
     def upload_file(file_bytes: bytes, filename: str, content_type: str | None = None):
-        """Returns (public_url, storage_path). Random path avoids cache collisions."""
-        MedicalRecordService.ensure_bucket()
+        """Returns (presigned_url, storage_path). Random path avoids cache collisions."""
         ext = (filename.rsplit(".", 1)[-1] if "." in filename else "bin")
         path = f"{uuid.uuid4().hex}.{ext}"
         content_type = content_type or mimetypes.guess_type(filename)[0] or "application/octet-stream"
-        supabase.storage.from_(MEDICAL_BUCKET).upload(
-            path, file_bytes, {"content-type": content_type, "upsert": "false"})
-        public_url = supabase.storage.from_(MEDICAL_BUCKET).get_public_url(path)
-        return public_url, path
+        
+        # Uploads to private bucket
+        storage_path = upload_private_file(file_bytes, AWS_MEDICAL_DOCS_BUCKET, path, content_type)
+        
+        # Generate temporary presigned URL for immediate frontend use/return
+        public_url = get_presigned_url(AWS_MEDICAL_DOCS_BUCKET, storage_path)
+        return public_url, storage_path
 
     @staticmethod
     def delete_file(storage_path: str):
         try:
-            supabase.storage.from_(MEDICAL_BUCKET).remove([storage_path])
-        except Exception:
-            pass
+            s3_delete_file(AWS_MEDICAL_DOCS_BUCKET, storage_path)
+        except Exception as e:
+            print(f"Failed to delete {storage_path} from S3: {e}")

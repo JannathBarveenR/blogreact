@@ -21,6 +21,7 @@ from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
 from fastapi.responses import RedirectResponse, JSONResponse
 from pydantic import BaseModel
 from supabase import Client
+from app.s3_client import upload_public_file, delete_file, AWS_PET_PHOTOS_BUCKET
 
 from app.config import FRONTEND_URL
 from app.supabase_client import supabase as global_supabase, supabase_admin
@@ -141,15 +142,7 @@ def enrich_pet_profile(profile: dict, owner_info: Optional[dict] = None) -> dict
     return p
 
 
-def ensure_pet_photos_bucket_exists():
-    try:
-        buckets = supabase_admin.storage.list_buckets()
-        bucket_names = [b.name for b in buckets] if buckets else []
-        if "pet-photos" not in bucket_names:
-            supabase_admin.storage.create_bucket("pet-photos", options={"public": True})
-            print("[Storage] Created public bucket 'pet-photos'")
-    except Exception as e:
-        print(f"[Storage] Note during pet-photos bucket check: {e}")
+# pet-photos bucket now on AWS S3
 
 
 def parse_float(val: Optional[str]) -> Optional[float]:
@@ -203,27 +196,16 @@ async def create_pet_profile(
     pet_photo_url = None
     if pet_photo and pet_photo.filename:
         try:
-            ensure_pet_photos_bucket_exists()
             clean_filename = sanitize_filename(pet_photo.filename)
             file_name = f"{int(time.time() * 1000)}-{clean_filename}"
             file_bytes = await pet_photo.read()
 
-            try:
-                supabase_admin.storage.from_("pet-photos").upload(
-                    file_name,
-                    file_bytes,
-                    file_options={"content-type": pet_photo.content_type or "image/jpeg", "upsert": "true"},
-                )
-            except Exception as upload_err:
-                print(f"Photo upload error via admin, retrying user client: {upload_err}")
-                supabase.storage.from_("pet-photos").upload(
-                    file_name,
-                    file_bytes,
-                    file_options={"content-type": pet_photo.content_type or "image/jpeg", "upsert": "true"},
-                )
-
-            url_data = supabase_admin.storage.from_("pet-photos").get_public_url(file_name)
-            pet_photo_url = url_data
+            pet_photo_url = upload_public_file(
+                file_bytes=file_bytes,
+                bucket=AWS_PET_PHOTOS_BUCKET,
+                filename=file_name,
+                content_type=pet_photo.content_type or "image/jpeg"
+            )
         except Exception as photo_err:
             print(f"Non-fatal photo upload warning: {photo_err}")
 
@@ -421,13 +403,12 @@ async def update_pet_photo(
         file_name = f"{profile_id}-{int(time.time() * 1000)}-{clean_name}"
         file_bytes = await file.read()
 
-        supabase.storage.from_("pet-photos").upload(
-            file_name,
-            file_bytes,
-            {"content-type": file.content_type or "image/jpeg"}
+        photo_url = upload_public_file(
+            file_bytes=file_bytes,
+            bucket=AWS_PET_PHOTOS_BUCKET,
+            filename=file_name,
+            content_type=file.content_type or "image/jpeg"
         )
-
-        photo_url = supabase.storage.from_("pet-photos").get_public_url(file_name)
 
         supabase.table("pet_profiles").update({"pet_photo_url": photo_url}).eq("id", profile_id).execute()
 
@@ -458,9 +439,9 @@ async def delete_pet_profile(
                 filename = photo_url.split("/")[-1]
                 if filename:
                     try:
-                        supabase.storage.from_("pet-photos").remove([filename])
+                        delete_file(AWS_PET_PHOTOS_BUCKET, filename)
                     except Exception as e:
-                        print(f"Error deleting photo from bucket: {e}")
+                        print(f"Error deleting photo from AWS S3: {e}")
 
         supabase.table("pet_profiles").delete().eq("id", profile_id).execute()
 
