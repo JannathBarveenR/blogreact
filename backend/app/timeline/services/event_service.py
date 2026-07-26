@@ -1,7 +1,7 @@
 # backend/app/timeline/services/event_service.py
 import uuid
 from datetime import date
-from app.supabase_client import supabase
+from app.supabase_client import supabase_admin as supabase
 from app.timeline.schemas.category_entry import CATEGORY_TO_FORM_TYPE
 from app.timeline.services.dedupe_service import DedupeService, compute_entry_hash
 from app.timeline.services import reminder_engine
