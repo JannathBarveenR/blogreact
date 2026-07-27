@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./TimelinePage.css";
 
-import Pets from "../Home/Pets/Pets";
+import ProfileCard from "../Home/ProfileCard/ProfileCard";
 import FilterChips from "./FilterChips";
 import TimelineCard from "./TimelineCard";
 import EmptyTimeline from "./EmptyTimeline";
@@ -120,13 +120,15 @@ export default function TimelinePage({
 
   return (
     <div className="tl-page">
-      {/* Pet Switcher */}
+      {/* Pet Switcher Header Card */}
       <div className="tl-page__pets">
-        <Pets
+        <ProfileCard
           pets={pets}
           selectedPet={selectedPet}
-          onPetSelect={onPetSelect}
+          handlePetSelect={onPetSelect}
           onAddPet={onAddPet}
+          onAddPetNote={handleAddNote}
+          onUploadRecords={() => navigate("/records", { state: { openUpload: true } })}
         />
       </div>
 

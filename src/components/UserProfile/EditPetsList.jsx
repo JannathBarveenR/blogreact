@@ -1,15 +1,17 @@
 import React, { useState, useRef } from "react";
-import { FiEdit2, FiArrowLeft, FiPlus, FiCheck, FiX } from "react-icons/fi";
+import { FiEdit2, FiArrowLeft, FiPlus, FiCheck, FiX, FiChevronDown, FiSearch } from "react-icons/fi";
 import { Dog, Cat, Rabbit, Bird, PawPrint } from "lucide-react";
 import fetchWithAuth from "../../utils/fetchWithAuth";
 import queryClient from "../../utils/queryClient";
+import { breedData } from "../ProfileCreation/constants";
 import "./EditPetsList.css";
+
 const EMPTY_FORM = {
   pet_name: "",
-  species: "",
   breed: "",
   age: "",
   pet_photo_url: "",
+  pet_type: "Dog",
 };
 
 const getPetId = (pet) => pet?.id ?? pet?._id ?? pet?.pet_id;
@@ -27,17 +29,21 @@ const EditPetsList = ({
   const [deletePetId, setDeletePetId] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [photoFile, setPhotoFile] = useState(null);
+  const [showBreedModal, setShowBreedModal] = useState(false);
+  const [breedSearch, setBreedSearch] = useState("");
   const fileInputRef = useRef(null);
 
   const startEdit = (pet) => {
     setEditingPetId(getPetId(pet));
     setPhotoFile(null);
+    const existingBreed = pet.breed || "";
+    const pType = pet.species || pet.pet_type || pet.type || "Dog";
     setForm({
       pet_name: pet.pet_name || pet.name || "",
-      species: pet.species || pet.pet_type || "",
-      breed: pet.breed || "",
-      age: pet.age || pet.approx_age || "",
+      breed: existingBreed,
+      age: pet.approx_age || pet.age || pet.birth_date || "",
       pet_photo_url: pet.pet_photo_url || pet.image || "",
+      pet_type: pType,
     });
   };
 
@@ -45,6 +51,8 @@ const EditPetsList = ({
     setEditingPetId(null);
     setForm(EMPTY_FORM);
     setPhotoFile(null);
+    setShowBreedModal(false);
+    setBreedSearch("");
   };
 
   const handleChange = (field) => (e) => {
@@ -65,8 +73,12 @@ const EditPetsList = ({
       const updatePayload = {
         pet_name: form.pet_name,
         breed: form.breed,
-        birth_date: form.age, // Backend supports birth_date string which resolves to age
+        approx_age: form.age, // Persist age text into approx_age database column!
       };
+
+      if (/^\d{4}-\d{2}-\d{2}$/.test((form.age || "").trim())) {
+        updatePayload.birth_date = form.age.trim();
+      }
 
       const res = await fetchWithAuth(`/api/pet-profile/${petId}`, {
         method: "PATCH",
@@ -89,7 +101,6 @@ const EditPetsList = ({
       // Force UI refresh instantly
       queryClient.invalidateQueries({ queryKey: ["pets"] });
 
-      // Call parent if it needs to do anything (like close modal)
       if (onUpdatePet) {
         await onUpdatePet(pet, photoFile);
       }
@@ -101,65 +112,68 @@ const EditPetsList = ({
       setSaving(false);
     }
   };
+
   const getPetPhoto = (pet) => pet.pet_photo_url || pet.image || null;
 
-const getPetIcon = (pet) => {
-  const type = (pet.species || pet.pet_type || pet.type || "")
-    .toLowerCase()
-    .trim();
+  const getPetIcon = (pet) => {
+    const type = (pet.species || pet.pet_type || pet.type || "")
+      .toLowerCase()
+      .trim();
 
-  switch (type) {
-    case "dog":
-      return Dog;
-
-    case "cat":
-      return Cat;
-
-    case "rabbit":
-    case "bunny":
-      return Rabbit;
-
-    case "bird":
-    case "parrot":
-      return Bird;
-
-    default:
-      return PawPrint;
-  }
-};
-const handleDelete = async () => {
-  if (!deletePetId) return;
-
-  setDeleting(true);
-
-  try {
-    const res = await fetchWithAuth(`/api/pet-profile/${deletePetId}`, {
-      method: "DELETE",
-    });
-
-    if (!res.ok) {
-      throw new Error("Failed to delete pet");
+    switch (type) {
+      case "dog":
+        return Dog;
+      case "cat":
+        return Cat;
+      case "rabbit":
+      case "bunny":
+        return Rabbit;
+      case "bird":
+      case "parrot":
+        return Bird;
+      default:
+        return PawPrint;
     }
+  };
 
-    // Instantly remove from the cache so it vanishes from the UI
-    queryClient.invalidateQueries({ queryKey: ["pets"] });
+  const handleDelete = async () => {
+    if (!deletePetId) return;
 
-    if (onDeletePet) {
-      await onDeletePet(deletePetId);
+    setDeleting(true);
+
+    try {
+      const res = await fetchWithAuth(`/api/pet-profile/${deletePetId}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to delete pet");
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["pets"] });
+
+      if (onDeletePet) {
+        await onDeletePet(deletePetId);
+      }
+
+      if (editingPetId === deletePetId) {
+        cancelEdit();
+      }
+
+      setDeletePetId(null);
+    } catch (err) {
+      console.error("Failed to delete pet:", err);
+      alert("Could not delete pet.");
+    } finally {
+      setDeleting(false);
     }
+  };
 
-    if (editingPetId === deletePetId) {
-      cancelEdit();
-    }
-
-    setDeletePetId(null);
-  } catch (err) {
-    console.error("Failed to delete pet:", err);
-    alert("Could not delete pet.");
-  } finally {
-    setDeleting(false);
-  }
-};
+  const currentPetType = form.pet_type || "Dog";
+  const fullBreedsList = breedData[currentPetType] || breedData["Dog"] || [];
+  const filteredBreeds = fullBreedsList.filter((b) =>
+    b.toLowerCase().includes(breedSearch.toLowerCase())
+  );
 
   return (
     <div className="edit-pets-page">
@@ -173,11 +187,8 @@ const handleDelete = async () => {
       </button>
 
       <div>
-        <h2 className="edit-pets-title">
-          Manage Pets
-        </h2>
+        <h2 className="edit-pets-title">Manage Pets</h2>
       </div>
-
 
       <p className="edit-pets-subtitle">
         Choose a pet to update their details, photo, or care info.
@@ -186,8 +197,8 @@ const handleDelete = async () => {
       {pets.length === 0 ? (
         <div className="edit-pets-empty">
           <div className="edit-pets-empty-icon">
-  <PawPrint size={72} strokeWidth={1.8} />
-</div>
+            <PawPrint size={72} strokeWidth={1.8} />
+          </div>
           <h4>No pets to edit yet</h4>
           <p>Add a pet first, then come back here to update their details.</p>
           <button className="edit-pets-add-btn" onClick={onAddPet}>
@@ -199,8 +210,7 @@ const handleDelete = async () => {
           {pets.map((pet) => {
             const name = pet.pet_name || pet.name || "Unnamed";
             const photo = getPetPhoto(pet);
-const PetIcon = getPetIcon(pet);
-            const species = pet.species || pet.pet_type || "";
+            const PetIcon = getPetIcon(pet);
             const petId = getPetId(pet);
             const isEditing = editingPetId === petId;
 
@@ -257,9 +267,9 @@ const PetIcon = getPetIcon(pet);
                     {!isEditing && (
                       <div className="edit-pet-info">
                         <span className="edit-pet-name">{name}</span>
-                        {species && (
+                        {pet.breed && (
                           <span className="edit-pet-species">
-                            {species}
+                            {pet.breed}
                           </span>
                         )}
                       </div>
@@ -269,10 +279,7 @@ const PetIcon = getPetIcon(pet);
                   {!isEditing && (
                     <button
                       className="edit-pet-delete-btn"
-                      
-                      onClick={() => {
-                        console.log("clicked", petId);
-                        setDeletePetId(petId)}}
+                      onClick={() => setDeletePetId(petId)}
                       type="button"
                     >
                       Remove
@@ -280,10 +287,10 @@ const PetIcon = getPetIcon(pet);
                   )}
                 </div>
 
-
                 {isEditing && (
                   <div className="edit-pet-form">
-                    
+
+                    {/* NAME FIELD */}
                     <label className="edit-pet-field">
                       <span>Name</span>
                       <input
@@ -294,34 +301,28 @@ const PetIcon = getPetIcon(pet);
                       />
                     </label>
 
-                    <div className="edit-pet-field-grid">
-                      <label className="edit-pet-field">
-                        <span>Species</span>
-                        <input
-                          type="text"
-                          value={form.species}
-                          onChange={handleChange("species")}
-                          placeholder="Dog, Cat..."
-                        />
-                      </label>
-                      <label className="edit-pet-field">
-                        <span>Breed</span>
-                        <input
-                          type="text"
-                          value={form.breed}
-                          onChange={handleChange("breed")}
-                          placeholder="Breed"
-                        />
-                      </label>
-                    </div>
+                    {/* BREED FIELD - Custom In-App Picker */}
+                    <label className="edit-pet-field">
+                      <span>Breed</span>
+                      <div
+                        className="edit-pet-breed-trigger"
+                        onClick={() => setShowBreedModal(true)}
+                      >
+                        <span className={form.breed ? "breed-val" : "breed-placeholder"}>
+                          {form.breed || "Select Breed"}
+                        </span>
+                        <FiChevronDown size={18} color="#6b7280" />
+                      </div>
+                    </label>
 
+                    {/* AGE FIELD (NORMAL TEXT) */}
                     <label className="edit-pet-field">
                       <span>Age</span>
                       <input
                         type="text"
                         value={form.age}
                         onChange={handleChange("age")}
-                        placeholder="e.g. 2 years"
+                        placeholder="e.g. 3 Years 2 Months or 2 Years"
                       />
                     </label>
 
@@ -343,6 +344,7 @@ const PetIcon = getPetIcon(pet);
                         <FiCheck size={14} /> {saving ? "Saving..." : "Save"}
                       </button>
                     </div>
+
                   </div>
                 )}
               </div>
@@ -357,44 +359,106 @@ const PetIcon = getPetIcon(pet);
           </div>
         </div>
       )}
-    {deletePetId && (
-      <div className="delete-modal-overlay">
-        <div className="delete-modal">
-          <div className="delete-modal-icon">
-            🐾
-          </div>
 
-          <h3>Remove Pet?</h3>
+      {/* Root Level In-App Breed Picker Modal (matching onboarding Step2) */}
+      {showBreedModal && (
+        <div className="breed-modal-overlay" onClick={() => setShowBreedModal(false)}>
+          <div className="breed-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="breed-modal-header">
+              <h3>Select Breed</h3>
+              <button
+                type="button"
+                className="breed-modal-close"
+                onClick={() => setShowBreedModal(false)}
+              >
+                <FiX size={18} />
+              </button>
+            </div>
 
-          <p>
-            Are you sure you want to remove this pet?
-            This action cannot be undone.
-          </p>
+            <div className="breed-modal-search">
+              <FiSearch size={16} color="#9ca3af" />
+              <input
+                type="text"
+                placeholder="Search breed..."
+                value={breedSearch}
+                onChange={(e) => setBreedSearch(e.target.value)}
+                autoFocus
+              />
+            </div>
 
-          <div className="delete-modal-actions">
-            <button
-              className="delete-cancel-btn"
-              onClick={() => setDeletePetId(null)}
-              disabled={deleting}
-            >
-              Cancel
-            </button>
+            <div className="breed-modal-list">
+              {filteredBreeds.length > 0 ? (
+                filteredBreeds.map((b) => (
+                  <div
+                    key={b}
+                    className={`breed-modal-item ${form.breed === b ? "active" : ""}`}
+                    onClick={() => {
+                      setForm((prev) => ({ ...prev, breed: b }));
+                      setShowBreedModal(false);
+                      setBreedSearch("");
+                    }}
+                  >
+                    <span>{b}</span>
+                    {form.breed === b && <FiCheck size={16} color="#1f7a3d" />}
+                  </div>
+                ))
+              ) : (
+                <div className="breed-modal-empty">No breeds found</div>
+              )}
 
-            <button
-              className="delete-confirm-btn"
-              onClick={handleDelete}
-              disabled={deleting}
-            >
-              {deleting ? "Removing..." : "Remove"}
-            </button>
+              <div
+                className="breed-modal-item breed-modal-item--custom"
+                onClick={() => {
+                  const custom = prompt("Enter custom breed name:");
+                  if (custom && custom.trim()) {
+                    setForm((prev) => ({ ...prev, breed: custom.trim() }));
+                  }
+                  setShowBreedModal(false);
+                  setBreedSearch("");
+                }}
+              >
+                <span>+ Type custom breed...</span>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    )}
-  </div>
-);
+      )}
 
-  
+      {/* Delete Pet Modal */}
+      {deletePetId && (
+        <div className="delete-modal-overlay">
+          <div className="delete-modal">
+            <div className="delete-modal-icon">🐾</div>
+
+            <h3>Remove Pet?</h3>
+
+            <p>
+              Are you sure you want to remove this pet?
+              This action cannot be undone.
+            </p>
+
+            <div className="delete-modal-actions">
+              <button
+                className="delete-cancel-btn"
+                onClick={() => setDeletePetId(null)}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+
+              <button
+                className="delete-confirm-btn"
+                onClick={handleDelete}
+                disabled={deleting}
+              >
+                {deleting ? "Removing..." : "Remove"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default EditPetsList;

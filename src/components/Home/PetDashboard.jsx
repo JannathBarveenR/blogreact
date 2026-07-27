@@ -12,46 +12,12 @@ import ProfileCard from "./ProfileCard/ProfileCard";
 
 import polLogo from "../../assets/logo.webp";
 import educationBannerImg from "../../assets/education-banner.png";
+import fetchWithAuth from "../../utils/fetchWithAuth";
+import PetLifestyleSurveyCard from "./PetLifestyleSurveyCard";
 
-// Helper to get task list based on hour of the day
-const getChecklistTasks = () => {
-  const hours = new Date().getHours();
-  
-  if (hours >= 5 && hours < 12) {
-    return [
-      { id: "morning_breakfast", label: "Had breakfast" },
-      { id: "morning_water", label: "Fresh water ready" },
-      { id: "morning_active", label: "Feeling active" },
-      { id: "morning_potty", label: "Potty looks normal" },
-      { id: "morning_healthy", label: "Looking healthy" },
-    ];
-  } else if (hours >= 12 && hours < 17) {
-    return [
-      { id: "afternoon_water", label: "Water is topped up" },
-      { id: "afternoon_eating", label: "Eating well" },
-      { id: "afternoon_moving", label: "Moving around normally" },
-      { id: "afternoon_relaxed", label: "Comfortable and relaxed" },
-      { id: "afternoon_play", label: "Had some play or activity" },
-    ];
-  } else if (hours >= 17 && hours < 21) {
-    return [
-      { id: "evening_dinner", label: "Had dinner" },
-      { id: "evening_water", label: "Fresh water ready" },
-      { id: "evening_activity", label: "Had enough activity" },
-      { id: "evening_clean", label: "Clean and comfortable" },
-      { id: "evening_behavior", label: "No unusual behavior" },
-    ];
-  } else {
-    return [
-      { id: "night_water", label: "Water ready for the night" },
-      { id: "night_sleeping", label: "Sleeping spot is comfortable" },
-      { id: "night_safe", label: "Safe and settled in" },
-      { id: "night_okay", label: "Feeling okay before bed" },
-      { id: "night_meds", label: "Medicines or daily care done" },
-    ];
-  }
-};
-
+// -----------------------------------------------------------------------------
+// Pet Dashboard Component
+// -----------------------------------------------------------------------------
 export default function PetHome({
   pets = [],
   selectedPet: propSelectedPet,
@@ -72,30 +38,34 @@ export default function PetHome({
   const [showPetDropdown, setShowPetDropdown] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Checklist State Management
-  const todayStr = new Date().toISOString().split("T")[0];
-  const currentTasks = getChecklistTasks();
-  const [checkedTasks, setCheckedTasks] = useState({});
+  // Survey State
+  const [surveyCompleted, setSurveyCompleted] = useState(false); // Default false, will check DB
+  const [checkingSurvey, setCheckingSurvey] = useState(true); // Default true to prevent flash
 
-  // Sync checklist state when active pet changes or date changes
   useEffect(() => {
-    if (!selectedPet?.id) return;
-    const initial = {};
-    currentTasks.forEach((t) => {
-      const val = localStorage.getItem(`checklist_${todayStr}_${selectedPet.id}_${t.id}`);
-      initial[t.id] = val === "true";
-    });
-    setCheckedTasks(initial);
-  }, [selectedPet?.id, todayStr]);
+    const checkSurveyStatus = async () => {
+      if (!selectedPet?.id) {
+        setCheckingSurvey(false);
+        return;
+      }
+      try {
+        setCheckingSurvey(true);
+        const res = await fetchWithAuth(`/api/pet-profile/${selectedPet.id}/lifestyle`);
+        
+        if (res.ok) {
+          const data = await res.json();
+          const hasAnswers = data.answers && Object.keys(data.answers).length > 0;
+          setSurveyCompleted(hasAnswers);
+        }
+      } catch (err) {
+        console.error("Failed to check survey status:", err);
+      } finally {
+        setCheckingSurvey(false);
+      }
+    };
+    checkSurveyStatus();
+  }, [selectedPet?.id]);
 
-  const toggleTask = (taskId) => {
-    if (!selectedPet?.id) return;
-    setCheckedTasks((prev) => {
-      const newVal = !prev[taskId];
-      localStorage.setItem(`checklist_${todayStr}_${selectedPet.id}_${taskId}`, String(newVal));
-      return { ...prev, [taskId]: newVal };
-    });
-  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -128,12 +98,7 @@ export default function PetHome({
           />
         </div>
 
-        <HeroSection
-          pets={pets}
-          checklistTasks={[]}
-          checkedTasks={{}}
-          onToggleTask={null}
-        />
+        <HeroSection pets={pets} />
 
         <UploadRecordsCard onNavigateTab={onNavigateTab} />
 
@@ -164,19 +129,17 @@ export default function PetHome({
       <ProfileCard
         pets={pets}
         selectedPet={selectedPet}
-        handlePetSelect={handlePetSelect}
+        onPetSelect={handlePetSelect}
         onAddPet={onAddPet}
-        showPetDropdown={showPetDropdown}
-        setShowPetDropdown={setShowPetDropdown}
-        dropdownRef={dropdownRef}
       />
 
-      <HeroSection
-        pets={pets}
-        checklistTasks={currentTasks}
-        checkedTasks={checkedTasks}
-        onToggleTask={toggleTask}
-      />
+      <div className="pet-dashboard-scrollable">
+        <HeroSection 
+          pets={pets} 
+          surveyCompleted={surveyCompleted}
+          checkingSurvey={checkingSurvey}
+        />
+      </div>
 
       <UploadRecordsCard onNavigateTab={onNavigateTab} />
 
