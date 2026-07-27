@@ -4,7 +4,7 @@ import ReminderToggle from "./shared/ReminderToggle";
 import DocumentUpload from "./shared/DocumentUpload";
 import SaveConfirmation from "./shared/SaveConfirmation";
 import CustomDatePicker from "./shared/CustomDatePicker";
-import { createMedicalEvent, searchClinics, uploadDocument } from "../../../api/timelineApi";
+import { createMedicalEvent, searchClinics, uploadEventRecord } from "../../../api/timelineApi";
 
 export default function VetVisitForm({ petId, petName, onClose, onSaved }) {
   const [visitDate, setVisitDate] = useState(new Date().toISOString().split("T")[0]);
@@ -101,7 +101,7 @@ export default function VetVisitForm({ petId, petName, onClose, onSaved }) {
       if (files.length > 0 && createdEvent.id) {
         for (const f of files) {
           try {
-            await uploadDocument(petId, f, "Vet Prescription / Report", createdEvent.id);
+            await uploadEventRecord(petId, createdEvent.id, f, "Vet Prescription / Report");
           } catch (docErr) {
             console.error("Doc upload error:", docErr);
           }

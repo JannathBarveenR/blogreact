@@ -4,7 +4,7 @@ import ReminderToggle from "./shared/ReminderToggle";
 import DocumentUpload from "./shared/DocumentUpload";
 import SaveConfirmation from "./shared/SaveConfirmation";
 import CustomDatePicker from "./shared/CustomDatePicker";
-import { createMedicalEvent, getVaccines, uploadDocument } from "../../../api/timelineApi";
+import { createMedicalEvent, getVaccines, uploadEventRecord } from "../../../api/timelineApi";
 
 export default function VaccinationForm({ petId, petName, onClose, onSaved }) {
   const [vaccineName, setVaccineName] = useState("");
@@ -95,7 +95,7 @@ export default function VaccinationForm({ petId, petName, onClose, onSaved }) {
       if (files.length > 0 && createdEvent.id) {
         for (const f of files) {
           try {
-            await uploadDocument(petId, f, "Vaccination Certificate", createdEvent.id);
+            await uploadEventRecord(petId, createdEvent.id, f, "Vaccination Certificate");
           } catch (docErr) {
             console.error("Doc upload error:", docErr);
           }

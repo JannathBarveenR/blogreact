@@ -4,7 +4,7 @@ import ReminderToggle from "./shared/ReminderToggle";
 import DocumentUpload from "./shared/DocumentUpload";
 import SaveConfirmation from "./shared/SaveConfirmation";
 import CustomDatePicker from "./shared/CustomDatePicker";
-import { createMedicalEvent, uploadDocument } from "../../../api/timelineApi";
+import { createMedicalEvent, uploadEventRecord } from "../../../api/timelineApi";
 
 export default function OtherForm({ petId, petName, onClose, onSaved }) {
   const [title, setTitle] = useState("");
@@ -43,7 +43,7 @@ export default function OtherForm({ petId, petName, onClose, onSaved }) {
       if (files.length > 0 && createdEvent.id) {
         for (const f of files) {
           try {
-            await uploadDocument(petId, f, "Document / Photo", createdEvent.id);
+            await uploadEventRecord(petId, createdEvent.id, f, "Document / Photo");
           } catch (docErr) {
             console.error("Doc upload error:", docErr);
           }

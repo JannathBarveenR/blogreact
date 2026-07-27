@@ -11,9 +11,10 @@ Usage:
 
 The script will:
   - Test public endpoints (health, location, public pet data)
-  - Create a test user via signup ? login ? get JWT token
+  - Create a test user via signup → login → get JWT token
   - Test all authenticated CRUD operations
   - Test V2 timeline endpoints
+  - Test V2 unified records endpoints (raw log=0 and timeline-linked log=1)
   - Clean up test data at the end
   - Print a PASS/FAIL summary
 
@@ -167,7 +168,7 @@ async def test_03_auth_flow(client: httpx.AsyncClient) -> dict:
 
     # 3d. Test 401 without token
     resp, _ = await safe_request(client, "GET", f"{BASE_URL}/api/auth/me")
-    record("GET /me without token ? 401", resp and resp.status_code == 401)
+    record("GET /me without token → 401", resp and resp.status_code == 401)
 
     return ctx
 
@@ -203,7 +204,7 @@ async def test_04_user_profile(client: httpx.AsyncClient, ctx: dict):
     resp, _ = await safe_request(client, "GET", 
                                   f"{BASE_URL}/api/user-profile/00000000-0000-0000-0000-000000000000",
                                   headers=headers)
-    record("Ownership: GET other user ? 403", resp and resp.status_code == 403)
+    record("Ownership: GET other user → 403", resp and resp.status_code == 403)
 
 
 async def test_05_pet_profile(client: httpx.AsyncClient, ctx: dict) -> dict:
@@ -247,7 +248,6 @@ async def test_05_pet_profile(client: httpx.AsyncClient, ctx: dict) -> dict:
     if resp and resp.status_code == 200:
         pets = resp.json()
         record("GET /api/pet-profile -- returns list", isinstance(pets, list) and len(pets) > 0)
-        # Check enrichment
         if pets:
             record("Pet has 'age' field (enrichment)", "age" in pets[0])
             record("Pet has 'owner_name' (enrichment)", "owner_name" in pets[0])
@@ -319,7 +319,7 @@ async def test_07_location(client: httpx.AsyncClient):
     # 7c. Invalid pincode
     resp, _ = await safe_request(client, "POST", f"{BASE_URL}/api/location/lookup", 
                                   json={"pincode": "123"})
-    record("POST /lookup invalid ? 400", resp and resp.status_code == 400)
+    record("POST /lookup invalid → 400", resp and resp.status_code == 400)
 
 
 async def test_08_checklist(client: httpx.AsyncClient, ctx: dict, pet_ctx: dict):
@@ -349,51 +349,198 @@ async def test_08_checklist(client: httpx.AsyncClient, ctx: dict, pet_ctx: dict)
     record("POST /checklist/{pet_id} -- 200", resp and resp.status_code == 200)
 
 
-async def test_09_medical_records(client: httpx.AsyncClient, ctx: dict, pet_ctx: dict):
-    """Test medical records upload and management."""
-    print("\n-- 9. Medical Records --")
+async def test_09_v2_raw_records(client: httpx.AsyncClient, ctx: dict, pet_ctx: dict) -> dict:
+    """
+    Test the new unified V2 records endpoint — raw upload path (log=0).
+    Replaces the old test_09_medical_records which used /api/medical-records/*.
+    """
+    print("\n-- 9. V2 Records — Raw Upload (log=0) --")
+    rec_ctx = {"record_id": None}
+
     if not ctx["token"] or not pet_ctx["pet_id"]:
-        record("Medical Records tests", False, "Missing auth or pet")
-        return
+        record("V2 Raw Records tests", False, "Missing auth or pet")
+        return rec_ctx
 
     headers = {"Authorization": f"Bearer {ctx['token']}"}
+    pid = pet_ctx["pet_id"]
 
-    # 9a. Upload a test record
-    files = {"file": ("test_report.txt", b"This is a test medical report content", "text/plain")}
+    # 9a. Upload a raw record (log=0)
+    files = {"file": ("test_report.txt", b"This is a test lab report content", "text/plain")}
     data = {
-        "pet_profile_id": pet_ctx["pet_id"],
-        "title": "Test Blood Report",
-        "category": "lab_report",
+        "title": "Blood Test June 2026",
+        "category": "Lab Reports",
+        "notes": "Fasted sample, taken at 7am",
     }
-    resp, err = await safe_request(client, "POST", f"{BASE_URL}/api/medical-records/upload",
-                                    headers=headers, data=data, files=files)
-    record_id = None
-    if resp and resp.status_code == 200:
-        record("POST /upload -- 200", True)
-        record_id = resp.json().get("record", {}).get("id")
-        record("Upload returns record ID", bool(record_id))
+    resp, err = await safe_request(
+        client, "POST", f"{BASE_URL}/api/v2/pets/{pid}/records",
+        headers=headers, data=data, files=files
+    )
+    if resp and resp.status_code == 201:
+        body = resp.json()
+        rec = body.get("record", {})
+        rec_ctx["record_id"] = rec.get("id")
+        record("POST /api/v2/pets/{pid}/records -- 201", True)
+        record("Raw record returns id", bool(rec_ctx["record_id"]))
+        record("Raw record log=0", rec.get("log") == 0)
+        record("Raw record event_id is null", rec.get("event_id") is None)
+        record("Raw record title saved", rec.get("title") == "Blood Test June 2026")
+        record("Raw record notes saved", rec.get("notes") == "Fasted sample, taken at 7am")
+        record("Raw record has file_url", bool(rec.get("file_url")))
+        record("Raw record has storage_path", bool(rec.get("storage_path")))
     else:
-        record("POST /upload", False, f"status={resp.status_code if resp else err}")
+        record("POST /api/v2/pets/{pid}/records", False,
+               f"status={resp.status_code if resp else 'none'} {resp.text[:300] if resp else err}")
+        return rec_ctx
 
-    # 9b. Get records
-    resp, _ = await safe_request(client, "GET", 
-                                  f"{BASE_URL}/api/medical-records/{pet_ctx['pet_id']}",
+    # 9b. List all records for pet (no filter)
+    resp, _ = await safe_request(client, "GET", f"{BASE_URL}/api/v2/pets/{pid}/records",
                                   headers=headers)
-    record("GET /medical-records/{pet_id} -- 200", resp and resp.status_code == 200)
+    if resp and resp.status_code == 200:
+        rows = resp.json()
+        record("GET /records (no filter) -- 200", True)
+        record("Records list is non-empty", isinstance(rows, list) and len(rows) > 0)
+    else:
+        record("GET /records (no filter)", False)
 
-    # 9c. Toggle favorite
-    if record_id:
-        resp, _ = await safe_request(client, "PATCH", 
-                                      f"{BASE_URL}/api/medical-records/{record_id}/favorite",
-                                      headers=headers)
-        record("PATCH /favorite -- 200", resp and resp.status_code == 200)
+    # 9c. List filtered by log=0
+    resp, _ = await safe_request(client, "GET", f"{BASE_URL}/api/v2/pets/{pid}/records?log=0",
+                                  headers=headers)
+    if resp and resp.status_code == 200:
+        rows = resp.json()
+        record("GET /records?log=0 -- 200", True)
+        record("All returned records have log=0", all(r.get("log") == 0 for r in rows))
+    else:
+        record("GET /records?log=0", False)
 
-    # 9d. Delete record
-    if record_id:
-        resp, _ = await safe_request(client, "DELETE", 
-                                      f"{BASE_URL}/api/medical-records/{record_id}",
-                                      headers=headers)
-        record("DELETE /medical-records/{id} -- 200", resp and resp.status_code == 200)
+    # 9d. Get single record (fresh presigned URL)
+    if rec_ctx["record_id"]:
+        resp, _ = await safe_request(
+            client, "GET",
+            f"{BASE_URL}/api/v2/pets/{pid}/records/{rec_ctx['record_id']}",
+            headers=headers
+        )
+        if resp and resp.status_code == 200:
+            r = resp.json()
+            record("GET /records/{id} -- 200", True)
+            record("Single record has fresh file_url", bool(r.get("file_url")))
+        else:
+            record("GET /records/{id}", False)
+
+    # 9e. Toggle favorite
+    if rec_ctx["record_id"]:
+        resp, _ = await safe_request(
+            client, "PATCH",
+            f"{BASE_URL}/api/v2/pets/{pid}/records/{rec_ctx['record_id']}/favorite",
+            headers=headers
+        )
+        if resp and resp.status_code == 200:
+            body = resp.json()
+            record("PATCH /records/{id}/favorite -- 200", True)
+            record("Favorite toggled to True", body.get("is_favorite") is True)
+        else:
+            record("PATCH /records/{id}/favorite", False)
+
+    # 9f. Verify old /api/medical-records/* is GONE (404 or 405)
+    resp, _ = await safe_request(
+        client, "POST", f"{BASE_URL}/api/medical-records/upload",
+        headers=headers,
+        data={"pet_profile_id": pid, "title": "Old", "category": "Other"},
+        files={"file": ("x.txt", b"x", "text/plain")}
+    )
+    record(
+        "Old endpoint POST /api/medical-records/upload is removed (404/405)",
+        resp is None or resp.status_code in (404, 405, 422)
+    )
+
+    return rec_ctx
+
+
+async def test_09b_v2_event_records(
+    client: httpx.AsyncClient, ctx: dict, pet_ctx: dict, event_ctx: dict
+) -> dict:
+    """
+    Test the new V2 records endpoint — timeline-linked upload path (log=1).
+    Verifies that the record ID is stored in medical_events.document_ids.
+    """
+    print("\n-- 9b. V2 Records — Timeline-Linked Upload (log=1) --")
+    linked_rec_ctx = {"record_id": None}
+
+    if not ctx["token"] or not pet_ctx["pet_id"] or not event_ctx.get("event_id"):
+        record("V2 Event Records tests", False, "Missing auth, pet, or event_id — run after test_11")
+        return linked_rec_ctx
+
+    headers = {"Authorization": f"Bearer {ctx['token']}"}
+    pid = pet_ctx["pet_id"]
+    eid = event_ctx["event_id"]
+
+    # 9b-a. Upload a timeline-linked record (log=1)
+    files = {"file": ("prescription.txt", b"Amoxicillin 250mg twice daily", "text/plain")}
+    data = {
+        "label": "Vet Prescription / Report",
+        "category": "Prescription",
+    }
+    resp, err = await safe_request(
+        client, "POST",
+        f"{BASE_URL}/api/v2/pets/{pid}/medical-events/{eid}/records",
+        headers=headers, data=data, files=files
+    )
+    if resp and resp.status_code == 201:
+        body = resp.json()
+        rec = body.get("record", {})
+        linked_rec_ctx["record_id"] = rec.get("id")
+        record("POST /medical-events/{eid}/records -- 201", True)
+        record("Linked record returns id", bool(linked_rec_ctx["record_id"]))
+        record("Linked record log=1", rec.get("log") == 1)
+        record("Linked record event_id matches", rec.get("event_id") == eid)
+        record("Linked record label saved", rec.get("label") == "Vet Prescription / Report")
+        record("Linked record has file_url", bool(rec.get("file_url")))
+        record("Linked record has storage_path", bool(rec.get("storage_path")))
+    else:
+        record("POST /medical-events/{eid}/records", False,
+               f"status={resp.status_code if resp else 'none'} {resp.text[:300] if resp else err}")
+        return linked_rec_ctx
+
+    # 9b-b. Verify document_ids was updated on the event
+    if linked_rec_ctx["record_id"]:
+        resp, _ = await safe_request(
+            client, "GET",
+            f"{BASE_URL}/api/v2/pets/{pid}/medical-events/{eid}",
+            headers=headers
+        )
+        if resp and resp.status_code == 200:
+            ev = resp.json()
+            doc_ids = ev.get("document_ids", [])
+            record("Event document_ids updated", linked_rec_ctx["record_id"] in doc_ids)
+        else:
+            record("Verify event document_ids — GET event", False)
+
+    # 9b-c. List records filtered by log=1 for this event
+    resp, _ = await safe_request(
+        client, "GET",
+        f"{BASE_URL}/api/v2/pets/{pid}/records?log=1&event_id={eid}",
+        headers=headers
+    )
+    if resp and resp.status_code == 200:
+        rows = resp.json()
+        record("GET /records?log=1&event_id -- 200", True)
+        record("All returned records have log=1", all(r.get("log") == 1 for r in rows))
+        record("Linked record appears in filtered list",
+               any(r.get("id") == linked_rec_ctx["record_id"] for r in rows))
+    else:
+        record("GET /records?log=1&event_id", False)
+
+    # 9b-d. Verify old /api/v2/pets/{pid}/documents is GONE
+    resp, _ = await safe_request(
+        client, "GET",
+        f"{BASE_URL}/api/v2/pets/{pid}/documents",
+        headers=headers
+    )
+    record(
+        "Old endpoint GET /api/v2/pets/{pid}/documents is removed (404/405)",
+        resp is None or resp.status_code in (404, 405)
+    )
+
+    return linked_rec_ctx
 
 
 async def test_10_v2_reference_data(client: httpx.AsyncClient, ctx: dict):
@@ -464,6 +611,10 @@ async def test_11_v2_medical_events(client: httpx.AsyncClient, ctx: dict, pet_ct
         event_ctx["event_id"] = data.get("event", {}).get("id")
         record("POST medical-events -- 201", True)
         record("Event has auto-generated reminders", bool(data.get("reminders")))
+        # Verify new document_ids field is present and starts as []
+        ev = data.get("event", {})
+        record("Event has document_ids field", "document_ids" in ev)
+        record("Event document_ids starts empty", ev.get("document_ids") == [])
     else:
         record("POST medical-events", False, 
                f"status={resp.status_code if resp else 'none'} body={resp.text[:300] if resp else err}")
@@ -598,17 +749,17 @@ async def test_14_v2_export(client: httpx.AsyncClient, ctx: dict, pet_ctx: dict)
 
 
 async def test_15_auth_security(client: httpx.AsyncClient, ctx: dict, pet_ctx: dict):
-    """Test security: unauthorized access, IDOR, etc."""
-    print("\n-- 15. Security Tests --")
+    """Test security: unauthorized access, IDOR, removed old endpoints."""
+    print("\n-- 15. Security & Removed Endpoints --")
     
-    # 15a. No token ? 401 on protected endpoints
+    # 15a. No token → 401 on protected endpoints
     for endpoint in [
         "/api/pet-profile",
         "/api/user-profile/test-id",
         "/api/checklist/test-id?date=2026-01-01",
     ]:
         resp, _ = await safe_request(client, "GET", f"{BASE_URL}{endpoint}")
-        record(f"No auth: GET {endpoint} ? 401", resp and resp.status_code == 401)
+        record(f"No auth: GET {endpoint} → 401", resp and resp.status_code == 401)
 
     # 15b. IDOR: try to access another user's pet (fake UUID)
     if ctx["token"]:
@@ -617,16 +768,96 @@ async def test_15_auth_security(client: httpx.AsyncClient, ctx: dict, pet_ctx: d
         resp, _ = await safe_request(client, "GET", 
                                       f"{BASE_URL}/api/pet-profile/{fake_pet_id}",
                                       headers=headers)
-        record("IDOR: GET fake pet ? 403 or 404", resp and resp.status_code in (403, 404))
+        record("IDOR: GET fake pet → 403 or 404", resp and resp.status_code in (403, 404))
 
         # V2 IDOR
         resp, _ = await safe_request(client, "GET", 
                                       f"{BASE_URL}/api/v2/pets/{fake_pet_id}/medical-events",
                                       headers=headers)
-        record("IDOR: V2 events fake pet ? 404", resp and resp.status_code == 404)
+        record("IDOR: V2 events fake pet → 404", resp and resp.status_code == 404)
+
+        # 15c. Confirm all retired endpoints return 404 / 405
+        retired = [
+            ("GET",    f"/api/medical-records/{pet_ctx.get('pet_id', 'x')}"),
+            ("DELETE", f"/api/medical-records/00000000-0000-0000-0000-000000000001"),
+            ("PATCH",  f"/api/medical-records/00000000-0000-0000-0000-000000000001/favorite"),
+            ("GET",    f"/api/v2/pets/{pet_ctx.get('pet_id', 'x')}/documents"),
+        ]
+        for method, path in retired:
+            resp, _ = await safe_request(client, method, f"{BASE_URL}{path}", headers=headers)
+            record(
+                f"Retired {method} {path} → 404/405",
+                resp is None or resp.status_code in (404, 405)
+            )
+
+        # 15d. New records endpoint requires auth
+        resp, _ = await safe_request(
+            client, "GET",
+            f"{BASE_URL}/api/v2/pets/{pet_ctx.get('pet_id', 'x')}/records"
+        )
+        record("No auth: GET /v2/pets/{pid}/records → 401", resp and resp.status_code == 401)
 
 
-async def test_99_cleanup(client: httpx.AsyncClient, ctx: dict, pet_ctx: dict, event_ctx: dict):
+async def test_16_v2_records_delete(
+    client: httpx.AsyncClient, ctx: dict, pet_ctx: dict,
+    rec_ctx: dict, linked_rec_ctx: dict, event_ctx: dict
+):
+    """Test deletion of both record types and verify event document_ids cleanup."""
+    print("\n-- 16. V2 Records — Delete & Cleanup Verification --")
+    if not ctx["token"] or not pet_ctx["pet_id"]:
+        record("V2 Records Delete tests", False, "Missing auth or pet")
+        return
+
+    headers = {"Authorization": f"Bearer {ctx['token']}"}
+    pid = pet_ctx["pet_id"]
+
+    # 16a. Delete the timeline-linked record and verify document_ids is cleaned
+    if linked_rec_ctx.get("record_id") and event_ctx.get("event_id"):
+        eid = event_ctx["event_id"]
+        resp, _ = await safe_request(
+            client, "DELETE",
+            f"{BASE_URL}/api/v2/pets/{pid}/records/{linked_rec_ctx['record_id']}",
+            headers=headers
+        )
+        record("DELETE linked record (log=1) -- 200", resp and resp.status_code == 200)
+
+        # Verify document_ids was cleaned from the event
+        resp, _ = await safe_request(
+            client, "GET",
+            f"{BASE_URL}/api/v2/pets/{pid}/medical-events/{eid}",
+            headers=headers
+        )
+        if resp and resp.status_code == 200:
+            ev = resp.json()
+            doc_ids = ev.get("document_ids", [])
+            record(
+                "Event document_ids cleaned after record delete",
+                linked_rec_ctx["record_id"] not in doc_ids
+            )
+        else:
+            record("Verify event document_ids after delete — GET event", False)
+
+    # 16b. Delete the raw record (log=0)
+    if rec_ctx.get("record_id"):
+        resp, _ = await safe_request(
+            client, "DELETE",
+            f"{BASE_URL}/api/v2/pets/{pid}/records/{rec_ctx['record_id']}",
+            headers=headers
+        )
+        record("DELETE raw record (log=0) -- 200", resp and resp.status_code == 200)
+
+        # Verify it's gone
+        resp, _ = await safe_request(
+            client, "GET",
+            f"{BASE_URL}/api/v2/pets/{pid}/records/{rec_ctx['record_id']}",
+            headers=headers
+        )
+        record("Deleted record returns 404", resp and resp.status_code == 404)
+
+
+async def test_99_cleanup(
+    client: httpx.AsyncClient, ctx: dict, pet_ctx: dict, event_ctx: dict
+):
     """Clean up test data."""
     print("\n-- 99. Cleanup --")
     if not ctx["token"]:
@@ -644,12 +875,12 @@ async def test_99_cleanup(client: httpx.AsyncClient, ctx: dict, pet_ctx: dict, e
 
     # Delete test pet
     if pet_ctx.get("pet_id"):
-        resp, _ = await safe_request(client, "DELETE", 
+        resp, _ = await safe_request(client, "DELETE",
                                       f"{BASE_URL}/api/pet-profile/{pet_ctx['pet_id']}",
                                       headers=headers)
         record("Delete test pet", resp and resp.status_code == 200)
 
-    print("  [INFO]  Note: Test user (auth.users row) cannot be deleted via API -- clean up manually if needed.")
+    print("  [INFO]  Note: Test user (auth.users row) cannot be deleted via API — clean up manually if needed.")
 
 
 # ==============================================================================
@@ -674,19 +905,32 @@ async def main():
 
         await test_01_health_check(client)
         await test_02_swagger_docs(client)
-        ctx = await test_03_auth_flow(client)
+        ctx      = await test_03_auth_flow(client)
         await test_04_user_profile(client, ctx)
-        pet_ctx = await test_05_pet_profile(client, ctx)
+        pet_ctx  = await test_05_pet_profile(client, ctx)
         await test_06_pet_health_id(client, ctx, pet_ctx)
         await test_07_location(client)
         await test_08_checklist(client, ctx, pet_ctx)
-        await test_09_medical_records(client, ctx, pet_ctx)
+
+        # ── Records tests ──────────────────────────────────────────────────────
+        # Run raw-upload test BEFORE event tests so we can also verify
+        # the old /api/medical-records/* 404 checks independently
+        rec_ctx  = await test_09_v2_raw_records(client, ctx, pet_ctx)
+
         await test_10_v2_reference_data(client, ctx)
         event_ctx = await test_11_v2_medical_events(client, ctx, pet_ctx)
+
+        # Timeline-linked upload test (needs event_id from test_11)
+        linked_rec_ctx = await test_09b_v2_event_records(client, ctx, pet_ctx, event_ctx)
+
         await test_12_v2_reminders(client, ctx, pet_ctx)
         await test_13_v2_timeline(client, ctx, pet_ctx)
         await test_14_v2_export(client, ctx, pet_ctx)
         await test_15_auth_security(client, ctx, pet_ctx)
+
+        # Delete records + verify cleanup (after all read tests)
+        await test_16_v2_records_delete(client, ctx, pet_ctx, rec_ctx, linked_rec_ctx, event_ctx)
+
         await test_99_cleanup(client, ctx, pet_ctx, event_ctx)
 
     # -- SUMMARY --

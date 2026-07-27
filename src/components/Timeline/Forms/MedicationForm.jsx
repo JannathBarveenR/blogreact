@@ -4,7 +4,7 @@ import DocumentUpload from "./shared/DocumentUpload";
 import SaveConfirmation from "./shared/SaveConfirmation";
 import CustomSelect from "./shared/CustomSelect";
 import CustomDatePicker from "./shared/CustomDatePicker";
-import { createMedicalEvent, searchMedicines, uploadDocument, createReminder } from "../../../api/timelineApi";
+import { createMedicalEvent, searchMedicines, uploadEventRecord, createReminder } from "../../../api/timelineApi";
 
 const MEDICINE_TYPES = [
   { value: "tablet", label: "Tablet / Pill" },
@@ -326,7 +326,7 @@ export default function MedicationForm({ petId, petName, onClose, onSaved }) {
       if (files.length > 0 && createdEvent.id) {
         for (const f of files) {
           try {
-            await uploadDocument(petId, f, "Prescription", createdEvent.id);
+            await uploadEventRecord(petId, createdEvent.id, f, "Prescription");
           } catch (docErr) {
             console.error("Doc upload error:", docErr);
           }

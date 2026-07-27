@@ -100,10 +100,10 @@ export default function MedicalRecords({
 
   const queryClient = useQueryClient();
   const { data: allRecords = [], isLoading: loadingRecords, refetch: fetchRecords } = useQuery({
-    queryKey: ["medicalRecords", activePetId],
+    queryKey: ["records", activePetId, 0],
     queryFn: async () => {
       if (!activePetId) return [];
-      const res = await fetchWithAuth(`/api/medical-records/${activePetId}`);
+      const res = await fetchWithAuth(`/api/v2/pets/${activePetId}/records?log=0`);
       if (!res.ok) throw new Error("Failed to fetch medical records");
       return res.json();
     },
@@ -145,14 +145,13 @@ export default function MedicalRecords({
 
     try {
       const formDataPayload = new FormData();
-      formDataPayload.append("pet_profile_id", activePetId);
       formDataPayload.append("title", title);
       formDataPayload.append("category", category);
 
       if (formData.notes) formDataPayload.append("notes", formData.notes);
       formDataPayload.append("file", selectedFile);
 
-      const res = await fetchWithAuth("/api/medical-records/upload", {
+      const res = await fetchWithAuth(`/api/v2/pets/${activePetId}/records`, {
         method: "POST",
         body: formDataPayload,
       });
@@ -189,7 +188,7 @@ export default function MedicalRecords({
   const deleteRecord = async () => {
     if (!viewFile) return;
     try {
-      const res = await fetchWithAuth(`/api/medical-records/${viewFile.id}`, {
+      const res = await fetchWithAuth(`/api/v2/pets/${activePetId}/records/${viewFile.id}`, {
         method: "DELETE",
       });
       if (res.ok) {
@@ -209,7 +208,7 @@ export default function MedicalRecords({
   const toggleFavorite = async (recordId) => {
     try {
       const res = await fetchWithAuth(
-        `/api/medical-records/${recordId}/favorite`,
+        `/api/v2/pets/${activePetId}/records/${recordId}/favorite`,
         {
           method: "PATCH",
         },
