@@ -1,11 +1,14 @@
 import React from "react";
 import CustomDatePicker from "./CustomDatePicker";
+import CustomTimePicker from "./CustomTimePicker";
 
 export default function ReminderToggle({
   enabled,
   onToggle,
   dueDate,
   onDueDateChange,
+  dueTime = "",
+  onDueTimeChange,
   label = "Set Next Due Date / Reminder",
 }) {
   return (
@@ -72,15 +75,28 @@ export default function ReminderToggle({
       </div>
 
       {enabled && (
-        <div className="pn-field" style={{ marginTop: 4 }}>
-          <label className="pn-field__label">Next Due Date</label>
-          <CustomDatePicker
-            value={dueDate || ""}
-            onChange={onDueDateChange}
-            placeholder="Select Due Date"
-            label="Next Due / Reminder Date"
-            allowFuture={true}
-          />
+        <div style={{ display: "flex", gap: 12, marginTop: 4, width: "100%" }}>
+          <div className="pn-field" style={{ flex: 1, minWidth: 0 }}>
+            <label className="pn-field__label">Next Due Date</label>
+            <CustomDatePicker
+              value={dueDate || ""}
+              onChange={onDueDateChange}
+              placeholder="Select Due Date"
+              label="Next Due / Reminder Date"
+              allowFuture={true}
+            />
+          </div>
+          {onDueTimeChange && (
+            <div className="pn-field" style={{ flex: 1, minWidth: 0 }}>
+              <label className="pn-field__label">Reminder Time</label>
+              <CustomTimePicker
+                value={dueTime || ""}
+                onChange={onDueTimeChange}
+                placeholder="Select Time"
+                label="Reminder Time"
+              />
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -5,6 +5,7 @@ import ReminderToggle from "./shared/ReminderToggle";
 import DocumentUpload from "./shared/DocumentUpload";
 import SaveConfirmation from "./shared/SaveConfirmation";
 import CustomDatePicker from "./shared/CustomDatePicker";
+import CustomTimePicker from "./shared/CustomTimePicker";
 import { useQueryClient } from "@tanstack/react-query";
 import { timelineKeys } from "../../../hooks/useTimelineQueries";
 import { createMedicalEvent, updateMedicalEvent, searchClinics, uploadDocument } from "../../../api/timelineApi";
@@ -12,6 +13,7 @@ import { createMedicalEvent, updateMedicalEvent, searchClinics, uploadDocument }
 export default function VetVisitForm({ petId, petName, onClose, onSaved, editData }) {
   const queryClient = useQueryClient();
   const [visitDate, setVisitDate] = useState(new Date().toISOString().split("T")[0]);
+  const [visitTime, setVisitTime] = useState("");
   const [reason, setReason] = useState("");
   const [clinicName, setClinicName] = useState("");
   const [vetName, setVetName] = useState("");
@@ -20,6 +22,7 @@ export default function VetVisitForm({ petId, petName, onClose, onSaved, editDat
 
   const [reminderEnabled, setReminderEnabled] = useState(false);
   const [followUpDate, setFollowUpDate] = useState("");
+  const [dueTime, setDueTime] = useState("09:00");
   const [files, setFiles] = useState([]);
 
   const [clinicsList, setClinicsList] = useState([]);
@@ -38,6 +41,12 @@ export default function VetVisitForm({ petId, petName, onClose, onSaved, editDat
 
     if (editData.event_date || catEntry.date_logged) {
       setVisitDate(editData.event_date || catEntry.date_logged);
+    }
+    if (cFields.visit_time || editData.event_time) {
+      setVisitTime(cFields.visit_time || editData.event_time);
+    }
+    if (cFields.due_time || editData.due_time) {
+      setDueTime(cFields.due_time || editData.due_time);
     }
     setReason(cFields.reason_for_visit || catEntry.reason_for_visit || editData.reason_for_visit || editData.overall_notes || "");
     setClinicName(cFields.clinic_name || catEntry.clinic_name || editData.clinic_name || "");
@@ -113,12 +122,21 @@ export default function VetVisitForm({ petId, petName, onClose, onSaved, editDat
 
       const payload = {
         event_date: visitDate,
+        event_time: visitTime || null,
         clinic_name: clinicName || null,
         vet_name: vetName || null,
         reason_for_visit: reason,
         overall_notes: examinationNotes || null,
         follow_up_date: reminderEnabled && followUpDate ? followUpDate : null,
-        category_entries: categoryEntries,
+        due_time: reminderEnabled ? dueTime : null,
+        category_entries: categoryEntries.map((ce) => ({
+          ...ce,
+          category_fields: {
+            ...(ce.category_fields || {}),
+            visit_time: visitTime || null,
+            due_time: reminderEnabled ? dueTime : null,
+          },
+        })),
       };
 
       if (editData) {
@@ -273,21 +291,31 @@ export default function VetVisitForm({ petId, petName, onClose, onSaved, editDat
               <label className="pn-field__label">Visit Date *</label>
               <CustomDatePicker
                 value={visitDate}
-                onChange={setVisitDate}
+                onChange={(d) => { setVisitDate(d); setIsDirty(true); }}
                 placeholder="Visit Date"
                 label="Select Visit Date"
               />
             </div>
             <div className="pn-field">
-              <label className="pn-field__label">Vet Name</label>
-              <input
-                type="text"
-                className="pn-input"
-                placeholder="Dr. Smith"
-                value={vetName}
-                onChange={(e) => setVetName(e.target.value)}
+              <label className="pn-field__label">Visit Time (Optional)</label>
+              <CustomTimePicker
+                value={visitTime}
+                onChange={(t) => { setVisitTime(t); setIsDirty(true); }}
+                placeholder="Select Time"
+                label="Select Visit Time"
               />
             </div>
+          </div>
+
+          <div className="pn-field">
+            <label className="pn-field__label">Vet Name</label>
+            <input
+              type="text"
+              className="pn-input"
+              placeholder="Dr. Smith"
+              value={vetName}
+              onChange={(e) => { setVetName(e.target.value); setIsDirty(true); }}
+            />
           </div>
 
           <div className="pn-field">
@@ -297,7 +325,7 @@ export default function VetVisitForm({ petId, petName, onClose, onSaved, editDat
               className="pn-input"
               placeholder="e.g. Routine checkup, fever, limping"
               value={reason}
-              onChange={(e) => setReason(e.target.value)}
+              onChange={(e) => { setReason(e.target.value); setIsDirty(true); }}
               required
             />
           </div>
@@ -310,7 +338,7 @@ export default function VetVisitForm({ petId, petName, onClose, onSaved, editDat
                 className="pn-input pn-input--with-icon"
                 placeholder="Search or enter clinic name"
                 value={clinicName}
-                onChange={(e) => handleClinicChange(e.target.value)}
+                onChange={(e) => { handleClinicChange(e.target.value); setIsDirty(true); }}
               />
               <span className="material-symbols-outlined pn-input-icon">local_hospital</span>
             </div>
@@ -342,7 +370,7 @@ export default function VetVisitForm({ petId, petName, onClose, onSaved, editDat
               className="pn-input"
               placeholder="e.g. Ear Infection, Mild Gastritis"
               value={diagnosis}
-              onChange={(e) => setDiagnosis(e.target.value)}
+              onChange={(e) => { setDiagnosis(e.target.value); setIsDirty(true); }}
             />
           </div>
 
@@ -352,18 +380,20 @@ export default function VetVisitForm({ petId, petName, onClose, onSaved, editDat
               className="pn-textarea"
               placeholder="Examination notes, vital signs, recommendations..."
               value={examinationNotes}
-              onChange={(e) => setExaminationNotes(e.target.value)}
+              onChange={(e) => { setExaminationNotes(e.target.value); setIsDirty(true); }}
             />
           </div>
         </FormSection>
 
-        <DocumentUpload files={files} onFilesChange={setFiles} label="Upload Prescription / Lab Reports" />
+        <DocumentUpload files={files} onFilesChange={(f) => { setFiles(f); setIsDirty(true); }} label="Upload Prescription / Lab Reports" />
 
         <ReminderToggle
           enabled={reminderEnabled}
-          onToggle={setReminderEnabled}
+          onToggle={(v) => { setReminderEnabled(v); setIsDirty(true); }}
           dueDate={followUpDate}
-          onDueDateChange={setFollowUpDate}
+          onDueDateChange={(d) => { setFollowUpDate(d); setIsDirty(true); }}
+          dueTime={dueTime}
+          onDueTimeChange={(t) => { setDueTime(t); setIsDirty(true); }}
           label="Set Vet Follow-up Date"
         />
 

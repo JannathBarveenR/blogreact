@@ -6,6 +6,8 @@ import DocumentUpload from "./shared/DocumentUpload";
 import SaveConfirmation from "./shared/SaveConfirmation";
 import CustomSelect from "./shared/CustomSelect";
 import CustomDatePicker from "./shared/CustomDatePicker";
+import CustomStepper from "./shared/CustomStepper";
+import CustomTimePicker from "./shared/CustomTimePicker";
 import { useQueryClient } from "@tanstack/react-query";
 import { timelineKeys } from "../../../hooks/useTimelineQueries";
 import { createMedicalEvent, updateMedicalEvent, uploadDocument } from "../../../api/timelineApi";
@@ -19,7 +21,9 @@ export default function DewormingForm({ petId, petName, onClose, onSaved, editDa
   const queryClient = useQueryClient();
   const [medName, setMedName] = useState("");
   const [givenDate, setGivenDate] = useState(new Date().toISOString().split("T")[0]);
-  const [dose, setDose] = useState("");
+  const [givenTime, setGivenTime] = useState("");
+  const [doseQty, setDoseQty] = useState("1");
+  const [doseUnit, setDoseUnit] = useState("tablet");
   const [weight, setWeight] = useState("");
   const [givenAt, setGivenAt] = useState("home");
   const [notes, setNotes] = useState("");
@@ -30,6 +34,7 @@ export default function DewormingForm({ petId, petName, onClose, onSaved, editDa
     d.setDate(d.getDate() + 90);
     return d.toISOString().split("T")[0];
   });
+  const [dueTime, setDueTime] = useState("09:00");
   const [files, setFiles] = useState([]);
 
   const [submitting, setSubmitting] = useState(false);
@@ -47,7 +52,21 @@ export default function DewormingForm({ petId, petName, onClose, onSaved, editDa
       setGivenDate(editData.event_date || catEntry.date_logged);
     }
     setMedName(catEntry.item_name || "");
-    setDose(cFields.dose || "");
+    if (cFields.dose) {
+      const parts = cFields.dose.trim().split(" ");
+      if (parts.length >= 2) {
+        setDoseQty(parts[0]);
+        setDoseUnit(parts.slice(1).join(" "));
+      } else {
+        setDoseQty(cFields.dose);
+      }
+    }
+    if (cFields.given_time || editData.event_time) {
+      setGivenTime(cFields.given_time || editData.event_time);
+    }
+    if (cFields.due_time || editData.due_time) {
+      setDueTime(cFields.due_time || editData.due_time);
+    }
     setWeight(cFields.weight ? String(cFields.weight) : "");
     setGivenAt(cFields.given_at || "home");
     setNotes(catEntry.notes || editData.overall_notes || "");
@@ -71,7 +90,9 @@ export default function DewormingForm({ petId, petName, onClose, onSaved, editDa
         next_due_date: reminderEnabled && nextDueDate ? nextDueDate : null,
         notes: notes || null,
         category_fields: {
-          dose: dose || null,
+          dose: doseQty ? `${doseQty} ${doseUnit}` : null,
+          given_time: givenTime || null,
+          due_time: reminderEnabled ? dueTime : null,
           weight: weight ? parseFloat(weight) : null,
           given_at: givenAt,
         },
@@ -79,6 +100,7 @@ export default function DewormingForm({ petId, petName, onClose, onSaved, editDa
 
       const payload = {
         event_date: givenDate,
+        event_time: givenTime || null,
         category_entries: [categoryEntry],
       };
 
@@ -245,22 +267,37 @@ export default function DewormingForm({ petId, petName, onClose, onSaved, editDa
               <label className="pn-field__label">Date Given</label>
               <CustomDatePicker
                 value={givenDate}
-                onChange={setGivenDate}
+                onChange={(d) => { setGivenDate(d); setIsDirty(true); }}
                 placeholder="Date Given"
                 label="Date Deworming Given"
               />
             </div>
 
             <div className="pn-field">
-              <label className="pn-field__label">Dosage</label>
-              <input
-                type="text"
-                className="pn-input"
-                placeholder="e.g. 1 tablet"
-                value={dose}
-                onChange={(e) => setDose(e.target.value)}
+              <label className="pn-field__label">Time Given (Optional)</label>
+              <CustomTimePicker
+                value={givenTime}
+                onChange={(t) => { setGivenTime(t); setIsDirty(true); }}
+                placeholder="Select Time"
+                label="Time Deworming Given"
               />
             </div>
+          </div>
+
+          <div className="pn-field">
+            <label className="pn-field__label">Dosage & Quantity</label>
+            <CustomStepper
+              value={doseQty}
+              unit={doseUnit}
+              onChange={(v) => { setDoseQty(v); setIsDirty(true); }}
+              onUnitChange={(u) => { setDoseUnit(u); setIsDirty(true); }}
+              allowedUnits={[
+                { value: "tablet", label: "tablet(s)" },
+                { value: "ml", label: "ml" },
+                { value: "mg", label: "mg" },
+                { value: "pipette", label: "pipette / spot-on" },
+              ]}
+            />
           </div>
 
           <div className="pn-grid-2">
@@ -272,7 +309,7 @@ export default function DewormingForm({ petId, petName, onClose, onSaved, editDa
                 className="pn-input"
                 placeholder="e.g. 15.5"
                 value={weight}
-                onChange={(e) => setWeight(e.target.value)}
+                onChange={(e) => { setWeight(e.target.value); setIsDirty(true); }}
               />
             </div>
 
@@ -281,7 +318,7 @@ export default function DewormingForm({ petId, petName, onClose, onSaved, editDa
               <CustomSelect
                 value={givenAt}
                 options={GIVEN_AT_OPTIONS}
-                onChange={setGivenAt}
+                onChange={(v) => { setGivenAt(v); setIsDirty(true); }}
               />
             </div>
           </div>
@@ -292,18 +329,20 @@ export default function DewormingForm({ petId, petName, onClose, onSaved, editDa
               className="pn-textarea"
               placeholder="Observations..."
               value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              onChange={(e) => { setNotes(e.target.value); setIsDirty(true); }}
             />
           </div>
         </FormSection>
 
-        <DocumentUpload files={files} onFilesChange={setFiles} label="Upload Prescription / Medicine Photo" />
+        <DocumentUpload files={files} onFilesChange={(f) => { setFiles(f); setIsDirty(true); }} label="Upload Prescription / Medicine Photo" />
 
         <ReminderToggle
           enabled={reminderEnabled}
-          onToggle={setReminderEnabled}
+          onToggle={(v) => { setReminderEnabled(v); setIsDirty(true); }}
           dueDate={nextDueDate}
-          onDueDateChange={setNextDueDate}
+          onDueDateChange={(d) => { setNextDueDate(d); setIsDirty(true); }}
+          dueTime={dueTime}
+          onDueTimeChange={(t) => { setDueTime(t); setIsDirty(true); }}
           label="Set Next Deworming Due Date (Auto: +90 days)"
         />
 

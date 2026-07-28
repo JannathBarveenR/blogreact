@@ -5,6 +5,7 @@ import ReminderToggle from "./shared/ReminderToggle";
 import DocumentUpload from "./shared/DocumentUpload";
 import SaveConfirmation from "./shared/SaveConfirmation";
 import CustomDatePicker from "./shared/CustomDatePicker";
+import CustomTimePicker from "./shared/CustomTimePicker";
 import { useQueryClient } from "@tanstack/react-query";
 import { timelineKeys } from "../../../hooks/useTimelineQueries";
 import { createMedicalEvent, updateMedicalEvent, uploadDocument } from "../../../api/timelineApi";
@@ -13,10 +14,12 @@ export default function OtherForm({ petId, petName, onClose, onSaved, editData }
   const queryClient = useQueryClient();
   const [title, setTitle] = useState("");
   const [eventDate, setEventDate] = useState(new Date().toISOString().split("T")[0]);
+  const [eventTime, setEventTime] = useState("");
   const [description, setDescription] = useState("");
 
   const [reminderEnabled, setReminderEnabled] = useState(false);
   const [nextDueDate, setNextDueDate] = useState("");
+  const [dueTime, setDueTime] = useState("09:00");
   const [files, setFiles] = useState([]);
 
   const [submitting, setSubmitting] = useState(false);
@@ -28,9 +31,16 @@ export default function OtherForm({ petId, petName, onClose, onSaved, editData }
   useEffect(() => {
     if (!editData) return;
     const catEntry = (editData.category_entries || [])[0] || {};
+    const cFields = catEntry.category_fields || {};
 
     if (editData.event_date || catEntry.date_logged) {
       setEventDate(editData.event_date || catEntry.date_logged);
+    }
+    if (cFields.given_time || editData.event_time) {
+      setEventTime(cFields.given_time || editData.event_time);
+    }
+    if (cFields.due_time || editData.due_time) {
+      setDueTime(cFields.due_time || editData.due_time);
     }
     setTitle(catEntry.item_name || "");
     setDescription(catEntry.notes || editData.overall_notes || "");
@@ -53,10 +63,15 @@ export default function OtherForm({ petId, petName, onClose, onSaved, editData }
         date_logged: eventDate,
         next_due_date: reminderEnabled && nextDueDate ? nextDueDate : null,
         notes: description || null,
+        category_fields: {
+          given_time: eventTime || null,
+          due_time: reminderEnabled ? dueTime : null,
+        },
       };
 
       const payload = {
         event_date: eventDate,
+        event_time: eventTime || null,
         category_entries: [categoryEntry],
       };
 
@@ -218,14 +233,25 @@ export default function OtherForm({ petId, petName, onClose, onSaved, editData }
             />
           </div>
 
-          <div className="pn-field">
-            <label className="pn-field__label">Date</label>
-            <CustomDatePicker
-              value={eventDate}
-              onChange={setEventDate}
-              placeholder="Select Date"
-              label="Select Note Date"
-            />
+          <div className="pn-grid-2">
+            <div className="pn-field">
+              <label className="pn-field__label">Date</label>
+              <CustomDatePicker
+                value={eventDate}
+                onChange={(d) => { setEventDate(d); setIsDirty(true); }}
+                placeholder="Select Date"
+                label="Select Note Date"
+              />
+            </div>
+            <div className="pn-field">
+              <label className="pn-field__label">Time (Optional)</label>
+              <CustomTimePicker
+                value={eventTime}
+                onChange={(t) => { setEventTime(t); setIsDirty(true); }}
+                placeholder="Select Time"
+                label="Select Note Time"
+              />
+            </div>
           </div>
 
           <div className="pn-field">
@@ -234,18 +260,20 @@ export default function OtherForm({ petId, petName, onClose, onSaved, editData }
               className="pn-textarea"
               placeholder="Describe what happened or what you observed..."
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => { setDescription(e.target.value); setIsDirty(true); }}
             />
           </div>
         </FormSection>
 
-        <DocumentUpload files={files} onFilesChange={setFiles} label="Upload Photos or Documents" />
+        <DocumentUpload files={files} onFilesChange={(f) => { setFiles(f); setIsDirty(true); }} label="Upload Photos or Documents" />
 
         <ReminderToggle
           enabled={reminderEnabled}
-          onToggle={setReminderEnabled}
+          onToggle={(v) => { setReminderEnabled(v); setIsDirty(true); }}
           dueDate={nextDueDate}
-          onDueDateChange={setNextDueDate}
+          onDueDateChange={(d) => { setNextDueDate(d); setIsDirty(true); }}
+          dueTime={dueTime}
+          onDueTimeChange={(t) => { setDueTime(t); setIsDirty(true); }}
           label="Set Follow-up / Reminder Date"
         />
 

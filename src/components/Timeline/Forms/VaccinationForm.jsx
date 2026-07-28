@@ -5,6 +5,8 @@ import ReminderToggle from "./shared/ReminderToggle";
 import DocumentUpload from "./shared/DocumentUpload";
 import SaveConfirmation from "./shared/SaveConfirmation";
 import CustomDatePicker from "./shared/CustomDatePicker";
+import CustomStepper from "./shared/CustomStepper";
+import CustomTimePicker from "./shared/CustomTimePicker";
 import { useQueryClient } from "@tanstack/react-query";
 import { timelineKeys } from "../../../hooks/useTimelineQueries";
 import { createMedicalEvent, updateMedicalEvent, getVaccines, uploadDocument } from "../../../api/timelineApi";
@@ -13,7 +15,9 @@ export default function VaccinationForm({ petId, petName, onClose, onSaved, edit
   const queryClient = useQueryClient();
   const [vaccineName, setVaccineName] = useState("");
   const [eventDate, setEventDate] = useState(new Date().toISOString().split("T")[0]);
-  const [dose, setDose] = useState("");
+  const [eventTime, setEventTime] = useState("");
+  const [doseQty, setDoseQty] = useState("1");
+  const [doseUnit, setDoseUnit] = useState("ml");
   const [batchNumber, setBatchNumber] = useState("");
   const [clinicName, setClinicName] = useState("");
   const [vetName, setVetName] = useState("");
@@ -21,6 +25,7 @@ export default function VaccinationForm({ petId, petName, onClose, onSaved, edit
 
   const [reminderEnabled, setReminderEnabled] = useState(false);
   const [nextDueDate, setNextDueDate] = useState("");
+  const [dueTime, setDueTime] = useState("09:00");
   const [files, setFiles] = useState([]);
 
   const [vaccinesList, setVaccinesList] = useState([]);
@@ -44,7 +49,21 @@ export default function VaccinationForm({ petId, petName, onClose, onSaved, edit
       setEventDate(editData.event_date || catEntry.date_logged);
     }
     setVaccineName(vDetails.vaccine_name || catEntry.item_name || "");
-    setDose(cFields.dose || "");
+    if (cFields.dose) {
+      const parts = cFields.dose.trim().split(" ");
+      if (parts.length >= 2) {
+        setDoseQty(parts[0]);
+        setDoseUnit(parts.slice(1).join(" "));
+      } else {
+        setDoseQty(cFields.dose);
+      }
+    }
+    if (cFields.given_time || editData.event_time) {
+      setEventTime(cFields.given_time || editData.event_time);
+    }
+    if (cFields.due_time || editData.due_time) {
+      setDueTime(cFields.due_time || editData.due_time);
+    }
     setBatchNumber(vDetails.batch_number || "");
     setClinicName(cFields.clinic_name || editData.clinic_name || "");
     setVetName(cFields.vet_name || editData.vet_name || "");
@@ -104,7 +123,9 @@ export default function VaccinationForm({ petId, petName, onClose, onSaved, edit
         notes: notes || null,
         category_fields: {
           medicine_type: "vaccine",
-          dose: dose || null,
+          dose: doseQty ? `${doseQty} ${doseUnit}` : null,
+          given_time: eventTime || null,
+          due_time: reminderEnabled ? dueTime : null,
           vaccine_details: {
             vaccine_name: vaccineName,
             batch_number: batchNumber || null,
@@ -114,6 +135,7 @@ export default function VaccinationForm({ petId, petName, onClose, onSaved, edit
 
       const payload = {
         event_date: eventDate,
+        event_time: eventTime || null,
         clinic_name: clinicName || null,
         vet_name: vetName || null,
         category_entries: [categoryEntry],
@@ -301,23 +323,36 @@ export default function VaccinationForm({ petId, petName, onClose, onSaved, edit
               <label className="pn-field__label">Date Given</label>
               <CustomDatePicker
                 value={eventDate}
-                onChange={setEventDate}
+                onChange={(d) => { setEventDate(d); setIsDirty(true); }}
                 placeholder="Select Date"
                 label="Date Vaccination Given"
               />
             </div>
             <div className="pn-field">
-              <label className="pn-field__label">
-                Dose<span className="pn-field__label-optional">(Optional)</span>
-              </label>
-              <input
-                type="text"
-                className="pn-input"
-                placeholder="e.g. 1.0 ml"
-                value={dose}
-                onChange={(e) => setDose(e.target.value)}
+              <label className="pn-field__label">Time Given (Optional)</label>
+              <CustomTimePicker
+                value={eventTime}
+                onChange={(t) => { setEventTime(t); setIsDirty(true); }}
+                placeholder="Select Time"
+                label="Time Vaccination Given"
               />
             </div>
+          </div>
+
+          <div className="pn-field">
+            <label className="pn-field__label">Dosage & Quantity</label>
+            <CustomStepper
+              value={doseQty}
+              unit={doseUnit}
+              onChange={(v) => { setDoseQty(v); setIsDirty(true); }}
+              onUnitChange={(u) => { setDoseUnit(u); setIsDirty(true); }}
+              allowedUnits={[
+                { value: "ml", label: "ml" },
+                { value: "dose", label: "dose(s)" },
+                { value: "vial", label: "vial(s)" },
+                { value: "mg", label: "mg" },
+              ]}
+            />
           </div>
 
           <div className="pn-field">
@@ -329,7 +364,7 @@ export default function VaccinationForm({ petId, petName, onClose, onSaved, edit
               className="pn-input"
               placeholder="e.g. Happy Paws Clinic"
               value={clinicName}
-              onChange={(e) => setClinicName(e.target.value)}
+              onChange={(e) => { setClinicName(e.target.value); setIsDirty(true); }}
             />
           </div>
         </FormSection>
@@ -344,7 +379,7 @@ export default function VaccinationForm({ petId, petName, onClose, onSaved, edit
                 className="pn-input"
                 placeholder="BTCH-9921"
                 value={batchNumber}
-                onChange={(e) => setBatchNumber(e.target.value)}
+                onChange={(e) => { setBatchNumber(e.target.value); setIsDirty(true); }}
               />
             </div>
             <div className="pn-field">
@@ -354,7 +389,7 @@ export default function VaccinationForm({ petId, petName, onClose, onSaved, edit
                 className="pn-input"
                 placeholder="Vet / Nurse Name"
                 value={vetName}
-                onChange={(e) => setVetName(e.target.value)}
+                onChange={(e) => { setVetName(e.target.value); setIsDirty(true); }}
               />
             </div>
           </div>
@@ -365,20 +400,22 @@ export default function VaccinationForm({ petId, petName, onClose, onSaved, edit
               className="pn-textarea"
               placeholder="Any reaction, observations or special instructions..."
               value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              onChange={(e) => { setNotes(e.target.value); setIsDirty(true); }}
             />
           </div>
         </FormSection>
 
         {/* Documents */}
-        <DocumentUpload files={files} onFilesChange={setFiles} label="Upload Certificate / Prescription" />
+        <DocumentUpload files={files} onFilesChange={(f) => { setFiles(f); setIsDirty(true); }} label="Upload Certificate / Prescription" />
 
         {/* Reminder */}
         <ReminderToggle
           enabled={reminderEnabled}
-          onToggle={setReminderEnabled}
+          onToggle={(v) => { setReminderEnabled(v); setIsDirty(true); }}
           dueDate={nextDueDate}
-          onDueDateChange={setNextDueDate}
+          onDueDateChange={(d) => { setNextDueDate(d); setIsDirty(true); }}
+          dueTime={dueTime}
+          onDueTimeChange={(t) => { setDueTime(t); setIsDirty(true); }}
           label="Set Vaccination Booster Due Date"
         />
 
