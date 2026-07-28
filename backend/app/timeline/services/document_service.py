@@ -1,5 +1,5 @@
 # backend/app/timeline/services/document_service.py
-from app.supabase_client import supabase
+from app.supabase_client import supabase_admin as supabase
 from app.services.medical_record_service import MedicalRecordService
 
 class DocumentService:

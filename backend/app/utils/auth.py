@@ -1,6 +1,6 @@
 """
-Shared authentication dependency for FastAPI routes.
-Extracts and validates the user_id from the JWT Bearer token.
+Shared authentication dependencies for FastAPI routes.
+Extracts and validates the user from the JWT Bearer token.
 """
 
 from typing import Optional
@@ -10,67 +10,60 @@ from app.supabase_client import supabase
 from app.config import SUPABASE_URL, SUPABASE_ANON_KEY
 
 
-async def get_current_user_id(authorization: Optional[str] = Header(None)) -> str:
-    """
-    FastAPI dependency that extracts the authenticated user's ID from the
-    Authorization Bearer token. Raises 401 if the token is missing or invalid.
-    
-    Usage in a route:
-        @router.get("/")
-        async def my_route(user_id: str = Depends(get_current_user_id)):
-            ...
-    """
+def _extract_token(authorization: Optional[str]) -> str:
+    """Extract and return the raw JWT from the Authorization header."""
     if not authorization:
         raise HTTPException(status_code=401, detail="Authorization header is required")
+    return authorization.replace("Bearer ", "") if authorization.startswith("Bearer ") else authorization
 
-    token = authorization.replace("Bearer ", "") if authorization.startswith("Bearer ") else authorization
 
+def _validate_token(token: str):
+    """Validate JWT via Supabase and return the user object. Raises 401 on failure."""
     try:
         result = supabase.auth.get_user(token)
         if result.user is None:
             raise HTTPException(status_code=401, detail="Invalid or expired token")
-        return result.user.id
+        return result.user
     except HTTPException:
         raise
     except Exception as e:
         print(f"[Auth Dependency] Token validation error: {e}")
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
-async def get_user_supabase(authorization: Optional[str] = Header(None)) -> Client:
-    """
-    FastAPI dependency that returns a Supabase client configured with the
-    user's JWT token for Row-Level Security (RLS).
-    """
-    if not authorization:
-        raise HTTPException(status_code=401, detail="Authorization header is required")
-
-    token = authorization.replace("Bearer ", "") if authorization.startswith("Bearer ") else authorization
-
-    try:
-        options = ClientOptions(headers={"Authorization": f"Bearer {token}"})
-        client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY, options=options)
-        return client
-    except Exception as e:
-        print(f"[Auth Dependency] Client creation error: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
 
 async def get_current_user(authorization: Optional[str] = Header(None)) -> dict:
     """
-    FastAPI dependency that returns a dictionary like {"id": user_id, "email": user_email}
-    for V2 compatibility.
+    FastAPI dependency — returns full user profile dict including metadata.
+    Used by both V1 and V2 routers.
     """
-    if not authorization:
-        raise HTTPException(status_code=401, detail="Authorization header is required")
+    token = _extract_token(authorization)
+    user = _validate_token(token)
+    return {
+        "id": user.id,
+        "email": user.email,
+        "user_metadata": getattr(user, "user_metadata", {}) or {},
+        "app_metadata": getattr(user, "app_metadata", {}) or {},
+    }
 
-    token = authorization.replace("Bearer ", "") if authorization.startswith("Bearer ") else authorization
 
+async def get_current_user_id(authorization: Optional[str] = Header(None)) -> str:
+    """
+    FastAPI dependency — returns just the user's UUID string.
+    Convenience wrapper for V1 routers that only need the ID.
+    """
+    user = await get_current_user(authorization)
+    return user["id"]
+
+
+async def get_user_supabase(authorization: Optional[str] = Header(None)) -> Client:
+    """
+    FastAPI dependency — returns a Supabase client configured with the
+    user's JWT for Row-Level Security (RLS) enforcement.
+    """
+    token = _extract_token(authorization)
     try:
-        result = supabase.auth.get_user(token)
-        if result.user is None:
-            raise HTTPException(status_code=401, detail="Invalid or expired token")
-        return {"id": result.user.id, "email": result.user.email}
-    except HTTPException:
-        raise
+        options = ClientOptions(headers={"Authorization": f"Bearer {token}"})
+        return create_client(SUPABASE_URL, SUPABASE_ANON_KEY, options=options)
     except Exception as e:
-        print(f"[Auth Dependency] Token validation error: {e}")
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
+        print(f"[Auth Dependency] Client creation error: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")

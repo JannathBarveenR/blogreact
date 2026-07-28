@@ -1,5 +1,5 @@
 # backend/app/timeline/services/category_engine.py
-from app.supabase_client import supabase
+from app.supabase_client import supabase_admin as supabase
 
 CATEGORIES = ["diagnosis","medication","vaccination","deworming",
               "anti_tick_flea","grooming","other"]

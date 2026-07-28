@@ -1,6 +1,6 @@
 # backend/app/timeline/services/export_service.py
 import io, csv
-from app.supabase_client import supabase
+from app.supabase_client import supabase_admin as supabase
 
 def _flatten_event(ev):
     flat = []
