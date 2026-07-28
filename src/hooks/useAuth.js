@@ -13,6 +13,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../utils/supabaseClient";
+import { refreshAccessToken } from "../utils/fetchWithAuth";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 
@@ -170,27 +171,18 @@ export default function useAuth() {
    * This is what prevents the 1-hour auto-logout.
    */
   const tryRefreshToken = async () => {
-    const refreshToken = localStorage.getItem("refresh_token");
-    if (!refreshToken) return false;
-
     try {
-      const { data, error } = await supabase.auth.refreshSession({
-        refresh_token: refreshToken,
-      });
-
-      if (error || !data?.session) return false;
-
-      const { access_token, refresh_token: newRefresh } = data.session;
-      localStorage.setItem("access_token", access_token);
-      if (newRefresh) localStorage.setItem("refresh_token", newRefresh);
-      setAuthCookies(access_token, newRefresh);
-
-      if (data.session.user) {
-        localStorage.setItem("user", JSON.stringify(data.session.user));
-        setUser(data.session.user);
+      const success = await refreshAccessToken();
+      if (success) {
+        const newToken = localStorage.getItem("access_token");
+        const storedUser = localStorage.getItem("user");
+        if (newToken) setToken(newToken);
+        if (storedUser) {
+          try { setUser(JSON.parse(storedUser)); } catch {}
+        }
+        return true;
       }
-      setToken(access_token);
-      return true;
+      return false;
     } catch (err) {
       console.error("[useAuth] Refresh failed:", err);
       return false;
@@ -215,9 +207,10 @@ export default function useAuth() {
     validateSession();
 
     // Listen for Supabase auth state changes (automatic token refresh)
+    let subscription = null;
     if (!authListenerSetup.current) {
       authListenerSetup.current = true;
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      const { data } = supabase.auth.onAuthStateChange(
         (event, session) => {
           if (event === "TOKEN_REFRESHED" && session) {
             localStorage.setItem("access_token", session.access_token);
@@ -237,9 +230,12 @@ export default function useAuth() {
           }
         }
       );
-
-      return () => subscription?.unsubscribe();
+      subscription = data?.subscription;
     }
+
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, [validateSession]);
 
   return {

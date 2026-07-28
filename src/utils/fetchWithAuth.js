@@ -12,33 +12,60 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 // Prevent multiple simultaneous refresh attempts
 let _refreshPromise = null;
 
-async function refreshAccessToken() {
+export async function refreshAccessToken() {
   if (_refreshPromise) return _refreshPromise;
 
   _refreshPromise = (async () => {
     const refreshToken = localStorage.getItem("refresh_token");
+    const accessToken = localStorage.getItem("access_token");
     if (!refreshToken) return false;
 
+    // Helper to persist new session details
+    const persistSession = (newAccess, newRefresh, userObj) => {
+      localStorage.setItem("access_token", newAccess);
+      if (newRefresh) localStorage.setItem("refresh_token", newRefresh);
+      if (userObj) localStorage.setItem("user", JSON.stringify(userObj));
+      try {
+        document.cookie = `pol_session=1; path=/; max-age=2592000; SameSite=Lax`;
+        document.cookie = `pol_at=${newAccess}; path=/; max-age=2592000; SameSite=Lax`;
+      } catch {}
+    };
+
     try {
+      // 1. Try setSession on Supabase JS Client (auto-refreshes if access token is expired)
+      if (accessToken && refreshToken) {
+        const { data: setSessionData, error: setSessionErr } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+
+        if (!setSessionErr && setSessionData?.session?.access_token) {
+          persistSession(
+            setSessionData.session.access_token,
+            setSessionData.session.refresh_token,
+            setSessionData.session.user
+          );
+          return true;
+        }
+      }
+
+      // 2. Fallback: Try explicit refreshSession on Supabase JS Client
       const { data, error } = await supabase.auth.refreshSession({
         refresh_token: refreshToken,
       });
 
-      if (error || !data?.session) return false;
+      if (!error && data?.session?.access_token) {
+        persistSession(
+          data.session.access_token,
+          data.session.refresh_token,
+          data.session.user
+        );
+        return true;
+      }
 
-      localStorage.setItem("access_token", data.session.access_token);
-      if (data.session.refresh_token) {
-        localStorage.setItem("refresh_token", data.session.refresh_token);
-      }
-      if (data.session.user) {
-        localStorage.setItem("user", JSON.stringify(data.session.user));
-      }
-      try {
-        document.cookie = `pol_session=1; path=/; max-age=2592000; SameSite=Lax`;
-        document.cookie = `pol_at=${data.session.access_token}; path=/; max-age=2592000; SameSite=Lax`;
-      } catch {}
-      return true;
-    } catch {
+      return false;
+    } catch (err) {
+      console.error("[fetchWithAuth] Token refresh error:", err);
       return false;
     }
   })();
