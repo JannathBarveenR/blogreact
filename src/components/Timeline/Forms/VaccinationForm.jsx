@@ -9,7 +9,7 @@ import CustomStepper from "./shared/CustomStepper";
 import CustomTimePicker from "./shared/CustomTimePicker";
 import { useQueryClient } from "@tanstack/react-query";
 import { timelineKeys } from "../../../hooks/useTimelineQueries";
-import { createMedicalEvent, updateMedicalEvent, getVaccines, uploadDocument } from "../../../api/timelineApi";
+import { createMedicalEvent, updateMedicalEvent, getVaccines, uploadEventRecord } from "../../../api/timelineApi";
 
 export default function VaccinationForm({ petId, petName, onClose, onSaved, editData }) {
   const queryClient = useQueryClient();

@@ -8,7 +8,7 @@ import CustomDatePicker from "./shared/CustomDatePicker";
 import CustomTimePicker from "./shared/CustomTimePicker";
 import { useQueryClient } from "@tanstack/react-query";
 import { timelineKeys } from "../../../hooks/useTimelineQueries";
-import { createMedicalEvent, updateMedicalEvent, searchClinics, uploadDocument } from "../../../api/timelineApi";
+import { createMedicalEvent, updateMedicalEvent, searchClinics, uploadEventRecord } from "../../../api/timelineApi";
 
 export default function VetVisitForm({ petId, petName, onClose, onSaved, editData }) {
   const queryClient = useQueryClient();

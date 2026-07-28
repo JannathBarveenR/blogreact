@@ -9,7 +9,7 @@ import CustomStepper from "./shared/CustomStepper";
 import CustomTimePicker from "./shared/CustomTimePicker";
 import { useQueryClient } from "@tanstack/react-query";
 import { timelineKeys } from "../../../hooks/useTimelineQueries";
-import { createMedicalEvent, updateMedicalEvent, searchMedicines, uploadDocument, createReminder } from "../../../api/timelineApi";
+import { createMedicalEvent, updateMedicalEvent, searchMedicines, uploadEventRecord, createReminder } from "../../../api/timelineApi";
 
 const MEDICINE_TYPES = [
   { value: "tablet", label: "Tablet / Pill" },

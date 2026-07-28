@@ -19,27 +19,22 @@ def _rows(pet_id):
 
     docs = []
     try:
-        docs = (supabase.table("medical_documents").select("*")
-                .eq("pet_id", pet_id).execute().data) or []
+        records = (supabase.table("medical_records").select("*")
+                   .eq("pet_profile_id", pet_id).eq("log", 1)
+                   .execute().data) or []
+        for r in records:
+            docs.append({
+                "id": r.get("id"),
+                "pet_id": r.get("pet_profile_id"),
+                "event_id": r.get("event_id"),
+                "file_url": r.get("file_url"),
+                "label": r.get("label") or r.get("title"),
+                "storage_path": r.get("storage_path"),
+                "uploaded_at": r.get("created_at"),
+            })
     except Exception as e:
-        print(f"[CategoryEngine] Warning: Could not query medical_documents: {e}")
-        try:
-            records = (supabase.table("medical_records").select("*")
-                       .eq("pet_profile_id", pet_id).execute().data) or []
-            for r in records:
-                docs.append({
-                    "id": r.get("id"),
-                    "pet_id": r.get("pet_profile_id"),
-                    "event_id": r.get("event_id"),
-                    "file_url": r.get("file_url"),
-                    "file_type": r.get("file_type"),
-                    "label": r.get("title") or r.get("file_name"),
-                    "storage_path": r.get("storage_path"),
-                    "uploaded_at": r.get("created_at"),
-                })
-        except Exception as e2:
-            print(f"[CategoryEngine] Warning: Could not query medical_records fallback: {e2}")
-            docs = []
+        print(f"[CategoryEngine] Warning: Could not query medical_records: {e}")
+        docs = []
 
     docs_by_event = {}
     for d in docs:

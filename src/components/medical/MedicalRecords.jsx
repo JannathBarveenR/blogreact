@@ -167,6 +167,7 @@ export default function MedicalRecords({
         setSelectedFile(null);
         setProgress(0);
         await fetchRecords();
+        queryClient.invalidateQueries({ queryKey: ["records", activePetId] });
       } else {
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData.detail || "Upload failed");
@@ -193,6 +194,7 @@ export default function MedicalRecords({
       });
       if (res.ok) {
         await fetchRecords();
+        queryClient.invalidateQueries({ queryKey: ["records", activePetId] });
       } else {
         const errData = await res.json().catch(() => ({}));
         alert(`Failed to delete record: ${errData.detail || "Database error"}`);
@@ -215,6 +217,7 @@ export default function MedicalRecords({
       );
       if (res.ok) {
         await fetchRecords();
+        queryClient.invalidateQueries({ queryKey: ["records", activePetId] });
       } else {
         console.error("Failed to toggle favorite");
       }

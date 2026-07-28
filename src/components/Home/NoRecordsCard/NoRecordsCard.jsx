@@ -22,7 +22,7 @@ export default function NoRecordsCard({ selectedPet, onNavigateTab }) {
     const fetchPetRecords = async () => {
       setLoading(true);
       try {
-        const res = await fetchWithAuth(`/api/medical-records/${petId}`);
+        const res = await fetchWithAuth(`/api/v2/pets/${petId}/records?log=0`);
         if (res.ok) {
           const data = await res.json();
           if (isMounted) setRecords(data || []);
@@ -64,7 +64,7 @@ export default function NoRecordsCard({ selectedPet, onNavigateTab }) {
           {records.slice(0, 3).map((rec) => (
             <div key={rec.id} className="summary-item" onClick={() => setViewFile(rec)}>
               <span className="summary-badge">{rec.category}</span>
-              <span className="summary-title">{rec.title || rec.file_name}</span>
+              <span className="summary-title">{rec.title || rec.label}</span>
               <span className="summary-date">
                 {rec.created_at ? new Date(rec.created_at).toLocaleDateString() : ""}
               </span>
@@ -80,7 +80,7 @@ export default function NoRecordsCard({ selectedPet, onNavigateTab }) {
               </button>
 
               <div className="file-view-content">
-                {viewFile.file_type?.startsWith("image") ? (
+                {/\.(png|jpg|jpeg|webp|gif)(\?.*)?$/i.test(viewFile.file_url || viewFile.storage_path || "") ? (
                   <img src={viewFile.file_url} alt="Preview" />
                 ) : (
                   <iframe
