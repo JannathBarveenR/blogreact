@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { FileUp, Sparkles, ArrowRight } from "lucide-react";
+import { Upload, ChevronRight, Lock } from "lucide-react";
+import rcrdCardImg from "../../../assets/rcrdcard.jpeg";
 import "./UploadRecordsCard.css";
 
 export default function UploadRecordsCard({ onNavigateTab }) {
@@ -16,29 +17,29 @@ export default function UploadRecordsCard({ onNavigateTab }) {
   };
 
   return (
-    <div className="upload-records-action-card" onClick={handleCardClick}>
-      <div className="upload-card-content">
-        <div className="upload-card-header">
-          <div className="upload-card-icon-wrapper">
-            <FileUp size={22} className="upload-card-icon" />
-          </div>
-          <div className="upload-card-badge">
-            <Sparkles size={12} /> AI Analysis Coming soon
-          </div>
-        </div>
+    <div className="upload-records-card-wrapper" onClick={handleCardClick}>
+      {/* Main Design Image */}
+      <img
+        src={rcrdCardImg}
+        alt="Upload Pet Health Records"
+        className="upload-records-main-img"
+      />
 
-        <div className="upload-card-text">
-          <h4 className="upload-card-title">Upload Pet Medical Records</h4>
-          <p className="upload-card-desc">
-            Keep prescriptions, lab reports &amp; vaccine records organized in one digital pass.
-          </p>
-        </div>
+      {/* CTA Button & Trust Tagline Overlay */}
+      <div className="upload-records-overlay-container">
+        <button
+          className="upload-my-records-btn"
+          onClick={handleCardClick}
+          type="button"
+        >
+          <Upload size={18} strokeWidth={2.5} />
+          <span>Upload My Records</span>
+          <ChevronRight size={18} strokeWidth={2.8} />
+        </button>
 
-        <div className="upload-card-footer">
-          <button className="upload-card-btn" onClick={handleCardClick}>
-            <span>Upload Records Now</span>
-            <ArrowRight size={16} />
-          </button>
+        <div className="upload-records-trust-tagline">
+          <Lock size={12} className="trust-lock-icon" strokeWidth={2.5} />
+          <span>Safe · Secure · Always With You</span>
         </div>
       </div>
     </div>

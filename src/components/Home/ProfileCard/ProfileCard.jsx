@@ -32,6 +32,7 @@ export default function ProfileCard({
   showPetDropdown: propShowPetDropdown,
   setShowPetDropdown: propSetShowPetDropdown,
   handlePetSelect: propHandlePetSelect,
+  onPetSelect: propOnPetSelect,
   dropdownRef: propDropdownRef,
   onAddPet,
   onUploadRecords,
@@ -57,8 +58,9 @@ export default function ProfileCard({
   const activeRef = propDropdownRef || internalRef;
 
   const onSelect = (pet) => {
-    if (propHandlePetSelect) {
-      propHandlePetSelect(pet);
+    const finalHandler = propOnPetSelect || propHandlePetSelect;
+    if (finalHandler) {
+      finalHandler(pet);
     }
     if (propSetShowPetDropdown) {
       propSetShowPetDropdown(false);

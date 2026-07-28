@@ -2,6 +2,7 @@ import os
 import boto3
 import uuid
 import mimetypes
+from botocore.config import Config
 from botocore.exceptions import NoCredentialsError, ClientError
 
 # Load from env
@@ -23,10 +24,15 @@ if not AWS_MEDICAL_DOCS_BUCKET:
 
 
 def get_s3_client():
-    """Initializes and returns a boto3 S3 client."""
-    # If using IAM Roles in production (EC2/ECS), boto3 automatically handles credentials
-    # when access keys are not provided.
-    kwargs = {"region_name": AWS_REGION}
+    """Initializes and returns a boto3 S3 client configured for virtual-hosted SigV4 presigned URLs."""
+    kwargs = {
+        "region_name": AWS_REGION,
+        "config": Config(
+            region_name=AWS_REGION,
+            signature_version="s3v4",
+            s3={"addressing_style": "virtual"}
+        )
+    }
     if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY:
         kwargs["aws_access_key_id"] = AWS_ACCESS_KEY_ID
         kwargs["aws_secret_access_key"] = AWS_SECRET_ACCESS_KEY

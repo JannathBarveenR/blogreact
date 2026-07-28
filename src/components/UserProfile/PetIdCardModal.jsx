@@ -30,6 +30,41 @@ const PetIdCardModal = ({
     pet.id ||
     "";
 
+  const getOwnerName = () => {
+    if (pet?.owner_name && pet.owner_name !== "Pet Parent") return pet.owner_name;
+    if (pet?.pet_parent && pet.pet_parent !== "Pet Parent") return pet.pet_parent;
+    if (pet?.owner_info?.owner_name && pet.owner_info.owner_name !== "Pet Parent") return pet.owner_info.owner_name;
+    if (pet?.owner_info?.full_name && pet.owner_info.full_name !== "Pet Parent") return pet.owner_info.full_name;
+
+    if (owner) {
+      if (owner.full_name) return owner.full_name;
+      if (owner.name) return owner.name;
+      if (owner.user_metadata?.full_name) return owner.user_metadata.full_name;
+      if (owner.user_metadata?.name) return owner.user_metadata.name;
+      if (owner.user_metadata?.first_name) {
+        return `${owner.user_metadata.first_name} ${owner.user_metadata.last_name || ""}`.trim();
+      }
+    }
+
+    try {
+      const stored = localStorage.getItem("user");
+      if (stored) {
+        const u = JSON.parse(stored);
+        if (u.full_name) return u.full_name;
+        if (u.name) return u.name;
+        if (u.user_metadata?.full_name) return u.user_metadata.full_name;
+        if (u.user_metadata?.name) return u.user_metadata.name;
+        if (u.user_metadata?.first_name) {
+          return `${u.user_metadata.first_name} ${u.user_metadata.last_name || ""}`.trim();
+        }
+      }
+    } catch {}
+
+    return "Pet Parent";
+  };
+
+  const resolvedOwnerName = getOwnerName();
+
   const petDataForKonva = {
     ...pet,
     pet_name: pet.pet_name || pet.name || "Pet",
@@ -39,8 +74,9 @@ const PetIdCardModal = ({
     breed: pet.breed || pet.pet_breed || "",
     birth_date: pet.birth_date || pet.birthDate || pet.dob || "",
     approx_age: pet.approx_age || pet.approxAge || pet.age || "",
-    owner_name: owner?.full_name || owner?.name || "Pet Parent",
-    owner_phone: owner?.phone || "",
+    owner_name: resolvedOwnerName,
+    pet_parent: resolvedOwnerName,
+    owner_phone: owner?.phone || owner?.user_metadata?.phone || pet.owner_phone || "",
   };
 
   const handleDownload = () => {

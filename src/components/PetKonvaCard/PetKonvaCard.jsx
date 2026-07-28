@@ -82,7 +82,31 @@ const PetKonvaCard = forwardRef(({ petData = {}, containerWidth = 380 }, ref) =>
 
   const ageDisplay = getAgeDisplay(rawDob, petData.approx_age || petData.approxAge || petData.age);
 
-  const ownerName = petData.owner_name || petData.pet_parent || petData.ownerName || petData.owner_info?.full_name || "Pet Parent";
+  const getOwnerName = () => {
+    if (petData.owner_name && petData.owner_name !== "Pet Parent") return petData.owner_name;
+    if (petData.pet_parent && petData.pet_parent !== "Pet Parent") return petData.pet_parent;
+    if (petData.ownerName && petData.ownerName !== "Pet Parent") return petData.ownerName;
+    if (petData.owner_info?.owner_name && petData.owner_info.owner_name !== "Pet Parent") return petData.owner_info.owner_name;
+    if (petData.owner_info?.full_name && petData.owner_info.full_name !== "Pet Parent") return petData.owner_info.full_name;
+
+    try {
+      const stored = localStorage.getItem("user");
+      if (stored) {
+        const u = JSON.parse(stored);
+        if (u.full_name) return u.full_name;
+        if (u.name) return u.name;
+        if (u.user_metadata?.full_name) return u.user_metadata.full_name;
+        if (u.user_metadata?.name) return u.user_metadata.name;
+        if (u.user_metadata?.first_name) {
+          return `${u.user_metadata.first_name} ${u.user_metadata.last_name || ""}`.trim();
+        }
+      }
+    } catch {}
+
+    return "Pet Parent";
+  };
+
+  const ownerName = getOwnerName();
   
   const frontendBase = import.meta.env.VITE_FRONTEND_URL || (typeof window !== "undefined" ? window.location.origin : "");
   const qrUrl = `${frontendBase}/pet/${encodeURIComponent(petolifeId.toLowerCase())}`;
@@ -282,10 +306,10 @@ const PetKonvaCard = forwardRef(({ petData = {}, containerWidth = 380 }, ref) =>
 
           {/* Right Side Info */}
           {/* Name */}
-          <Text x={560} y={320} text={petName} fontSize={110} fontStyle="bold" fontFamily="system-ui, sans-serif" fill="#123d2f" />
+          <Text x={560} y={320} text={petName} fontSize={80} width={450} wrap="none" ellipsis={true} fontStyle="bold" fontFamily="system-ui, sans-serif" fill="#123d2f" />
           {/* Tilted outline Heart beside Name - matching styling and position */}
           <Path 
-            x={560 + Math.min(petName.length * 65, 450) + 30} 
+            x={560 + Math.min(petName.length * 48, 430) + 20} 
             y={335} 
             data={SVG_PATHS.heartSolid} 
             stroke="#719d3f" 

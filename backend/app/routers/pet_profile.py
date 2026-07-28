@@ -107,17 +107,50 @@ def calculate_approx_age_from_dob(dob_str: Optional[str]) -> Optional[str]:
 
 
 def get_user_owner_info(user_id: str) -> dict:
-    """Fetch user's full name and phone from user_profiles table."""
+    """Fetch user's full name and phone from user_profiles table, or auth.users fallback."""
+    name = None
+    phone = ""
+
+    # 1. Try public.user_profiles table
     try:
-        res = global_supabase.table("user_profiles").select("full_name, phone").eq("id", user_id).execute()
-        if res.data and res.data[0].get("full_name"):
-            return {
-                "owner_name": res.data[0]["full_name"],
-                "owner_phone": res.data[0].get("phone", "") or ""
-            }
-    except Exception:
-        pass
-    return {"owner_name": "Pet Parent", "owner_phone": ""}
+        res = global_supabase.table("user_profiles").select("full_name, phone, email").eq("id", user_id).execute()
+        if res.data and len(res.data) > 0:
+            row = res.data[0]
+            if row.get("full_name") and str(row.get("full_name")).strip():
+                name = str(row["full_name"]).strip()
+            phone = row.get("phone", "") or ""
+            if not name and row.get("email"):
+                name = str(row["email"]).split("@")[0].replace(".", " ").replace("_", " ").title()
+    except Exception as e:
+        print(f"[get_user_owner_info] Error querying user_profiles: {e}")
+
+    if name:
+        return {"owner_name": name, "owner_phone": phone}
+
+    # 2. Fallback: Check auth.users user_metadata via Supabase Admin API
+    try:
+        if supabase_admin:
+            user_resp = supabase_admin.auth.admin.get_user_by_id(user_id)
+            user_obj = getattr(user_resp, "user", user_resp) if user_resp else None
+            if user_obj:
+                meta = getattr(user_obj, "user_metadata", {}) or {}
+                if isinstance(meta, dict):
+                    name = meta.get("full_name") or meta.get("name") or meta.get("display_name")
+                    if not name and meta.get("first_name"):
+                        name = f"{meta.get('first_name', '')} {meta.get('last_name', '')}".strip()
+
+                if not phone:
+                    phone = getattr(user_obj, "phone", "") or (meta.get("phone", "") if isinstance(meta, dict) else "") or ""
+
+                if not name and getattr(user_obj, "email", None):
+                    name = str(user_obj.email).split("@")[0].replace(".", " ").replace("_", " ").title()
+    except Exception as e:
+        print(f"[get_user_owner_info] Error fetching auth user by id: {e}")
+
+    return {
+        "owner_name": name or "Pet Parent",
+        "owner_phone": phone or ""
+    }
 
 
 def enrich_pet_profile(profile: dict, owner_info: Optional[dict] = None) -> dict:
