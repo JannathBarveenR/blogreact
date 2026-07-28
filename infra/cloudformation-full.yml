@@ -410,6 +410,16 @@ Resources:
         - Key: Name
           Value: !Sub "${EnvironmentName}-bastion"
 
+  BastionEIP:
+    Type: AWS::EC2::EIP
+    DependsOn: VPCGatewayAttachment
+    Properties:
+      Domain: vpc
+      InstanceId: !Ref BastionHost
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-bastion-eip"
+
   # ═══════════════════════════════════════════════════════════════════════
   # APPLICATION LOAD BALANCER — HTTP only (CloudFront handles HTTPS)
   # ═══════════════════════════════════════════════════════════════════════
@@ -553,11 +563,6 @@ Resources:
         - Key: Name
           Value: !Sub "${EnvironmentName}-petolife-app"
           PropagateAtLaunch: true
-    UpdatePolicy:
-      AutoScalingRollingUpdate:
-        MinInstancesInService: 1
-        MaxBatchSize: 1
-        PauseTime: PT10M
 
   # Scale out at 60% CPU, scale in aggressively when load drops
   ScalingPolicy:
@@ -720,7 +725,7 @@ Outputs:
 
   BastionPublicIP:
     Description: "SSH: ssh -i key.pem ubuntu@<this-ip>"
-    Value: !GetAtt BastionHost.PublicIp
+    Value: !Ref BastionEIP
 
   ALBDNSName:
     Description: "ALB internal DNS (CloudFront origin — not for public DNS)"
@@ -736,4 +741,4 @@ Outputs:
 
   SSHViaBastion:
     Description: "SSH to app server through Bastion"
-    Value: !Sub "ssh -J ubuntu@${BastionHost.PublicIp} -i key.pem ubuntu@<app-private-ip>"
+    Value: !Sub "ssh -J ubuntu@${BastionEIP} -i key.pem ubuntu@<app-private-ip>"

@@ -96,39 +96,69 @@ const handleDeleteAccount = async () => {
   navigate("/login");
 };
 
-const handleSavePassword = async () => {
-  if (!currentPassword.trim()) {
-    alert("Please enter your current password.");
-    return;
-  }
-
-  if (newPassword.length < 8) {
-    alert("Password must contain at least 8 characters.");
-    return;
-  }
-
-  if (newPassword !== confirmPassword) {
-    alert("Passwords do not match.");
-    return;
-  }
-
-  try {
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    if (error) {
-      alert(error.message || "Failed to update password.");
+  const handleSavePassword = async () => {
+    if (isGoogleUser) {
+      alert("Password change is not available for Google Sign-In accounts.");
+      setShowPasswordModal(false);
       return;
     }
-    alert("Password updated successfully.");
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-    setShowPasswordModal(false);
-  } catch (err) {
-    console.error("Password update error:", err);
-    alert("Password updated successfully.");
-    setShowPasswordModal(false);
-  }
-};
+
+    if (!currentPassword.trim()) {
+      alert("Please enter your current password.");
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      alert("Password must contain at least 8 characters.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      alert("Passwords do not match.");
+      return;
+    }
+
+    try {
+      // 1. Ensure supabase.auth client has the active session attached
+      const accessToken = localStorage.getItem("access_token");
+      const refreshToken = localStorage.getItem("refresh_token");
+      if (accessToken) {
+        await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken || "",
+        });
+      }
+
+      // 2. Validate current password with Supabase Auth
+      const email = user?.email || userProfile?.email;
+      if (email) {
+        const { error: authErr } = await supabase.auth.signInWithPassword({
+          email,
+          password: currentPassword,
+        });
+        if (authErr) {
+          alert(authErr.message || "Current password is incorrect.");
+          return;
+        }
+      }
+
+      // 3. Update password
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) {
+        alert(error.message || "Failed to update password.");
+        return;
+      }
+
+      alert("Password updated successfully.");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setShowPasswordModal(false);
+    } catch (err) {
+      console.error("Password update error:", err);
+      alert("Failed to update password. Please try again.");
+    }
+  };
   const handleCancelView = () => {
     setViewingPetId(null);
   };
