@@ -99,6 +99,30 @@
   transition: all 0.18s ease;
 }
 
+.hero-survey-cta {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.hero-survey-btn {
+  background-color: #004b23;
+  color: #ffffff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: background-color 0.2s ease;
+}
+
+.hero-survey-btn:hover {
+  background-color: #003619;
+}
+
 .hero-checklist-item.checked .hero-checklist-text {
   color: #a0aec0;
   text-decoration: line-through;

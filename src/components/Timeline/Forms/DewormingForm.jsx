@@ -1,35 +1,81 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import FormSection from "./shared/FormSection";
 import ReminderToggle from "./shared/ReminderToggle";
 import DocumentUpload from "./shared/DocumentUpload";
 import SaveConfirmation from "./shared/SaveConfirmation";
 import CustomSelect from "./shared/CustomSelect";
 import CustomDatePicker from "./shared/CustomDatePicker";
-import { createMedicalEvent, uploadEventRecord } from "../../../api/timelineApi";
+import CustomStepper from "./shared/CustomStepper";
+import CustomTimePicker from "./shared/CustomTimePicker";
+import { useQueryClient } from "@tanstack/react-query";
+import { timelineKeys } from "../../../hooks/useTimelineQueries";
+import { createMedicalEvent, updateMedicalEvent, uploadDocument } from "../../../api/timelineApi";
 
 const GIVEN_AT_OPTIONS = [
   { value: "home", label: "Home" },
   { value: "clinic", label: "Vet Clinic" },
 ];
 
-export default function DewormingForm({ petId, petName, onClose, onSaved }) {
+export default function DewormingForm({ petId, petName, onClose, onSaved, editData }) {
+  const queryClient = useQueryClient();
   const [medName, setMedName] = useState("");
   const [givenDate, setGivenDate] = useState(new Date().toISOString().split("T")[0]);
-  const [dose, setDose] = useState("");
+  const [givenTime, setGivenTime] = useState("");
+  const [doseQty, setDoseQty] = useState("1");
+  const [doseUnit, setDoseUnit] = useState("tablet");
   const [weight, setWeight] = useState("");
   const [givenAt, setGivenAt] = useState("home");
   const [notes, setNotes] = useState("");
 
-  const [reminderEnabled, setReminderEnabled] = useState(true);
+  const [reminderEnabled, setReminderEnabled] = useState(false);
   const [nextDueDate, setNextDueDate] = useState(() => {
     const d = new Date();
     d.setDate(d.getDate() + 90);
     return d.toISOString().split("T")[0];
   });
+  const [dueTime, setDueTime] = useState("09:00");
   const [files, setFiles] = useState([]);
 
   const [submitting, setSubmitting] = useState(false);
   const [savedData, setSavedData] = useState(null);
+  const [toastMessage, setToastMessage] = useState("");
+  const [isDirty, setIsDirty] = useState(false);
+  const [showUnsavedPrompt, setShowUnsavedPrompt] = useState(false);
+
+  useEffect(() => {
+    if (!editData) return;
+    const catEntry = (editData.category_entries || [])[0] || {};
+    const cFields = catEntry.category_fields || {};
+
+    if (editData.event_date || catEntry.date_logged) {
+      setGivenDate(editData.event_date || catEntry.date_logged);
+    }
+    setMedName(catEntry.item_name || "");
+    if (cFields.dose) {
+      const parts = cFields.dose.trim().split(" ");
+      if (parts.length >= 2) {
+        setDoseQty(parts[0]);
+        setDoseUnit(parts.slice(1).join(" "));
+      } else {
+        setDoseQty(cFields.dose);
+      }
+    }
+    if (cFields.given_time || editData.event_time) {
+      setGivenTime(cFields.given_time || editData.event_time);
+    }
+    if (cFields.due_time || editData.due_time) {
+      setDueTime(cFields.due_time || editData.due_time);
+    }
+    setWeight(cFields.weight ? String(cFields.weight) : "");
+    setGivenAt(cFields.given_at || "home");
+    setNotes(catEntry.notes || editData.overall_notes || "");
+    const hasNextDue = Boolean(catEntry.next_due_date || editData.next_due_date);
+    setReminderEnabled(hasNextDue);
+    if (hasNextDue) {
+      setNextDueDate(catEntry.next_due_date || editData.next_due_date);
+    }
+  }, [editData]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -44,7 +90,9 @@ export default function DewormingForm({ petId, petName, onClose, onSaved }) {
         next_due_date: reminderEnabled && nextDueDate ? nextDueDate : null,
         notes: notes || null,
         category_fields: {
-          dose: dose || null,
+          dose: doseQty ? `${doseQty} ${doseUnit}` : null,
+          given_time: givenTime || null,
+          due_time: reminderEnabled ? dueTime : null,
           weight: weight ? parseFloat(weight) : null,
           given_at: givenAt,
         },
@@ -52,8 +100,18 @@ export default function DewormingForm({ petId, petName, onClose, onSaved }) {
 
       const payload = {
         event_date: givenDate,
+        event_time: givenTime || null,
         category_entries: [categoryEntry],
       };
+
+      if (editData) {
+        const targetEventId = editData.id || editData.event_id || editData.medical_event_id;
+        await updateMedicalEvent(petId, targetEventId, payload);
+        queryClient.invalidateQueries({ queryKey: timelineKeys.all(petId) });
+        if (onSaved) onSaved("✓ Deworming record updated successfully!");
+        else if (onClose) onClose();
+        return;
+      }
 
       const res = await createMedicalEvent(petId, payload);
       const createdEvent = res.event || res;
@@ -66,6 +124,12 @@ export default function DewormingForm({ petId, petName, onClose, onSaved }) {
             console.error("Doc upload error:", docErr);
           }
         }
+      }
+
+      try {
+        queryClient.invalidateQueries({ queryKey: timelineKeys.all(petId) });
+      } catch (cErr) {
+        console.error("Cache invalidation error:", cErr);
       }
 
       setSavedData({
@@ -96,14 +160,91 @@ export default function DewormingForm({ petId, petName, onClose, onSaved }) {
     );
   }
 
+  const handleHeaderClose = () => {
+    if (editData && isDirty) {
+      setShowUnsavedPrompt(true);
+    } else {
+      onClose();
+    }
+  };
+
   return (
     <div className="pn-form-container">
+      {toastMessage && (
+        <div style={{
+          position: "fixed",
+          top: 20,
+          left: "50%",
+          transform: "translateX(-50%)",
+          background: "#004b23",
+          color: "#ffffff",
+          padding: "10px 20px",
+          borderRadius: "20px",
+          fontWeight: "700",
+          fontSize: "14px",
+          boxShadow: "0 8px 20px rgba(0,0,0,0.2)",
+          zIndex: 9999,
+          display: "flex",
+          alignItems: "center",
+          gap: "8px"
+        }}>
+          <span className="material-symbols-outlined" style={{ fontSize: 20 }}>check_circle</span>
+          {toastMessage}
+        </div>
+      )}
+
+      {/* Unsaved Changes Confirmation Modal */}
+      {showUnsavedPrompt && createPortal(
+        <div className="ev-modal-overlay" onClick={() => setShowUnsavedPrompt(false)}>
+          <div className="ev-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 380 }}>
+            <div className="ev-modal-icon-wrap" style={{ background: "#fef3c7", color: "#d97706" }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 28 }}>warning</span>
+            </div>
+            <h3 className="ev-modal-title">Unsaved Changes</h3>
+            <p className="ev-modal-desc">
+              You have modified this medical record. Would you like to save your updates before leaving?
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", marginTop: 8 }}>
+              <button
+                type="button"
+                className="ev-primary-btn"
+                style={{ width: "100%", height: 46, borderRadius: 14, fontSize: 15, fontWeight: 700, background: "#004b23", border: "none" }}
+                onClick={(e) => {
+                  setShowUnsavedPrompt(false);
+                  handleSubmit(e);
+                }}
+              >
+                Save Changes
+              </button>
+              <button
+                type="button"
+                style={{ width: "100%", height: 46, borderRadius: 14, fontSize: 15, fontWeight: 700, background: "#ef4444", color: "#ffffff", border: "none", cursor: "pointer" }}
+                onClick={() => {
+                  setShowUnsavedPrompt(false);
+                  onClose();
+                }}
+              >
+                Discard Changes
+              </button>
+              <button
+                type="button"
+                style={{ background: "transparent", border: "none", color: "#64748b", fontWeight: 600, fontSize: 14, cursor: "pointer", padding: "6px" }}
+                onClick={() => setShowUnsavedPrompt(false)}
+              >
+                Keep Editing
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
       <div className="pn-form-header">
         <div className="pn-form-header__left">
-          <button className="pn-form-header__back" onClick={onClose}>
-            <span className="material-symbols-outlined">arrow_back</span>
+          <button className="pn-form-header__back" onClick={handleHeaderClose} type="button">
+            <span className="material-symbols-outlined">{editData ? "close" : "arrow_back"}</span>
           </button>
-          <h2 className="pn-form-header__title">Add Deworming</h2>
+          <h2 className="pn-form-header__title">{editData ? "Edit Deworming" : "Add Deworming"}</h2>
         </div>
       </div>
 
@@ -126,22 +267,37 @@ export default function DewormingForm({ petId, petName, onClose, onSaved }) {
               <label className="pn-field__label">Date Given</label>
               <CustomDatePicker
                 value={givenDate}
-                onChange={setGivenDate}
+                onChange={(d) => { setGivenDate(d); setIsDirty(true); }}
                 placeholder="Date Given"
                 label="Date Deworming Given"
               />
             </div>
 
             <div className="pn-field">
-              <label className="pn-field__label">Dosage</label>
-              <input
-                type="text"
-                className="pn-input"
-                placeholder="e.g. 1 tablet"
-                value={dose}
-                onChange={(e) => setDose(e.target.value)}
+              <label className="pn-field__label">Time Given (Optional)</label>
+              <CustomTimePicker
+                value={givenTime}
+                onChange={(t) => { setGivenTime(t); setIsDirty(true); }}
+                placeholder="Select Time"
+                label="Time Deworming Given"
               />
             </div>
+          </div>
+
+          <div className="pn-field">
+            <label className="pn-field__label">Dosage & Quantity</label>
+            <CustomStepper
+              value={doseQty}
+              unit={doseUnit}
+              onChange={(v) => { setDoseQty(v); setIsDirty(true); }}
+              onUnitChange={(u) => { setDoseUnit(u); setIsDirty(true); }}
+              allowedUnits={[
+                { value: "tablet", label: "tablet(s)" },
+                { value: "ml", label: "ml" },
+                { value: "mg", label: "mg" },
+                { value: "pipette", label: "pipette / spot-on" },
+              ]}
+            />
           </div>
 
           <div className="pn-grid-2">
@@ -153,7 +309,7 @@ export default function DewormingForm({ petId, petName, onClose, onSaved }) {
                 className="pn-input"
                 placeholder="e.g. 15.5"
                 value={weight}
-                onChange={(e) => setWeight(e.target.value)}
+                onChange={(e) => { setWeight(e.target.value); setIsDirty(true); }}
               />
             </div>
 
@@ -162,7 +318,7 @@ export default function DewormingForm({ petId, petName, onClose, onSaved }) {
               <CustomSelect
                 value={givenAt}
                 options={GIVEN_AT_OPTIONS}
-                onChange={setGivenAt}
+                onChange={(v) => { setGivenAt(v); setIsDirty(true); }}
               />
             </div>
           </div>
@@ -173,18 +329,20 @@ export default function DewormingForm({ petId, petName, onClose, onSaved }) {
               className="pn-textarea"
               placeholder="Observations..."
               value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              onChange={(e) => { setNotes(e.target.value); setIsDirty(true); }}
             />
           </div>
         </FormSection>
 
-        <DocumentUpload files={files} onFilesChange={setFiles} label="Upload Prescription / Medicine Photo" />
+        <DocumentUpload files={files} onFilesChange={(f) => { setFiles(f); setIsDirty(true); }} label="Upload Prescription / Medicine Photo" />
 
         <ReminderToggle
           enabled={reminderEnabled}
-          onToggle={setReminderEnabled}
+          onToggle={(v) => { setReminderEnabled(v); setIsDirty(true); }}
           dueDate={nextDueDate}
-          onDueDateChange={setNextDueDate}
+          onDueDateChange={(d) => { setNextDueDate(d); setIsDirty(true); }}
+          dueTime={dueTime}
+          onDueTimeChange={(t) => { setDueTime(t); setIsDirty(true); }}
           label="Set Next Deworming Due Date (Auto: +90 days)"
         />
 

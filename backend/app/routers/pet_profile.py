@@ -142,6 +142,23 @@ def enrich_pet_profile(profile: dict, owner_info: Optional[dict] = None) -> dict
     return p
 
 
+class PetProfileUpdate(BaseModel):
+    pet_name: Optional[str] = None
+    breed: Optional[str] = None
+    gender: Optional[str] = None
+    birth_date: Optional[str] = None
+    approx_age: Optional[str] = None
+    weight: Optional[str] = None
+    blood_group: Optional[str] = None
+
+class PetLifestyleUpdate(BaseModel):
+    answers: dict
+
+
+from app.supabase_client import supabase as global_supabase, supabase_admin
+from app.routers.pet_health_id import generate_pet_health_id, store_pet_health_id
+from app.utils.auth import get_current_user_id, get_user_supabase
+from supabase import Client
 # pet-photos bucket now on AWS S3
 
 
@@ -451,3 +468,65 @@ async def delete_pet_profile(
     except Exception as e:
         print(f"Delete profile error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to delete profile: {str(e)}")
+
+
+@router.get("/{profile_id}/lifestyle")
+async def get_pet_lifestyle(
+    profile_id: str,
+    user_id: str = Depends(get_current_user_id),
+    supabase: Client = Depends(get_user_supabase)
+):
+    """Fetch pet lifestyle data."""
+    try:
+        # Check ownership
+        pet_check = supabase.table("pet_profiles").select("user_id").eq("id", profile_id).execute()
+        if not pet_check.data or pet_check.data[0]["user_id"] != user_id:
+            raise HTTPException(status_code=403, detail="Not authorized")
+
+        result = supabase.table("pet_lifestyle").select("*").eq("pet_id", profile_id).execute()
+        if not result.data:
+            return {"answers": {}}
+        return {"answers": result.data[0].get("answers", {})}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Fetch lifestyle error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch lifestyle: {str(e)}")
+
+
+@router.post("/{profile_id}/lifestyle")
+async def update_pet_lifestyle(
+    profile_id: str,
+    payload: PetLifestyleUpdate,
+    user_id: str = Depends(get_current_user_id),
+    supabase: Client = Depends(get_user_supabase)
+):
+    """Create or update pet lifestyle data (Upsert)."""
+    try:
+        # Check ownership
+        pet_check = supabase.table("pet_profiles").select("user_id").eq("id", profile_id).execute()
+        if not pet_check.data or pet_check.data[0]["user_id"] != user_id:
+            raise HTTPException(status_code=403, detail="Not authorized")
+
+        # Check if exists
+        existing = supabase.table("pet_lifestyle").select("id").eq("pet_id", profile_id).execute()
+        
+        if existing.data:
+            res = supabase.table("pet_lifestyle").update(
+                {"answers": payload.answers, "updated_at": "now()"}
+            ).eq("pet_id", profile_id).execute()
+        else:
+            res = supabase.table("pet_lifestyle").insert({
+                "pet_id": profile_id,
+                "answers": payload.answers
+            }).execute()
+
+        if not res.data:
+            raise HTTPException(status_code=500, detail="Failed to save lifestyle data")
+            
+        return {"message": "Lifestyle updated successfully", "data": res.data[0]}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Update lifestyle error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to update lifestyle: {str(e)}")

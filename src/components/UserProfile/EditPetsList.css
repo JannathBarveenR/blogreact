@@ -627,3 +627,183 @@
     transform:scale(1);
   }
 }
+
+/* Custom Breed Trigger Input Box */
+.edit-pet-breed-trigger {
+  width: 100%;
+  height: 46px;
+  border-radius: 14px;
+  border: 1.5px solid #dcdfdc;
+  background: #ffffff;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.edit-pet-breed-trigger:hover {
+  border-color: #1f7a3d;
+}
+
+.breed-val {
+  font-size: 14px;
+  font-weight: 600;
+  color: #16321f;
+}
+
+.breed-placeholder {
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+/* Custom In-App Breed Modal Popup */
+.breed-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.breed-modal {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  height: 480px; /* Fixed height so search results collapsing doesn't shrink the popup dialog */
+  max-height: 85vh;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 20px 20px 22px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 60px rgba(0, 75, 73, 0.2);
+}
+
+.breed-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.breed-modal-header h3 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  color: #16321f;
+}
+
+.breed-modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: #f3f4f6;
+  color: #4b5563;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.breed-modal-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f4f6f4;
+  border: 1px solid #e2e8e0;
+  border-radius: 14px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+}
+
+.breed-modal-search input {
+  border: none;
+  background: transparent;
+  outline: none;
+  width: 100%;
+  font-size: 14px;
+  color: #16321f;
+}
+
+.breed-modal-list {
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 50vh;
+  padding-right: 2px;
+}
+
+.breed-modal-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  transition: background 0.15s ease;
+}
+
+.breed-modal-item:hover {
+  background: #f4f8f3;
+}
+
+.breed-modal-item.active {
+  background: #eaf4e7;
+  color: #1f7a3d;
+  font-weight: 700;
+}
+
+.breed-modal-item--custom {
+  color: #1f7a3d;
+  font-weight: 700;
+  border-top: 1px dashed #e2e8e0;
+  margin-top: 6px;
+  padding-top: 14px;
+}
+
+/* Breed Dropdown Select */
+.edit-pet-select {
+  width: 100%;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid #dcdfdc;
+  background: #ffffff;
+  padding: 0 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #16321f;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.edit-pet-select:focus {
+  border-color: #1f7a3d;
+  box-shadow: 0 0 0 3px rgba(31, 122, 61, 0.12);
+}
+
+.edit-pet-custom-back {
+  padding: 0 12px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid #dcdfdc;
+  background: #f0f7ec;
+  color: #1f7a3d;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+}

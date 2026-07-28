@@ -1,6 +1,6 @@
 # backend/app/timeline/schemas/reminder.py
 from __future__ import annotations
-from typing import Optional, Literal
+from typing import Optional, Literal, List
 from datetime import date, time
 from pydantic import BaseModel, Field
 
@@ -48,3 +48,15 @@ class ReminderUpdate(BaseModel):
     linked_event_id: Optional[str] = None
     notes: Optional[str] = None
     status: Optional[str] = None
+
+
+class DoseScheduleCreate(BaseModel):
+    """Generate one reminder per dose-time per day for a medication course."""
+    medication_name: str = Field(..., max_length=100)
+    frequency: List[Literal["morning", "afternoon", "night"]]  # e.g. ["morning", "afternoon"]
+    start_date: date
+    duration_days: int = Field(..., ge=1, le=365)
+    # Optional per-slot dose labels, e.g. {"morning": "1 tablet", "night": "2 tablets"}
+    dose_labels: Optional[dict] = None
+    linked_event_id: Optional[str] = None
+    notes: Optional[str] = Field(None, max_length=300)
