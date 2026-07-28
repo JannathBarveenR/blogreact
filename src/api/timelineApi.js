@@ -114,6 +114,33 @@ export async function deleteReminder(petId, reminderId) {
   return res.json();
 }
 
+export async function markReminderMissed(petId, reminderId) {
+  const res = await fetchWithAuth(
+    `/api/v2/pets/${petId}/reminders/${reminderId}/mark-missed`,
+    { method: "PUT" }
+  );
+  if (!res.ok) throw new Error("Failed to mark reminder as missed");
+  return res.json();
+}
+
+/**
+ * Generate one reminder per dose-slot per day for a medication course.
+ * @param {string} petId
+ * @param {{ medication_name, frequency, start_date, duration_days, dose_labels?, linked_event_id?, notes? }} payload
+ */
+export async function generateDoseSchedule(petId, payload) {
+  const res = await fetchWithAuth(
+    `/api/v2/pets/${petId}/reminders/generate-dose-schedule`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }
+  );
+  if (!res.ok) throw new Error("Failed to generate dose schedule");
+  return res.json();
+}
+
 // ─── Documents ───────────────────────────────────────────────────
 export async function uploadDocument(petId, file, label, eventId = null) {
   const formData = new FormData();
