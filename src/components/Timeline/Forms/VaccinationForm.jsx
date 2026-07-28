@@ -4,9 +4,12 @@ import ReminderToggle from "./shared/ReminderToggle";
 import DocumentUpload from "./shared/DocumentUpload";
 import SaveConfirmation from "./shared/SaveConfirmation";
 import CustomDatePicker from "./shared/CustomDatePicker";
+import { useQueryClient } from "@tanstack/react-query";
+import { timelineKeys } from "../../../hooks/useTimelineQueries";
 import { createMedicalEvent, getVaccines, uploadDocument } from "../../../api/timelineApi";
 
 export default function VaccinationForm({ petId, petName, onClose, onSaved }) {
+  const queryClient = useQueryClient();
   const [vaccineName, setVaccineName] = useState("");
   const [eventDate, setEventDate] = useState(new Date().toISOString().split("T")[0]);
   const [dose, setDose] = useState("");
@@ -100,6 +103,12 @@ export default function VaccinationForm({ petId, petName, onClose, onSaved }) {
             console.error("Doc upload error:", docErr);
           }
         }
+      }
+
+      try {
+        queryClient.invalidateQueries({ queryKey: timelineKeys.all(petId) });
+      } catch (cErr) {
+        console.error("Cache invalidation error:", cErr);
       }
 
       setSavedData({

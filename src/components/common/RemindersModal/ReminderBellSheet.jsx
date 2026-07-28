@@ -29,8 +29,12 @@ function getSlotForReminder(rem) {
   return "night";
 }
 
+function getLocalToday() {
+  return new Date().toLocaleDateString("en-CA");
+}
+
 function isOverdue(rem) {
-  const today = new Date().toISOString().split("T")[0];
+  const today = getLocalToday();
   if (rem.due_date < today) return true;
   if (rem.due_date === today && rem.due_time) {
     const now = new Date();
@@ -47,7 +51,7 @@ export default function ReminderBellSheet({ petId, petName, onClose }) {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null); // reminder id being acted on
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = getLocalToday();
 
   const load = async () => {
     if (!petId) return;

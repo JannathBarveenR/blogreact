@@ -5,6 +5,8 @@ import DocumentUpload from "./shared/DocumentUpload";
 import SaveConfirmation from "./shared/SaveConfirmation";
 import CustomSelect from "./shared/CustomSelect";
 import CustomDatePicker from "./shared/CustomDatePicker";
+import { useQueryClient } from "@tanstack/react-query";
+import { timelineKeys } from "../../../hooks/useTimelineQueries";
 import { createMedicalEvent, uploadDocument } from "../../../api/timelineApi";
 
 const GIVEN_AT_OPTIONS = [
@@ -13,6 +15,7 @@ const GIVEN_AT_OPTIONS = [
 ];
 
 export default function DewormingForm({ petId, petName, onClose, onSaved }) {
+  const queryClient = useQueryClient();
   const [medName, setMedName] = useState("");
   const [givenDate, setGivenDate] = useState(new Date().toISOString().split("T")[0]);
   const [dose, setDose] = useState("");
@@ -66,6 +69,12 @@ export default function DewormingForm({ petId, petName, onClose, onSaved }) {
             console.error("Doc upload error:", docErr);
           }
         }
+      }
+
+      try {
+        queryClient.invalidateQueries({ queryKey: timelineKeys.all(petId) });
+      } catch (cErr) {
+        console.error("Cache invalidation error:", cErr);
       }
 
       setSavedData({

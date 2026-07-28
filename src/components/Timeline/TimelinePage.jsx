@@ -60,7 +60,7 @@ export default function TimelinePage({
   const petName = selectedPet?.pet_name || selectedPet?.name || "";
 
   /* ── TanStack Query feed ────────────────────────────────────────── */
-  const { data: timelineData, isLoading: loading, isError } = useTimeline(selectedPet?.id, "chronological");
+  const { data: timelineData, isLoading: loading, isError, refetch } = useTimeline(selectedPet?.id, "chronological");
   const rawEvents = timelineData?.events || [];
   const rawEventsCount = rawEvents.length;
 
@@ -156,7 +156,7 @@ export default function TimelinePage({
               warning
             </span>
             <p>{error}</p>
-            <button className="tl-page__retry" onClick={fetchFeed}>Retry</button>
+            <button className="tl-page__retry" onClick={() => refetch()}>Retry</button>
           </div>
         ) : events.length === 0 ? (
           <EmptyTimeline

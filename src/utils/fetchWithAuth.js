@@ -33,6 +33,10 @@ async function refreshAccessToken() {
       if (data.session.user) {
         localStorage.setItem("user", JSON.stringify(data.session.user));
       }
+      try {
+        document.cookie = `pol_session=1; path=/; max-age=2592000; SameSite=Lax`;
+        document.cookie = `pol_at=${data.session.access_token}; path=/; max-age=2592000; SameSite=Lax`;
+      } catch {}
       return true;
     } catch {
       return false;

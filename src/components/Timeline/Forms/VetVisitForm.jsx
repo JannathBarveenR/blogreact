@@ -4,9 +4,12 @@ import ReminderToggle from "./shared/ReminderToggle";
 import DocumentUpload from "./shared/DocumentUpload";
 import SaveConfirmation from "./shared/SaveConfirmation";
 import CustomDatePicker from "./shared/CustomDatePicker";
+import { useQueryClient } from "@tanstack/react-query";
+import { timelineKeys } from "../../../hooks/useTimelineQueries";
 import { createMedicalEvent, searchClinics, uploadDocument } from "../../../api/timelineApi";
 
 export default function VetVisitForm({ petId, petName, onClose, onSaved }) {
+  const queryClient = useQueryClient();
   const [visitDate, setVisitDate] = useState(new Date().toISOString().split("T")[0]);
   const [reason, setReason] = useState("");
   const [clinicName, setClinicName] = useState("");
@@ -106,6 +109,12 @@ export default function VetVisitForm({ petId, petName, onClose, onSaved }) {
             console.error("Doc upload error:", docErr);
           }
         }
+      }
+
+      try {
+        queryClient.invalidateQueries({ queryKey: timelineKeys.all(petId) });
+      } catch (cErr) {
+        console.error("Cache invalidation error:", cErr);
       }
 
       setSavedData({

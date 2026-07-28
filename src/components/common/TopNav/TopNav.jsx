@@ -30,10 +30,11 @@ const TopNav = () => {
       try {
         const res = await getReminders(activePet.id);
         const list = res.reminders || res || [];
-        const pending = list.filter(
-          (r) => r.status === "pending" || r.status === "snoozed"
+        const today = new Date().toLocaleDateString("en-CA");
+        const active = list.filter(
+          (r) => r.status !== "completed" && r.due_date <= today
         );
-        setPendingCount(pending.length);
+        setPendingCount(active.length);
       } catch (err) {
         console.error("Error fetching reminder count:", err);
       }
@@ -95,9 +96,11 @@ const TopNav = () => {
             // Refresh pending count after closing
             getReminders(activePet.id).then((res) => {
               const list = res.reminders || res || [];
-              setPendingCount(
-                list.filter((r) => r.status === "pending" || r.status === "snoozed").length
+              const today = new Date().toLocaleDateString("en-CA");
+              const active = list.filter(
+                (r) => r.status !== "completed" && r.due_date <= today
               );
+              setPendingCount(active.length);
             }).catch(() => {});
           }}
         />
