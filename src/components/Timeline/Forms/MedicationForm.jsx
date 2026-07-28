@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import FormSection from "./shared/FormSection";
 import DocumentUpload from "./shared/DocumentUpload";
 import SaveConfirmation from "./shared/SaveConfirmation";
@@ -8,7 +9,7 @@ import CustomStepper from "./shared/CustomStepper";
 import CustomTimePicker from "./shared/CustomTimePicker";
 import { useQueryClient } from "@tanstack/react-query";
 import { timelineKeys } from "../../../hooks/useTimelineQueries";
-import { createMedicalEvent, searchMedicines, uploadDocument, createReminder } from "../../../api/timelineApi";
+import { createMedicalEvent, updateMedicalEvent, searchMedicines, uploadDocument, createReminder } from "../../../api/timelineApi";
 
 const MEDICINE_TYPES = [
   { value: "tablet", label: "Tablet / Pill" },
@@ -117,7 +118,7 @@ function get1HourPriorTime(timeStr) {
   return `${String(h12).padStart(2, "0")}:${String(mm).padStart(2, "0")} ${period}`;
 }
 
-export default function MedicationForm({ petId, petName, onClose, onSaved }) {
+export default function MedicationForm({ petId, petName, onClose, onSaved, editData }) {
   const queryClient = useQueryClient();
   // Prescription documents (AT THE TOP)
   const [files, setFiles] = useState([]);
@@ -150,7 +151,7 @@ export default function MedicationForm({ petId, petName, onClose, onSaved }) {
   const [startDate, setStartDate] = useState(new Date().toLocaleDateString("en-CA"));
 
   // Follow-up Reminder configuration (At the back)
-  const [followUpEnabled, setFollowUpEnabled] = useState(true);
+  const [followUpEnabled, setFollowUpEnabled] = useState(false);
   const [followUpType, setFollowUpType] = useState("vet_visit");
   const [followUpDate, setFollowUpDate] = useState(() => {
     const d = new Date();
@@ -162,6 +163,44 @@ export default function MedicationForm({ petId, petName, onClose, onSaved }) {
   // Submit & Save state
   const [submitting, setSubmitting] = useState(false);
   const [savedData, setSavedData] = useState(null);
+  const [toastMessage, setToastMessage] = useState("");
+  const [isDirty, setIsDirty] = useState(false);
+  const [showUnsavedPrompt, setShowUnsavedPrompt] = useState(false);
+
+  // Pre-fill fields if editing an existing record
+  useEffect(() => {
+    if (!editData) return;
+    const catEntry = (editData.category_entries || [])[0] || {};
+    const cFields = catEntry.category_fields || {};
+    const mList = cFields.medicines_list || [];
+
+    if (editData.event_date || catEntry.date_logged) {
+      setStartDate(editData.event_date || catEntry.date_logged);
+    }
+    if (mList.length > 0) {
+      const mapped = mList.map((m, i) => ({
+        id: m.id || String(i),
+        name: m.name || "",
+        type: m.type || "tablet",
+        doseQty: m.dose_qty || "1",
+        doseUnit: m.dose_unit || "tablet",
+        durationDays: m.duration_days || 5,
+        frequency: m.frequency || "Daily (Once)",
+        foodRelation: m.food_relation || "after_food",
+        doseTimes: m.dose_times || [],
+        specialInstructions: m.special_instructions || "",
+      }));
+      setAddedMedicines(mapped);
+    }
+    const hasFollowUp = Boolean(editData.follow_up_date || catEntry.next_due_date);
+    setFollowUpEnabled(hasFollowUp);
+    if (hasFollowUp) {
+      setFollowUpDate(editData.follow_up_date || catEntry.next_due_date);
+    }
+    if (editData.follow_up_notes) {
+      setFollowUpNotes(editData.follow_up_notes);
+    }
+  }, [editData]);
 
   // Auto-switch default dose unit and default preset when medicine type changes
   const handleMedTypeChange = (newType) => {
@@ -222,6 +261,7 @@ export default function MedicationForm({ petId, petName, onClose, onSaved }) {
     };
 
     setAddedMedicines((prev) => [...prev, newItem]);
+    setIsDirty(true);
     
     // Clear item form inputs
     setMedName("");
@@ -238,6 +278,7 @@ export default function MedicationForm({ petId, petName, onClose, onSaved }) {
 
   const handleRemoveMedicine = (idToRemove) => {
     setAddedMedicines((prev) => prev.filter((item) => item.id !== idToRemove));
+    setIsDirty(true);
   };
 
   const handleSubmit = async (e) => {
@@ -284,12 +325,16 @@ export default function MedicationForm({ petId, petName, onClose, onSaved }) {
         special_instructions: item.specialInstructions || "",
       }));
 
+      const formattedStartDate = new Date(startDate + "T00:00:00").toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      });
+
       // Main summary category entry holding the full medicines_list JSON array
       const mainCategoryEntry = {
         category: "medication",
-        item_name: finalMedicines.length === 1 
-          ? finalMedicines[0].name 
-          : `${finalMedicines[0].name} + ${finalMedicines.length - 1} more`,
+        item_name: formattedStartDate || startDate,
         date_logged: startDate,
         next_due_date: followUpEnabled && followUpDate ? followUpDate : null,
         notes: finalMedicines.map((m) => `${m.name}: ${m.doseQty} ${m.doseUnit} (${m.frequency})`).join("\n"),
@@ -309,6 +354,15 @@ export default function MedicationForm({ petId, petName, onClose, onSaved }) {
         event_date: startDate,
         category_entries: [mainCategoryEntry],
       };
+
+      if (editData) {
+        const targetEventId = editData.id || editData.event_id || editData.medical_event_id;
+        await updateMedicalEvent(petId, targetEventId, payload);
+        queryClient.invalidateQueries({ queryKey: timelineKeys.all(petId) });
+        if (onSaved) onSaved("✓ Medication record updated successfully!");
+        else if (onClose) onClose();
+        return;
+      }
 
       const res = await createMedicalEvent(petId, payload);
       const createdEvent = res.event || res;
@@ -474,15 +528,92 @@ export default function MedicationForm({ petId, petName, onClose, onSaved }) {
 
   const currentPresets = DOSAGE_QTY_PRESETS[medType] || [];
 
+  const handleHeaderClose = () => {
+    if (editData && isDirty) {
+      setShowUnsavedPrompt(true);
+    } else {
+      onClose();
+    }
+  };
+
   return (
     <div className="pn-form-container">
+      {toastMessage && (
+        <div style={{
+          position: "fixed",
+          top: 20,
+          left: "50%",
+          transform: "translateX(-50%)",
+          background: "#004b23",
+          color: "#ffffff",
+          padding: "10px 20px",
+          borderRadius: "20px",
+          fontWeight: "700",
+          fontSize: "14px",
+          boxShadow: "0 8px 20px rgba(0,0,0,0.2)",
+          zIndex: 9999,
+          display: "flex",
+          alignItems: "center",
+          gap: "8px"
+        }}>
+          <span className="material-symbols-outlined" style={{ fontSize: 20 }}>check_circle</span>
+          {toastMessage}
+        </div>
+      )}
+
+      {/* Unsaved Changes Confirmation Modal */}
+      {showUnsavedPrompt && createPortal(
+        <div className="ev-modal-overlay" onClick={() => setShowUnsavedPrompt(false)}>
+          <div className="ev-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 380 }}>
+            <div className="ev-modal-icon-wrap" style={{ background: "#fef3c7", color: "#d97706" }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 28 }}>warning</span>
+            </div>
+            <h3 className="ev-modal-title">Unsaved Changes</h3>
+            <p className="ev-modal-desc">
+              You have modified this medical record. Would you like to save your updates before leaving?
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", marginTop: 8 }}>
+              <button
+                type="button"
+                className="ev-primary-btn"
+                style={{ width: "100%", height: 46, borderRadius: 14, fontSize: 15, fontWeight: 700, background: "#004b23", border: "none" }}
+                onClick={(e) => {
+                  setShowUnsavedPrompt(false);
+                  handleSubmit(e);
+                }}
+              >
+                Save Changes
+              </button>
+              <button
+                type="button"
+                style={{ width: "100%", height: 46, borderRadius: 14, fontSize: 15, fontWeight: 700, background: "#ef4444", color: "#ffffff", border: "none", cursor: "pointer" }}
+                onClick={() => {
+                  setShowUnsavedPrompt(false);
+                  onClose();
+                }}
+              >
+                Discard Changes
+              </button>
+              <button
+                type="button"
+                style={{ background: "transparent", border: "none", color: "#64748b", fontWeight: 600, fontSize: 14, cursor: "pointer", padding: "6px" }}
+                onClick={() => setShowUnsavedPrompt(false)}
+              >
+                Keep Editing
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
       {/* ── Form Top Navigation ── */}
       <div className="pn-form-header">
         <div className="pn-form-header__left">
-          <button className="pn-form-header__back" onClick={onClose} type="button">
-            <span className="material-symbols-outlined">arrow_back</span>
+          <button className="pn-form-header__back" onClick={handleHeaderClose} type="button">
+            <span className="material-symbols-outlined">{editData ? "close" : "arrow_back"}</span>
           </button>
-          <h2 className="pn-form-header__title">Add Medication</h2>
+          <h2 className="pn-form-header__title">{editData ? "Edit Medication" : "Add Medication"}</h2>
         </div>
       </div>
 

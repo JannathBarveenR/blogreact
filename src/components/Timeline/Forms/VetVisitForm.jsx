@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import FormSection from "./shared/FormSection";
 import ReminderToggle from "./shared/ReminderToggle";
 import DocumentUpload from "./shared/DocumentUpload";
@@ -6,9 +7,9 @@ import SaveConfirmation from "./shared/SaveConfirmation";
 import CustomDatePicker from "./shared/CustomDatePicker";
 import { useQueryClient } from "@tanstack/react-query";
 import { timelineKeys } from "../../../hooks/useTimelineQueries";
-import { createMedicalEvent, searchClinics, uploadDocument } from "../../../api/timelineApi";
+import { createMedicalEvent, updateMedicalEvent, searchClinics, uploadDocument } from "../../../api/timelineApi";
 
-export default function VetVisitForm({ petId, petName, onClose, onSaved }) {
+export default function VetVisitForm({ petId, petName, onClose, onSaved, editData }) {
   const queryClient = useQueryClient();
   const [visitDate, setVisitDate] = useState(new Date().toISOString().split("T")[0]);
   const [reason, setReason] = useState("");
@@ -26,6 +27,28 @@ export default function VetVisitForm({ petId, petName, onClose, onSaved }) {
 
   const [submitting, setSubmitting] = useState(false);
   const [savedData, setSavedData] = useState(null);
+  const [toastMessage, setToastMessage] = useState("");
+  const [isDirty, setIsDirty] = useState(false);
+  const [showUnsavedPrompt, setShowUnsavedPrompt] = useState(false);
+
+  useEffect(() => {
+    if (!editData) return;
+    const catEntry = (editData.category_entries || [])[0] || {};
+    const cFields = catEntry.category_fields || {};
+
+    if (editData.event_date || catEntry.date_logged) {
+      setVisitDate(editData.event_date || catEntry.date_logged);
+    }
+    setReason(cFields.reason_for_visit || catEntry.reason_for_visit || editData.reason_for_visit || editData.overall_notes || "");
+    setClinicName(cFields.clinic_name || catEntry.clinic_name || editData.clinic_name || "");
+    setVetName(cFields.vet_name || catEntry.vet_name || editData.vet_name || "");
+    setExaminationNotes(cFields.examination_notes || editData.overall_notes || "");
+    setDiagnosis(cFields.diagnosis || "");
+    if (editData.follow_up_date || catEntry.next_due_date) {
+      setReminderEnabled(true);
+      setFollowUpDate(editData.follow_up_date || catEntry.next_due_date);
+    }
+  }, [editData]);
 
   const handleClinicChange = async (val) => {
     setClinicName(val);
@@ -98,6 +121,15 @@ export default function VetVisitForm({ petId, petName, onClose, onSaved }) {
         category_entries: categoryEntries,
       };
 
+      if (editData) {
+        const targetEventId = editData.id || editData.event_id || editData.medical_event_id;
+        await updateMedicalEvent(petId, targetEventId, payload);
+        queryClient.invalidateQueries({ queryKey: timelineKeys.all(petId) });
+        if (onSaved) onSaved("✓ Vet visit record updated successfully!");
+        else if (onClose) onClose();
+        return;
+      }
+
       const res = await createMedicalEvent(petId, payload);
       const createdEvent = res.event || res;
 
@@ -146,14 +178,91 @@ export default function VetVisitForm({ petId, petName, onClose, onSaved }) {
     );
   }
 
+  const handleHeaderClose = () => {
+    if (editData && isDirty) {
+      setShowUnsavedPrompt(true);
+    } else {
+      onClose();
+    }
+  };
+
   return (
     <div className="pn-form-container">
+      {toastMessage && (
+        <div style={{
+          position: "fixed",
+          top: 20,
+          left: "50%",
+          transform: "translateX(-50%)",
+          background: "#004b23",
+          color: "#ffffff",
+          padding: "10px 20px",
+          borderRadius: "20px",
+          fontWeight: "700",
+          fontSize: "14px",
+          boxShadow: "0 8px 20px rgba(0,0,0,0.2)",
+          zIndex: 9999,
+          display: "flex",
+          alignItems: "center",
+          gap: "8px"
+        }}>
+          <span className="material-symbols-outlined" style={{ fontSize: 20 }}>check_circle</span>
+          {toastMessage}
+        </div>
+      )}
+
+      {/* Unsaved Changes Confirmation Modal */}
+      {showUnsavedPrompt && createPortal(
+        <div className="ev-modal-overlay" onClick={() => setShowUnsavedPrompt(false)}>
+          <div className="ev-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 380 }}>
+            <div className="ev-modal-icon-wrap" style={{ background: "#fef3c7", color: "#d97706" }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 28 }}>warning</span>
+            </div>
+            <h3 className="ev-modal-title">Unsaved Changes</h3>
+            <p className="ev-modal-desc">
+              You have modified this medical record. Would you like to save your updates before leaving?
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", marginTop: 8 }}>
+              <button
+                type="button"
+                className="ev-primary-btn"
+                style={{ width: "100%", height: 46, borderRadius: 14, fontSize: 15, fontWeight: 700, background: "#004b23", border: "none" }}
+                onClick={(e) => {
+                  setShowUnsavedPrompt(false);
+                  handleSubmit(e);
+                }}
+              >
+                Save Changes
+              </button>
+              <button
+                type="button"
+                style={{ width: "100%", height: 46, borderRadius: 14, fontSize: 15, fontWeight: 700, background: "#ef4444", color: "#ffffff", border: "none", cursor: "pointer" }}
+                onClick={() => {
+                  setShowUnsavedPrompt(false);
+                  onClose();
+                }}
+              >
+                Discard Changes
+              </button>
+              <button
+                type="button"
+                style={{ background: "transparent", border: "none", color: "#64748b", fontWeight: 600, fontSize: 14, cursor: "pointer", padding: "6px" }}
+                onClick={() => setShowUnsavedPrompt(false)}
+              >
+                Keep Editing
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
       <div className="pn-form-header">
         <div className="pn-form-header__left">
-          <button className="pn-form-header__back" onClick={onClose}>
-            <span className="material-symbols-outlined">arrow_back</span>
+          <button className="pn-form-header__back" onClick={handleHeaderClose} type="button">
+            <span className="material-symbols-outlined">{editData ? "close" : "arrow_back"}</span>
           </button>
-          <h2 className="pn-form-header__title">Add Vet Visit</h2>
+          <h2 className="pn-form-header__title">{editData ? "Edit Vet Visit" : "Add Vet Visit"}</h2>
         </div>
       </div>
 

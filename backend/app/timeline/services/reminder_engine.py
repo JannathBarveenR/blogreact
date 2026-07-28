@@ -54,7 +54,24 @@ def suggest_next_due(entry, event_date):
     return None
 
 def _insert(reminder: dict):
-    return supabase.table("reminders").insert(reminder).execute().data[0]
+    rem_copy = dict(reminder)
+    try:
+        res = supabase.table("reminders").insert(rem_copy).execute()
+        if res.data:
+            return res.data[0]
+    except Exception as e:
+        err_str = str(e)
+        if "time_slot" in err_str or "PGRST204" in err_str or "PGRST205" in err_str:
+            rem_copy.pop("time_slot", None)
+            try:
+                res = supabase.table("reminders").insert(rem_copy).execute()
+                if res.data:
+                    return res.data[0]
+            except Exception as e2:
+                print(f"[ReminderEngine] Retry _insert error: {e2}")
+                raise e2
+        print(f"[ReminderEngine] _insert error: {e}")
+        raise e
 
 def _priority_for(rtype, due):
     if rtype in ("vaccination","follow_up","medication_end"):
