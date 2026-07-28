@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./TimelinePage.css";
 
-import Pets from "../Home/Pets/Pets";
+import ProfileCard from "../Home/ProfileCard/ProfileCard";
 import FilterChips from "./FilterChips";
 import TimelineCard from "./TimelineCard";
 import EmptyTimeline from "./EmptyTimeline";
@@ -60,7 +60,7 @@ export default function TimelinePage({
   const petName = selectedPet?.pet_name || selectedPet?.name || "";
 
   /* ── TanStack Query feed ────────────────────────────────────────── */
-  const { data: timelineData, isLoading: loading, isError } = useTimeline(selectedPet?.id, "chronological");
+  const { data: timelineData, isLoading: loading, isError, refetch } = useTimeline(selectedPet?.id, "chronological");
   const rawEvents = timelineData?.events || [];
   const rawEventsCount = rawEvents.length;
 
@@ -120,13 +120,15 @@ export default function TimelinePage({
 
   return (
     <div className="tl-page">
-      {/* Pet Switcher */}
+      {/* Pet Switcher Header Card */}
       <div className="tl-page__pets">
-        <Pets
+        <ProfileCard
           pets={pets}
           selectedPet={selectedPet}
-          onPetSelect={onPetSelect}
+          handlePetSelect={onPetSelect}
           onAddPet={onAddPet}
+          onAddPetNote={handleAddNote}
+          onUploadRecords={() => navigate("/records", { state: { openUpload: true } })}
         />
       </div>
 
@@ -154,7 +156,7 @@ export default function TimelinePage({
               warning
             </span>
             <p>{error}</p>
-            <button className="tl-page__retry" onClick={fetchFeed}>Retry</button>
+            <button className="tl-page__retry" onClick={() => refetch()}>Retry</button>
           </div>
         ) : events.length === 0 ? (
           <EmptyTimeline

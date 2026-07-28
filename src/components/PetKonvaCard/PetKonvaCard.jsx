@@ -39,7 +39,7 @@ const SVG_PATHS = {
   check: "M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
 };
 
-const PetKonvaCard = forwardRef(({ petData = {}, containerWidth = 360 }, ref) => {
+const PetKonvaCard = forwardRef(({ petData = {}, containerWidth = 380 }, ref) => {
   const stageRef = useRef(null);
   const [qrDataUrl, setQrDataUrl] = useState("");
   const [copied, setCopied] = useState(false);
@@ -103,9 +103,10 @@ const PetKonvaCard = forwardRef(({ petData = {}, containerWidth = 360 }, ref) =>
   useImperativeHandle(ref, () => ({
     downloadCard: () => {
       if (!stageRef.current) return;
+      // High-definition 4:5 PNG export (2000 x 2500)
       const dataUrl = stageRef.current.toDataURL({ pixelRatio: 2 });
       const link = document.createElement("a");
-      link.download = `${petName.replace(/\s+/g, "_")}_PetoLife_ID_Story.png`;
+      link.download = `${petName.replace(/\s+/g, "_")}_PetoLife_ID_Card.png`;
       link.href = dataUrl;
       link.click();
     },

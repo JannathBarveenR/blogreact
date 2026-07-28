@@ -65,15 +65,6 @@ async def update_checklist(
             supabase.table("daily_task_logs").update({"completed": body.completed, "task_title": body.task_title, "updated_at": datetime.now().isoformat()}).eq("id", existing.data[0]["id"]).execute()
         else:
             supabase.table("daily_task_logs").insert(log_data).execute()
-        
-        # Streak logic placeholder
-        try:
-             # Basic streak fetch
-             streak = supabase.table("pet_streaks").select("*").eq("pet_id", pet_id).execute()
-             # If we wanted to update it, we'd do it here. 
-        except Exception:
-             pass
-
         return {"message": "Checklist updated"}
     except HTTPException:
         raise

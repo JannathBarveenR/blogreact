@@ -1,5 +1,5 @@
 # backend/app/timeline/services/reference_data_service.py
-from app.supabase_client import supabase
+from app.supabase_client import supabase_admin as supabase
 
 DIAGNOSIS_TAXONOMY = {
     "respiratory": ["Kennel Cough", "Pneumonia"],

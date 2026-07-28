@@ -13,7 +13,7 @@ const PetIdCardModal = ({
 
   useEffect(() => {
     const updateWidth = () => {
-      const w = Math.min(350, window.innerWidth - 36);
+      const w = Math.min(380, window.innerWidth - 32);
       setModalWidth(w > 260 ? w : 260);
     };
     updateWidth();

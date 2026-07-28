@@ -14,6 +14,7 @@ const AuthCallback = lazy(() => import("./components/AuthCallback/AuthCallback")
 const ParentProfile = lazy(() => import("./components/ParentProfile/ParentProfile"));
 const RemindersPage = lazy(() => import("./components/Reminders/RemindersPage"));
 const EventDetailPage = lazy(() => import("./components/Timeline/EventDetailPage/EventDetailPage"));
+const PetLifestyleSurveyPage = lazy(() => import("./components/Home/PetLifestyleSurveyPage"));
 
 function LoadingFallback() {
   return (
@@ -65,6 +66,7 @@ function App() {
             <Route path="/reminders" element={<RemindersPage />} />
             <Route path="/timeline/event/:eventId" element={<EventDetailPage />} />
             <Route path="/records/event/:eventId" element={<EventDetailPage />} />
+            <Route path="/survey/:petId" element={<PetLifestyleSurveyPage />} />
           </Route>
 
           {/* Fallback */}

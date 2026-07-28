@@ -17,11 +17,24 @@ import { supabase } from "../utils/supabaseClient";
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 
 // ── Module-level shared state ────────────────────────────────────────────────
-// This ensures that even if useAuth() is called from 5 different components,
-// the validation only happens once. All other instances read cached state.
 let _validationPromise = null;
 let _lastValidatedAt = 0;
-const VALIDATION_COOLDOWN_MS = 60 * 1000; // Don't re-validate more than once per minute
+const VALIDATION_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes cache for validation
+
+// Cookie Helpers
+function setAuthCookies(accessToken, refreshToken) {
+  try {
+    document.cookie = `pol_session=1; path=/; max-age=2592000; SameSite=Lax`;
+    if (accessToken) document.cookie = `pol_at=${accessToken}; path=/; max-age=2592000; SameSite=Lax`;
+  } catch {}
+}
+
+function clearAuthCookies() {
+  try {
+    document.cookie = "pol_session=; path=/; max-age=0;";
+    document.cookie = "pol_at=; path=/; max-age=0;";
+  } catch {}
+}
 
 export default function useAuth() {
   const navigate = useNavigate();
@@ -32,7 +45,9 @@ export default function useAuth() {
     } catch { return null; }
   });
   const [token, setToken] = useState(() => localStorage.getItem("access_token") || null);
-  const [isAuthenticated, setIsAuthenticated] = useState(!!token);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return !!(localStorage.getItem("access_token") || document.cookie.includes("pol_session=1"));
+  });
   const [loading, setLoading] = useState(true);
   const authListenerSetup = useRef(false);
 
@@ -43,6 +58,12 @@ export default function useAuth() {
     localStorage.setItem("access_token", accessToken);
     if (refreshToken) localStorage.setItem("refresh_token", refreshToken);
     if (userData) localStorage.setItem("user", JSON.stringify(userData));
+    setAuthCookies(accessToken, refreshToken);
+
+    if (accessToken && refreshToken) {
+      supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken }).catch(() => {});
+    }
+
     setToken(accessToken);
     setUser(userData);
     setIsAuthenticated(true);
@@ -55,6 +76,7 @@ export default function useAuth() {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
     localStorage.removeItem("user");
+    clearAuthCookies();
     const userId = user?.id;
     if (userId) {
       localStorage.removeItem(`pets_${userId}`);
@@ -75,10 +97,17 @@ export default function useAuth() {
    */
   const validateSession = useCallback(async () => {
     const storedToken = localStorage.getItem("access_token");
+    const storedRefresh = localStorage.getItem("refresh_token");
+
     if (!storedToken) {
       setIsAuthenticated(false);
       setLoading(false);
       return false;
+    }
+
+    // Sync session with Supabase client to enable background auto-refresh
+    if (storedToken && storedRefresh) {
+      supabase.auth.setSession({ access_token: storedToken, refresh_token: storedRefresh }).catch(() => {});
     }
 
     // If we validated recently, skip the server call entirely
@@ -105,6 +134,7 @@ export default function useAuth() {
         if (!res.ok) throw new Error("Invalid token");
         const userData = await res.json();
         setUser((prev) => prev ? { ...prev, ...userData } : userData);
+        setAuthCookies(storedToken, storedRefresh);
         _lastValidatedAt = Date.now();
         return true;
       } catch {
@@ -117,6 +147,8 @@ export default function useAuth() {
         // Refresh also failed — clear everything
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
+        localStorage.removeItem("user");
+        clearAuthCookies();
         setToken(null);
         setUser(null);
         return false;
@@ -151,6 +183,8 @@ export default function useAuth() {
       const { access_token, refresh_token: newRefresh } = data.session;
       localStorage.setItem("access_token", access_token);
       if (newRefresh) localStorage.setItem("refresh_token", newRefresh);
+      setAuthCookies(access_token, newRefresh);
+
       if (data.session.user) {
         localStorage.setItem("user", JSON.stringify(data.session.user));
         setUser(data.session.user);

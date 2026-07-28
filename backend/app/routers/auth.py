@@ -6,13 +6,17 @@ POST /api/auth/login               — Email+password login
 GET  /api/auth/google              — Returns Google OAuth redirect URL
 GET  /api/auth/me                  — Get current user from access token
 POST /api/auth/register-interest   — Early-access interest form (landing page)
+POST /api/auth/forgot-password     — Send password reset email
+POST /api/auth/reset-password      — Reset password with token
 """
 
 from typing import Optional, Literal
-from fastapi import APIRouter, HTTPException, Header
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
-from app.supabase_client import supabase
+from supabase import create_client
+from app.supabase_client import supabase, supabase_admin
 from app.config import FRONTEND_URL, SUPABASE_URL, SUPABASE_ANON_KEY
+from app.utils.auth import get_current_user as auth_get_current_user, _extract_token, _validate_token
 
 router = APIRouter()
 
@@ -78,14 +82,15 @@ async def signup(body: SignupRequest):
         if body.phone:
             admin_payload["phone"] = body.phone
 
-        result = supabase.auth.admin.create_user(admin_payload)
+        # Use supabase_admin for admin operations
+        result = supabase_admin.auth.admin.create_user(admin_payload)
 
         if result.user is None:
             raise HTTPException(status_code=400, detail="Signup failed — invalid details.")
 
         # Save to user_profiles so pet public page can show owner contact info
         try:
-            supabase.table("user_profiles").upsert({
+            supabase_admin.table("user_profiles").upsert({
                 "id": result.user.id,
                 "full_name": body.full_name or "",
                 "phone": body.phone or "",
@@ -111,8 +116,7 @@ async def signup(body: SignupRequest):
     except Exception as e:
         error_msg = str(e)
         print(f"Signup error: {error_msg}")
-        # Provide user-friendly error for duplicate phone/email
-        if "already been registered" in error_msg.lower() or "already exists" in error_msg.lower() or "duplicate" in error_msg.lower():
+        if any(w in error_msg.lower() for w in ["already been registered", "already exists", "duplicate"]):
             raise HTTPException(
                 status_code=400,
                 detail="This phone number or email is already registered. Please login instead."
@@ -133,15 +137,12 @@ async def login(body: LoginRequest):
         if body.phone:
             credentials["phone"] = body.phone
 
-        # Use anon key (with service role fallback) for sign_in_with_password
-        from supabase import create_client
-        auth_key = SUPABASE_ANON_KEY
-        if not auth_key:
-            print("[Auth] WARNING: Neither SUPABASE_ANON_KEY nor SUPABASE_SERVICE_ROLE_KEY is set")
+        if not SUPABASE_ANON_KEY:
             raise HTTPException(status_code=500, detail="Server configuration error: Supabase key not set")
-        temp_supabase = create_client(SUPABASE_URL, auth_key)
-
-        result = temp_supabase.auth.sign_in_with_password(credentials)
+        
+        # We use a clean client instance for login so we don't mutate the global singleton session
+        temp_client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+        result = temp_client.auth.sign_in_with_password(credentials)
 
         if result.session is None:
             raise HTTPException(status_code=401, detail="Invalid email or password.")
@@ -197,31 +198,9 @@ async def google_oauth():
 
 
 @router.get("/me")
-async def get_current_user(authorization: Optional[str] = Header(None)):
+async def me_endpoint(user: dict = Depends(auth_get_current_user)):
     """Get current user profile from the access token."""
-    if not authorization:
-        raise HTTPException(status_code=401, detail="No authorization header provided")
-
-    token = authorization.replace("Bearer ", "") if authorization.startswith("Bearer ") else authorization
-
-    try:
-        result = supabase.auth.get_user(token)
-
-        if result.user is None:
-            raise HTTPException(status_code=401, detail="Invalid or expired token")
-
-        return {
-            "id": result.user.id,
-            "email": result.user.email,
-            "user_metadata": result.user.user_metadata,
-            "app_metadata": getattr(result.user, "app_metadata", {}),
-        }
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        print(f"Get user error: {e}")
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    return user
 
 
 @router.post("/register-interest")
@@ -248,11 +227,11 @@ async def register_interest(body: RegisterInterestRequest):
         print(f"[register-interest] Error saving record: {e}")
         return {"message": "Thanks! You're on the early access list. We'll reach out soon."}
 
+
 @router.post("/forgot-password")
 async def forgot_password(body: ForgotPasswordRequest):
     """Send a password reset email."""
     try:
-        # Supabase API for reset password
         supabase.auth.reset_password_for_email(body.email, {"redirect_to": f"{FRONTEND_URL}/reset-password"})
         return {"message": "Password reset email sent successfully."}
     except Exception as e:
@@ -268,15 +247,14 @@ async def reset_password(body: ResetPasswordRequest):
         if not body.new_password or len(body.new_password) < 6:
             raise HTTPException(status_code=400, detail="Password must be at least 6 characters.")
 
-        # Get user from access token to find user_id
         user_result = supabase.auth.get_user(body.access_token)
         if not user_result or not user_result.user:
             raise HTTPException(status_code=401, detail="Invalid or expired reset token.")
 
         user_id = user_result.user.id
 
-        # Update password via admin API
-        supabase.auth.admin.update_user_by_id(
+        # Update password via admin API using supabase_admin
+        supabase_admin.auth.admin.update_user_by_id(
             user_id,
             {"password": body.new_password}
         )

@@ -1,9 +1,12 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 import httpx
+
 router = APIRouter()
+
 class PincodeRequest(BaseModel):
     pincode: str
+
 COMMON_PINCODES = {
     "641001": {"city": "Coimbatore", "state": "Tamil Nadu", "district": "Coimbatore"},
     "641002": {"city": "Coimbatore", "state": "Tamil Nadu", "district": "Coimbatore"},
@@ -15,6 +18,7 @@ COMMON_PINCODES = {
     "500001": {"city": "Hyderabad", "state": "Telangana", "district": "Hyderabad"},
     "500002": {"city": "Hyderabad", "state": "Telangana", "district": "Hyderabad"},
 }
+
 async def fetch_pincode_data(pincode: str):
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
@@ -26,54 +30,32 @@ async def fetch_pincode_data(pincode: str):
             return None
     except Exception:
         return None
-@router.post("/lookup")
-async def lookup_pincode(body: PincodeRequest):
-    pincode = body.pincode.strip()
-    if len(pincode) != 6 or not pincode.isdigit():
-        raise HTTPException(status_code=400, detail="Invalid pincode. Must be 6 digits.")
-    
-    # Check common pincodes first
-    if pincode in COMMON_PINCODES:
-        data = COMMON_PINCODES[pincode]
-        return {
-            "pincode": pincode,
-            "city": data["city"],
-            "state": data["state"],
-            "district": data["district"],
-            "is_valid": True
-        }
-    
-    # Fetch from India Post API
-    raw_data = await fetch_pincode_data(pincode)
-    if raw_data and raw_data.get("Status") == "Success" and raw_data.get("PostOffice"):
-        po = raw_data["PostOffice"][0]
-        return {
-            "pincode": pincode,
-            "city": po.get("District") or po.get("Region", ""),
-            "state": po.get("State", ""),
-            "district": po.get("District", ""),
-            "is_valid": True
-        }
-    
-    raise HTTPException(status_code=404, detail=f"Pincode {pincode} not found")
+
 @router.get("/pincode/{pincode}")
 async def get_location(pincode: str):
-    if len(pincode) != 6 or not pincode.isdigit():
-        raise HTTPException(status_code=400, detail="Invalid pincode format")
+    """Lookup city/state/district from 6-digit Indian pincode."""
+    pincode_clean = pincode.strip()
+    if len(pincode_clean) != 6 or not pincode_clean.isdigit():
+        raise HTTPException(status_code=400, detail="Invalid pincode. Must be 6 digits.")
     
-    if pincode in COMMON_PINCODES:
-        data = COMMON_PINCODES[pincode]
-        return {"pincode": pincode, **data, "is_valid": True}
+    if pincode_clean in COMMON_PINCODES:
+        data = COMMON_PINCODES[pincode_clean]
+        return {"pincode": pincode_clean, **data, "is_valid": True}
     
-    raw_data = await fetch_pincode_data(pincode)
+    raw_data = await fetch_pincode_data(pincode_clean)
     if raw_data and raw_data.get("Status") == "Success" and raw_data.get("PostOffice"):
         po = raw_data["PostOffice"][0]
         return {
-            "pincode": pincode,
+            "pincode": pincode_clean,
             "city": po.get("District") or po.get("Region", ""),
             "state": po.get("State", ""),
             "district": po.get("District", ""),
             "is_valid": True
         }
     
-    raise HTTPException(status_code=404, detail=f"Pincode {pincode} not found")
+    raise HTTPException(status_code=404, detail=f"Pincode {pincode_clean} not found")
+
+@router.post("/lookup")
+async def lookup_pincode(body: PincodeRequest):
+    """POST wrapper for pincode lookup (delegates to GET implementation)."""
+    return await get_location(body.pincode)

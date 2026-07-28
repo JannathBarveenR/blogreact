@@ -462,52 +462,198 @@
   cursor: not-allowed;
 }
 
-.rem-history-status {
+/* ── Grouped layout ── */
+.rem-grouped-list {
   display: flex;
-  justify-content: flex-end;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.rem-status-pill {
-  display: inline-flex;
+.rem-group {}
+
+.rem-group-header {
+  display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 12px;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 0 2px;
+}
+
+.rem-group-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.rem-group-dot--morning   { background: #f59e0b; }
+.rem-group-dot--afternoon { background: #f97316; }
+.rem-group-dot--night     { background: #6366f1; }
+.rem-group-dot--other     { background: #94a3b8; }
+
+.rem-group-label {
   font-size: 12px;
   font-weight: 800;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
-.rem-status-pill--done {
-  background: #eaf5e5;
-  color: #004b23;
+.rem-group-time {
+  font-size: 11px;
+  color: #9ca3af;
+  font-weight: 600;
+  margin-left: auto;
 }
 
-.rem-status-pill--forgot {
+/* ── Card variants ── */
+.rem-card-item--missed {
+  background: #fef9f9;
+  border-color: #fca5a5;
+}
+
+.rem-card-item--snoozed {
+  background: #fefce8;
+  border-color: #fde68a;
+}
+
+.rem-card-item--done {
+  background: #f9fdf6;
+  border-color: #d1e7c8;
+  opacity: 0.85;
+}
+
+/* ── Status pills ── */
+.rem-status-pill--missed {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.rem-status-pill--snoozed {
+  background: #fefce8;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+/* ── Tab missed dot ── */
+.rem-missed-dot {
+  display: inline-block;
+  margin-left: 6px;
   background: #fee2e2;
-  color: #dc2626;
+  color: #b91c1c;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 99px;
 }
 
-.rem-loading-box,
-.rem-empty-box {
-  background: #ffffff;
-  border-radius: 20px;
-  padding: 30px 20px;
-  text-align: center;
-  border: 1.5px dashed #cfe3c9;
+/* ── Card options: 2-col for active, flexible ── */
+.rem-card-options {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
 }
 
-.rem-empty-emoji {
-  font-size: 36px;
+.rem-option-btn {
+  flex: 1;
+  height: 40px;
+  border-radius: 12px;
+  border: none;
+  font-size: 13px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.rem-option-btn--done {
+  background: linear-gradient(90deg, #84b662 0%, #004b23 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 75, 73, 0.2);
+}
+
+.rem-option-btn--snooze {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.rem-option-btn:hover { transform: scale(1.02); }
+.rem-option-btn:active { transform: scale(0.97); }
+
+/* ── Empty box icon ── */
+.rem-empty-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #f0fdf4;
+  color: #84b662;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 10px;
 }
 
 .rem-empty-box h3 {
-  margin: 10px 0 4px;
+  margin: 0 0 6px;
   font-size: 17px;
   color: #004b23;
+  font-weight: 800;
 }
 
 .rem-empty-box p {
   margin: 0;
   font-size: 13px;
   color: #64748b;
+  line-height: 1.5;
+}
+
+.rem-loading-box {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 30px 20px;
+  text-align: center;
+  border: 1.5px dashed #cfe3c9;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* Base status pill */
+.rem-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.rem-status-pill--done {
+  background: #eaf5e5;
+  color: #004b23;
+  border: 1px solid #c3ddb5;
+}
+
+.rem-history-status {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+/* Ensure rem-empty-box has correct base */
+.rem-empty-box {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 36px 20px;
+  text-align: center;
+  border: 1.5px dashed #cfe3c9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
 }

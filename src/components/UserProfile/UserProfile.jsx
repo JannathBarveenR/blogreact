@@ -14,7 +14,7 @@ import { supabase } from "../../utils/supabaseClient";
 import EditableUserCard from "./EditableUserCard";
 import EditPetList from "./EditPetsList";
 import PetIdCardModal from "./PetIdCardModal";
-import Pets from "../Home/Pets/Pets";
+import ProfileCard from "../Home/ProfileCard/ProfileCard";
 
 import "./UserProfile.css";
 
@@ -277,10 +277,10 @@ const getPetIcon = (pet) => {
           </button>
         </div>
       ) : (
-          <Pets
+          <ProfileCard
             pets={pets}
             selectedPet={pets.find((p) => p.id === activePetId) || pets[0]}
-            onPetSelect={handlePetSelect}
+            handlePetSelect={handlePetSelect}
             onAddPet={onAddPet}
           />
       )}

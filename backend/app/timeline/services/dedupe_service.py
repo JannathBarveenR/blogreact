@@ -1,6 +1,6 @@
 # backend/app/timeline/services/dedupe_service.py
 import hashlib
-from app.supabase_client import supabase
+from app.supabase_client import supabase_admin as supabase
 
 def _primary_field(entry: dict) -> str:
     cat = entry.get("category")
