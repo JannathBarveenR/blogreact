@@ -212,30 +212,71 @@ const PetKonvaCard = forwardRef(({ petData = {}, containerWidth = 360 }, ref) =>
             />
           )}
 
-          {/* Large Pet Profile Circle */}
-          <Circle x={280} y={480} radius={240} stroke="#ffffff" strokeWidth={16} fill="#ffffff" shadowBlur={30} shadowColor="rgba(0,0,0,0.15)" shadowOffsetY={10} />
+          {/* Rounded Square Pet Profile Photo with Curved Edges */}
+          {/* Outer white border rounded square */}
+          <Rect
+            x={35}
+            y={230}
+            width={460}
+            height={460}
+            cornerRadius={48}
+            fill="#ffffff"
+            shadowBlur={35}
+            shadowColor="rgba(0,0,0,0.14)"
+            shadowOffsetY={12}
+          />
           {loadedPetPhoto ? (
-            <Group clipFunc={(ctx) => ctx.arc(280, 480, 240, 0, Math.PI * 2, false)}>
-              <KonvaImage image={loadedPetPhoto} x={40} y={240} width={480} height={480} />
+            <Group
+              clipFunc={(ctx) => {
+                ctx.beginPath();
+                const x = 50, y = 245, w = 430, h = 430, r = 36;
+                if (ctx.roundRect) {
+                  ctx.roundRect(x, y, w, h, r);
+                } else {
+                  ctx.moveTo(x + r, y);
+                  ctx.arcTo(x + w, y, x + w, y + h, r);
+                  ctx.arcTo(x + w, y + h, x, y + h, r);
+                  ctx.arcTo(x, y + h, x, y, r);
+                  ctx.arcTo(x, y, x + w, y, r);
+                }
+                ctx.closePath();
+              }}
+            >
+              <KonvaImage image={loadedPetPhoto} x={50} y={245} width={430} height={430} />
             </Group>
           ) : (
-            <Group clipFunc={(ctx) => ctx.arc(280, 480, 240, 0, Math.PI * 2, false)}>
-              <Rect x={40} y={240} width={480} height={480} fill="#eaf5e5" />
-              <Path x={170} y={370} scaleX={4} scaleY={4} data={SVG_PATHS.paw} fill="#274a38" />
+            <Group
+              clipFunc={(ctx) => {
+                ctx.beginPath();
+                const x = 50, y = 245, w = 430, h = 430, r = 36;
+                if (ctx.roundRect) {
+                  ctx.roundRect(x, y, w, h, r);
+                } else {
+                  ctx.moveTo(x + r, y);
+                  ctx.arcTo(x + w, y, x + w, y + h, r);
+                  ctx.arcTo(x + w, y + h, x, y + h, r);
+                  ctx.arcTo(x, y + h, x, y, r);
+                  ctx.arcTo(x, y, x + w, y, r);
+                }
+                ctx.closePath();
+              }}
+            >
+              <Rect x={50} y={245} width={430} height={430} fill="#eaf5e5" />
+              <Path x={170} y={380} scaleX={4} scaleY={4} data={SVG_PATHS.paw} fill="#274a38" />
             </Group>
           )}
 
-          {/* Heart Badge outline on Profile Circle */}
-          <Circle x={280} y={720} radius={40} fill="#133c2a" />
-          <Path 
-            x={268} 
-            y={708} 
-            data={SVG_PATHS.heartSolid} 
-            stroke="#ffffff" 
-            strokeWidth={2} 
-            fill="transparent" 
-            scaleX={1.2} 
-            scaleY={1.2} 
+          {/* Heart Badge at bottom of rounded square */}
+          <Circle x={265} y={690} radius={42} fill="#133c2a" shadowBlur={10} shadowColor="rgba(0,0,0,0.25)" />
+          <Path
+            x={252}
+            y={677}
+            data={SVG_PATHS.heartSolid}
+            stroke="#ffffff"
+            strokeWidth={2}
+            fill="transparent"
+            scaleX={1.2}
+            scaleY={1.2}
           />
 
           {/* Right Side Info */}
@@ -354,10 +395,20 @@ const PetKonvaCard = forwardRef(({ petData = {}, containerWidth = 360 }, ref) =>
 
           {/* Bottom Area */}
           
-          {/* Left: Pet Parent */}
+          {/* Left: Pet Parent — teal avatar icon matching standard user avatar */}
           <Group x={120} y={1080}>
-            <Circle x={80} y={60} radius={60} fill="#f4f8f1" stroke="#bdd3c2" strokeWidth={2} />
-            <Path x={58} y={38} data={SVG_PATHS.user} fill="#123d2f" scaleX={1.8} scaleY={1.8} />
+            {/* Teal circle background */}
+            <Circle x={80} y={60} radius={62} fill="#57be9b" />
+            {/* White user silhouette clipped inside the circle */}
+            <Group clipFunc={(ctx) => ctx.arc(80, 60, 62, 0, Math.PI * 2, false)}>
+              {/* White head */}
+              <Circle x={80} y={42} radius={21} fill="#ffffff" />
+              {/* White shoulder / V-neck body shape */}
+              <Path
+                data="M 30 106 C 30 76 52 68 80 68 C 108 68 130 76 130 106 C 114 122 98 126 80 126 C 62 126 46 122 30 106 Z"
+                fill="#ffffff"
+              />
+            </Group>
             <Text x={0} y={140} width={160} align="center" text="PET PARENT" fontSize={22} fontStyle="bold" fontFamily="system-ui, sans-serif" fill="#406950" />
             <Text x={-40} y={170} width={240} align="center" text={ownerName} fontSize={38} fontStyle="bold" fontFamily="system-ui, sans-serif" fill="#123d2f" />
           </Group>
