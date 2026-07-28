@@ -347,6 +347,23 @@ Resources:
               - Effect: Allow
                 Action: cloudfront:CreateInvalidation
                 Resource: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
+        - PolicyName: S3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:DeleteObject
+                  - s3:ListBucket
+                Resource:
+                  - "arn:aws:s3:::petolife-avatars-*"
+                  - "arn:aws:s3:::petolife-avatars-*/*"
+                  - "arn:aws:s3:::petolife-pet-photos-*"
+                  - "arn:aws:s3:::petolife-pet-photos-*/*"
+                  - "arn:aws:s3:::petolife-medical-docs-*"
+                  - "arn:aws:s3:::petolife-medical-docs-*/*"
 
   EC2InstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -460,6 +477,10 @@ Resources:
               VolumeType: gp3
               Encrypted: true
               DeleteOnTermination: true
+        MetadataOptions:
+          HttpEndpoint: enabled
+          HttpTokens: required
+          HttpPutResponseHopLimit: 2
         TagSpecifications:
           - ResourceType: instance
             Tags:
@@ -504,6 +525,9 @@ Resources:
             # Launch
             chown -R ubuntu:ubuntu $REPO
             docker compose up -d --build
+
+            # Invalidate CloudFront CDN cache automatically on boot (instant update for users)
+            aws cloudfront create-invalidation --distribution-id "${CloudFrontDistribution}" --paths "/*" --region us-east-1 || true
 
             echo "=== PetOLife Bootstrap COMPLETE $(date) ==="
 

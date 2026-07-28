@@ -57,6 +57,7 @@ graph TB
 6. **AWS Auto Scaling Group (ASG)**: Maintains 1 EC2 instance by default. When CPU utilization exceeds 60%, it spins up Instance #3 (a 2nd app server in AZ-B) to handle excess load. As soon as traffic normalizes, ASG terminates Instance #3 immediately to minimize cost.
 7. **AWS Secrets Manager**: Stores `.env` and `backend/.env` configuration securely. The EC2 instance retrieves secrets on boot via an IAM role (no keys hardcoded or stored in Git/S3).
 8. **CloudWatch Alarms & SNS Notifications**: Monitors CPU utilization, ALB target health, and 5xx response rates. Sends instant email alerts via AWS SNS whenever an alarm triggers or recovers.
+9. **IAM Role S3 Access (Zero Access Keys)**: The EC2 Instance Profile (`EC2Role`) includes direct IAM policies for `s3:PutObject`, `s3:GetObject`, `s3:DeleteObject`, and `s3:ListBucket` on your `petolife-*` buckets. Boto3 inside FastAPI automatically assumes this IAM role, so you **never need to store `AWS_ACCESS_KEY_ID` or `AWS_SECRET_ACCESS_KEY`** in your `.env` files!
 
 ---
 
