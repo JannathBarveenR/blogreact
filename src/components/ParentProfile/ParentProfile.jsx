@@ -57,8 +57,10 @@ export default function ParentProfile() {
           if (rawCity) setCity(rawCity);
           if (rawState) setState(rawState);
 
-          if (rawName && rawPhone && rawPincode && rawAddress && rawCity && rawState) {
+          if (rawName && (rawPhone || data.email)) {
             setIsAlreadyCompleted(true);
+            navigate("/home", { replace: true });
+            return;
           }
         } else {
           // pre-populate name from email
@@ -125,10 +127,6 @@ export default function ParentProfile() {
     }
     if (!city) {
       setError("Could not determine city from pincode.");
-      return;
-    }
-    if (!address.trim()) {
-      setError("Please enter your address.");
       return;
     }
 
@@ -284,13 +282,12 @@ export default function ParentProfile() {
             </div>
 
             <div className="form-group">
-              <label>Address</label>
+              <label>Address <span style={{ fontSize: "12px", color: "#6b7280", fontWeight: 400 }}>(Optional)</span></label>
               <input
                 type="text"
-                placeholder="Flat / House no. / Street / Area"
+                placeholder="Flat / House no. / Street / Area (Optional)"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                required
               />
             </div>
 

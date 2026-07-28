@@ -44,8 +44,8 @@ export default function AuthCallback() {
             });
             if (profileRes.ok) {
               const profileData = await profileRes.json();
-              // If they have completed onboarding (must have phone and city at minimum)
-              if (profileData && profileData.phone && profileData.city) {
+              // If a user profile exists (has name, phone, or email), they are already onboarded
+              if (profileData && (profileData.full_name || profileData.phone || profileData.email || profileData.auth_provider)) {
                 setStatus("Sign in successful! Redirecting…");
                 navigate("/home", { replace: true });
               } else {

@@ -71,30 +71,44 @@ const UserProfile = ({ pets = [], activePetId, onPetSelect, onAddPet, onUpdatePe
     const petObj = typeof pet === "object" ? pet : pets.find((p) => p.id === pet);
     onPetSelect?.(petObj);
   };
-const handleDeleteAccount = async () => {
-  if (!deletePassword.trim()) {
-    alert("Please enter your password to confirm account deletion.");
-    return;
-  }
+  const handleDeleteAccount = async () => {
+    if (!isGoogleUser && !deletePassword.trim()) {
+      alert("Please enter your password to confirm account deletion.");
+      return;
+    }
 
-  try {
-    await supabase.auth.signOut();
-  } catch (err) {
-    // Ignore signout error if session is already invalid
-  }
+    if (!isGoogleUser && deletePassword.trim()) {
+      const email = user?.email || userProfile?.email;
+      if (email) {
+        const { error: authErr } = await supabase.auth.signInWithPassword({
+          email,
+          password: deletePassword,
+        });
+        if (authErr) {
+          alert(authErr.message || "Incorrect password.");
+          return;
+        }
+      }
+    }
 
-  alert("Account deleted successfully.");
-  setShowDeleteModal(false);
-  setDeletePassword("");
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      // Ignore signout error if session is already invalid
+    }
 
-  if (logout) {
-    logout();
-  }
+    alert("Account deleted successfully.");
+    setShowDeleteModal(false);
+    setDeletePassword("");
 
-  localStorage.clear();
-  sessionStorage.clear();
-  navigate("/login");
-};
+    if (logout) {
+      logout();
+    }
+
+    localStorage.clear();
+    sessionStorage.clear();
+    navigate("/login");
+  };
 
   const handleSavePassword = async () => {
     if (isGoogleUser) {
@@ -517,15 +531,17 @@ const getPetIcon = (pet) => {
         will be deleted.
       </p>
 
-      <input
-        type={showDeletePassword ? "text" : "password"}
-        placeholder="Enter Password"
-        value={deletePassword}
-        onChange={(e) =>
-          setDeletePassword(e.target.value)
-        }
-        className="profile-input"
-      />
+      {!isGoogleUser && (
+        <input
+          type={showDeletePassword ? "text" : "password"}
+          placeholder="Enter Password"
+          value={deletePassword}
+          onChange={(e) =>
+            setDeletePassword(e.target.value)
+          }
+          className="profile-input"
+        />
+      )}
 
       <div className="logout-modal-actions">
 

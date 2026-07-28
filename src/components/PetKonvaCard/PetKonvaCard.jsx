@@ -11,13 +11,30 @@ function useLoadedImage(src) {
       setImage(null);
       return;
     }
+    let isCancelled = false;
+
+    // 1. Try with crossOrigin="Anonymous" (enables high-res canvas exports when CORS is permitted)
     const img = new window.Image();
     img.crossOrigin = "Anonymous";
     img.src = src;
-    img.onload = () => setImage(img);
-    img.onerror = (e) => {
-      console.warn("Failed to load Konva image:", src, e);
-      setImage(null);
+    img.onload = () => {
+      if (!isCancelled) setImage(img);
+    };
+    img.onerror = () => {
+      // 2. Fallback without crossOrigin (ensures S3 photos display even if bucket CORS headers are restricted)
+      const fallbackImg = new window.Image();
+      fallbackImg.src = src;
+      fallbackImg.onload = () => {
+        if (!isCancelled) setImage(fallbackImg);
+      };
+      fallbackImg.onerror = (err) => {
+        console.warn("Failed to load Konva image:", src, err);
+        if (!isCancelled) setImage(null);
+      };
+    };
+
+    return () => {
+      isCancelled = true;
     };
   }, [src]);
   return image;
