@@ -18,7 +18,8 @@ export const timelineKeys = {
   events: (petId, category) => ["timeline", petId, "events", category ?? "all"],
   event: (petId, eventId) => ["timeline", petId, "event", eventId],
   reminders: (petId, type, status) => ["timeline", petId, "reminders", type, status],
-  documents: (petId, eventId) => ["timeline", petId, "documents", eventId ?? "all"],
+  // Unified records (replaces old documents key)
+  records: (petId, log, eventId) => ["records", petId, log ?? "all", eventId ?? "all"],
   vaccines: (animalType) => ["reference", "vaccines", animalType ?? "all"],
   medicines: (query, type) => ["reference", "medicines", query, type],
   shampoos: (category) => ["reference", "shampoos", category ?? "all"],
@@ -131,31 +132,62 @@ export function useDeleteReminder(petId) {
   });
 }
 
-// ─── Documents ────────────────────────────────────────────────────
-export function useDocuments(petId, eventId = null) {
+// ─── Records (unified — replaces old Documents hooks) ─────────────
+//
+//  useUploadEventRecord  → timeline-linked upload (log=1)
+//  useUploadRawRecord    → standalone upload from Medical Records tab (log=0)
+//  useRecords            → list records (filterable by log / eventId)
+//  useDeleteRecord       → deletes record + cleans up event.document_ids if log=1
+//  useToggleRecordFavorite → toggle is_favorite (log=0 use case)
+
+export function useRecords(petId, { log, eventId } = {}) {
   return useQuery({
-    queryKey: timelineKeys.documents(petId, eventId),
-    queryFn: () => api.getDocuments(petId, eventId),
+    queryKey: timelineKeys.records(petId, log, eventId),
+    queryFn: () => api.getRecords(petId, { log, eventId }),
     enabled: !!petId,
   });
 }
 
-export function useUploadDocument(petId) {
+export function useUploadEventRecord(petId) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ file, label, eventId }) => api.uploadDocument(petId, file, label, eventId),
+    mutationFn: ({ eventId, file, label, category }) =>
+      api.uploadEventRecord(petId, eventId, file, label, category),
     onSuccess: () => {
+      // Invalidate both records cache and timeline (event.document_ids changed)
+      queryClient.invalidateQueries({ queryKey: timelineKeys.records(petId) });
       queryClient.invalidateQueries({ queryKey: timelineKeys.all(petId) });
     },
   });
 }
 
-export function useDeleteDocument(petId) {
+export function useUploadRawRecord(petId) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (docId) => api.deleteDocument(petId, docId),
+    mutationFn: (formData) => api.uploadRawRecord(petId, formData),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: timelineKeys.records(petId) });
+    },
+  });
+}
+
+export function useDeleteRecord(petId) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (recordId) => api.deleteRecord(petId, recordId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: timelineKeys.records(petId) });
       queryClient.invalidateQueries({ queryKey: timelineKeys.all(petId) });
+    },
+  });
+}
+
+export function useToggleRecordFavorite(petId) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (recordId) => api.toggleRecordFavorite(petId, recordId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: timelineKeys.records(petId) });
     },
   });
 }

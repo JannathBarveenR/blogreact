@@ -119,7 +119,7 @@ export default function DewormingForm({ petId, petName, onClose, onSaved, editDa
       if (files.length > 0 && createdEvent.id) {
         for (const f of files) {
           try {
-            await uploadDocument(petId, f, "Deworming Prescription / Photo", createdEvent.id);
+            await uploadEventRecord(petId, createdEvent.id, f, "Deworming Prescription / Photo");
           } catch (docErr) {
             console.error("Doc upload error:", docErr);
           }

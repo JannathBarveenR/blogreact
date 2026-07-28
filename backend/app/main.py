@@ -5,8 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from app.config import PORT, FRONTEND_URL, ENVIRONMENT
-from app.routers import auth, location, pet_profile, pet_health_id, medical_records, checklist, user_profile
-from app.routers.v2 import medical_events, reference_data, timeline, reminders, documents, export
+from app.routers import auth, location, pet_profile, pet_health_id, checklist, user_profile
+from app.routers.v2 import medical_events, reference_data, timeline, reminders, records, export
 from app.supabase_client import supabase
 
 _is_production = ENVIRONMENT == "production"
@@ -83,7 +83,6 @@ app.include_router(auth.router,            prefix="/api/auth",            tags=[
 app.include_router(pet_profile.router,     prefix="/api/pet-profile",     tags=["Pet Profile"])
 app.include_router(location.router,        prefix="/api/location",        tags=["Location"])
 app.include_router(pet_health_id.router,   prefix="/api/pet-health-id",   tags=["Pet Health ID"])
-app.include_router(medical_records.router, prefix="/api/medical-records", tags=["Medical Records"])
 app.include_router(checklist.router,       prefix="/api/checklist",       tags=["Checklist"])
 app.include_router(user_profile.router,    prefix="/api/user-profile",    tags=["User Profile"])
 
@@ -92,7 +91,7 @@ app.include_router(reference_data.router)
 app.include_router(medical_events.router)
 app.include_router(timeline.router)
 app.include_router(reminders.router)
-app.include_router(documents.router)
+app.include_router(records.router)
 app.include_router(export.router)
 
 

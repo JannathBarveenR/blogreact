@@ -478,7 +478,7 @@ export default function MedicationForm({ petId, petName, onClose, onSaved, editD
       if (files.length > 0 && createdEvent.id) {
         for (const f of files) {
           try {
-            await uploadDocument(petId, f, "Prescription", createdEvent.id);
+            await uploadEventRecord(petId, createdEvent.id, f, "Prescription");
           } catch (docErr) {
             console.error("Doc upload error:", docErr);
           }
