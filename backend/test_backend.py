@@ -243,6 +243,37 @@ async def test_05_pet_profile(client: httpx.AsyncClient, ctx: dict) -> dict:
         record("POST /api/pet-profile", False, f"status={resp.status_code} body={resp.text[:300]}")
         return pet_ctx
 
+async def test_05b_pet_lifestyle(client: httpx.AsyncClient, ctx: dict, pet_ctx: dict):
+    print("\n-- 5b. Pet Lifestyle Survey --")
+    if not ctx["token"] or not pet_ctx["pet_id"]:
+        record("Pet Lifestyle tests", False, "Missing auth or pet")
+        return
+
+    headers = {"Authorization": f"Bearer {ctx['token']}"}
+    pid = pet_ctx["pet_id"]
+
+    # POST lifestyle
+    resp, err = await safe_request(
+        client, "POST", f"{BASE_URL}/api/pet-profile/{pid}/lifestyle",
+        headers=headers, json={"answers": {"indoor_outdoor": "indoor"}}
+    )
+    if err:
+        record("POST /api/pet-profile/{pid}/lifestyle", False, err)
+    else:
+        record("POST /api/pet-profile/{pid}/lifestyle -- 200", resp.status_code == 200)
+
+    # GET lifestyle
+    resp, err = await safe_request(
+        client, "GET", f"{BASE_URL}/api/pet-profile/{pid}/lifestyle",
+        headers=headers
+    )
+    if err:
+        record("GET /api/pet-profile/{pid}/lifestyle", False, err)
+    else:
+        record("GET /api/pet-profile/{pid}/lifestyle -- 200", resp.status_code == 200)
+        data = resp.json()
+        record("Lifestyle data matches", data.get("answers", {}).get("indoor_outdoor") == "indoor")
+
     # 5b. List pets
     resp, _ = await safe_request(client, "GET", f"{BASE_URL}/api/pet-profile", headers=headers)
     if resp and resp.status_code == 200:
@@ -908,6 +939,7 @@ async def main():
         ctx      = await test_03_auth_flow(client)
         await test_04_user_profile(client, ctx)
         pet_ctx  = await test_05_pet_profile(client, ctx)
+        await test_05b_pet_lifestyle(client, ctx, pet_ctx)
         await test_06_pet_health_id(client, ctx, pet_ctx)
         await test_07_location(client)
         await test_08_checklist(client, ctx, pet_ctx)
