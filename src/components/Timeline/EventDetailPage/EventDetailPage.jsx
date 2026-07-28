@@ -1,11 +1,19 @@
 import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { FiArrowLeft, FiCalendar, FiClock, FiFileText, FiUser, FiPhone, FiCheckCircle, FiShield, FiDownload, FiTrash2 } from "react-icons/fi";
-import { getMedicalEvent, deleteMedicalEvent } from "../../../api/timelineApi";
+import { FiArrowLeft, FiCalendar, FiClock, FiFileText, FiUser, FiPhone, FiCheckCircle, FiShield, FiDownload, FiTrash2, FiEdit2, FiSave, FiX } from "react-icons/fi";
+import { getMedicalEvent, deleteMedicalEvent, updateMedicalEvent } from "../../../api/timelineApi";
+import { useQueryClient } from "@tanstack/react-query";
+import { timelineKeys } from "../../../hooks/useTimelineQueries";
 import useAuth from "../../../hooks/useAuth";
 import { usePets } from "../../../hooks/usePetsQuery";
 import { PetAvatar } from "../../common/PetAvatar";
 import logoImg from "../../../assets/logo-with-tagline.webp";
+import MedicationForm from "../Forms/MedicationForm";
+import VetVisitForm from "../Forms/VetVisitForm";
+import VaccinationForm from "../Forms/VaccinationForm";
+import DewormingForm from "../Forms/DewormingForm";
+import OtherForm from "../Forms/OtherForm";
 import "./EventDetailPage.css";
 
 export default function EventDetailPage() {
@@ -15,11 +23,17 @@ export default function EventDetailPage() {
   const statePetId = location.state?.petId;
   const { user } = useAuth();
   const { data: pets = [] } = usePets(user?.id);
+  const queryClient = useQueryClient();
 
   const [eventData, setEventData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [deleting, setDeleting] = useState(false);
+
+  // Modal & Toast states
+  const [isEditing, setIsEditing] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [toastMsg, setToastMsg] = useState("");
 
   useEffect(() => {
     async function fetchDetails() {
@@ -62,21 +76,28 @@ export default function EventDetailPage() {
     fetchDetails();
   }, [eventId, pets, statePetId]);
 
-  const handleDeleteRecord = async () => {
-    if (!window.confirm("Are you sure you want to delete this medical record? This action cannot be undone.")) {
-      return;
-    }
+  const confirmDeleteRecord = async () => {
     const petId = eventData?.pet_id || pets[0]?.id;
     if (!petId || !eventId) return;
 
     try {
       setDeleting(true);
       await deleteMedicalEvent(petId, eventId);
-      alert("Medical record deleted successfully.");
-      navigate("/timeline/home");
+      try {
+        queryClient.invalidateQueries({ queryKey: timelineKeys.all(petId) });
+      } catch (cacheErr) {
+        console.error(cacheErr);
+      }
+      setShowDeleteModal(false);
+      setToastMsg("✓ Medical record deleted successfully!");
+      setTimeout(() => {
+        navigate("/timeline/home");
+      }, 1200);
     } catch (err) {
       console.error("Failed to delete record:", err);
-      alert("Failed to delete medical record. Please try again.");
+      setShowDeleteModal(false);
+      setToastMsg("⚠️ Failed to delete medical record.");
+      setTimeout(() => setToastMsg(""), 3500);
     } finally {
       setDeleting(false);
     }
@@ -113,6 +134,48 @@ export default function EventDetailPage() {
   const medicinesList = categoryFields.medicines_list || [];
   const attachments = eventData.attachments || primaryEntry.attachments || [];
 
+  const renderEditForm = () => {
+    const cat = (primaryEntry.category || "medication").toLowerCase();
+    const petId = eventData?.pet_id || pets[0]?.id;
+    const petName = activePet?.pet_name || activePet?.name || "Pet";
+
+    const commonProps = {
+      petId,
+      petName,
+      editData: eventData,
+      onClose: () => setIsEditing(false),
+      onSaved: (msg) => {
+        setIsEditing(false);
+        setToastMsg(msg || "✓ Record updated successfully!");
+        setTimeout(() => setToastMsg(""), 3500);
+        getMedicalEvent(petId, eventId).then((data) => {
+          if (data) setEventData(data);
+        }).catch(() => {});
+      },
+    };
+
+    if (cat === "medication") return <MedicationForm {...commonProps} />;
+    if (cat === "diagnosis" || cat === "vet_visit") return <VetVisitForm {...commonProps} />;
+    if (cat === "vaccination") return <VaccinationForm {...commonProps} />;
+    if (cat === "deworming") return <DewormingForm {...commonProps} />;
+    return <OtherForm {...commonProps} />;
+  };
+
+  if (isEditing) {
+    return (
+      <div className="ev-detail-page ev-detail-edit-mode">
+        {renderEditForm()}
+        {toastMsg && createPortal(
+          <div className="ev-toast-popup">
+            <span className="material-symbols-outlined">check_circle</span>
+            <span>{toastMsg}</span>
+          </div>,
+          document.body
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="ev-detail-page">
       {/* Top Header */}
@@ -125,35 +188,35 @@ export default function EventDetailPage() {
       </header>
 
       <main className="ev-body">
-        {/* Pet & Parent Card */}
+        {/* Pet Card (Photo & Name only) */}
         <div className="ev-card ev-pet-parent-card">
           <div className="ev-pet-row">
-            <PetAvatar src={activePet?.pet_photo_url} petType={activePet?.pet_type} size={54} />
+            <div className="ev-square-pet-avatar">
+              {activePet?.pet_photo_url ? (
+                <img src={activePet.pet_photo_url} alt={activePet?.pet_name || activePet?.name || "Pet"} />
+              ) : (
+                <span className="material-symbols-outlined" style={{ fontSize: 32, color: "#004b23" }}>pets</span>
+              )}
+            </div>
             <div>
               <h3 className="ev-pet-name">{activePet?.pet_name || activePet?.name || "Pet"}</h3>
               <span className="ev-pet-id-pill"><FiShield size={12} /> {activePet?.petolife_id || "Petolife ID"}</span>
             </div>
           </div>
-
-          <div className="ev-divider" />
-
-          <div className="ev-parent-info">
-            <div className="ev-info-item">
-              <FiUser size={15} color="#004b23" />
-              <span>Pet Parent: <strong>{user?.user_metadata?.full_name || user?.email || "Parent"}</strong></span>
-            </div>
-            <div className="ev-info-item">
-              <FiCalendar size={15} color="#004b23" />
-              <span>Event Date: <strong>{eventData.event_date}</strong></span>
-            </div>
-          </div>
         </div>
 
-        {/* Medicines / Treatment Breakdown */}
+        {/* Record Detail Card */}
         <div className="ev-card">
           <div className="ev-card-title-row">
             <span className="ev-badge">{primaryEntry.category || "MEDICATION"}</span>
-            <span className="ev-date">{eventData.event_date}</span>
+            <button
+              type="button"
+              className="ev-pencil-btn"
+              onClick={() => setIsEditing(true)}
+              title="Edit Record"
+            >
+              <FiEdit2 size={15} />
+            </button>
           </div>
 
           <h2 className="ev-main-title">{primaryEntry.item_name || "Prescription Record"}</h2>
@@ -208,20 +271,58 @@ export default function EventDetailPage() {
           </div>
         )}
 
-        <button className="ev-primary-btn" onClick={() => navigate("/reminders")}>
-          View Linked Reminders
-        </button>
-
         {/* Delete Medical Record Button */}
         <button
           type="button"
           className="ev-delete-btn"
-          onClick={handleDeleteRecord}
+          onClick={() => setShowDeleteModal(true)}
           disabled={deleting}
         >
           <FiTrash2 size={16} /> {deleting ? "Deleting Record..." : "Delete Medical Record"}
         </button>
       </main>
+
+      {/* In-App Toast Notification */}
+      {toastMsg && createPortal(
+        <div className="ev-toast-popup">
+          <span className="material-symbols-outlined">check_circle</span>
+          <span>{toastMsg}</span>
+        </div>,
+        document.body
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && createPortal(
+        <div className="ev-modal-overlay" onClick={() => setShowDeleteModal(false)}>
+          <div className="ev-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="ev-modal-icon-wrap">
+              <FiTrash2 size={26} />
+            </div>
+            <h3 className="ev-modal-title">Delete Medical Record?</h3>
+            <p className="ev-modal-desc">
+              Are you sure you want to delete this medical record? This action cannot be undone.
+            </p>
+            <div className="ev-modal-actions">
+              <button
+                type="button"
+                className="ev-modal-cancel-btn"
+                onClick={() => setShowDeleteModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="ev-modal-delete-btn"
+                onClick={confirmDeleteRecord}
+                disabled={deleting}
+              >
+                {deleting ? "Deleting..." : "Yes, Delete"}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

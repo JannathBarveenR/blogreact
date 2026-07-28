@@ -77,8 +77,25 @@ export default function PublicPetProfile() {
   const petName = pet.pet_name || pet.name || "Pet";
   const petolifeId = pet.petolife_id || id;
   const ageDisplay = pet.birth_date ? getAge(pet.birth_date) : pet.approx_age || "Not specified";
-  const ownerName = pet.owner_info?.full_name || pet.care_team?.owner_name || "Pet Parent";
-  const ownerPhone = pet.owner_info?.phone || pet.care_team?.owner_phone || "";
+  const getOwnerName = (petObj) => {
+    if (!petObj) return "Pet Parent";
+    const candidates = [
+      petObj.owner_info?.owner_name,
+      petObj.owner_info?.full_name,
+      petObj.owner_name,
+      petObj.pet_parent,
+      petObj.care_team?.owner_name,
+    ];
+    for (const name of candidates) {
+      if (name && typeof name === "string" && name.trim() && name.trim() !== "Pet Parent") {
+        return name.trim();
+      }
+    }
+    return "Pet Parent";
+  };
+
+  const ownerName = getOwnerName(pet);
+  const ownerPhone = pet.owner_phone || pet.owner_info?.owner_phone || pet.owner_info?.phone || pet.care_team?.owner_phone || "";
   
   const maskedPhone = ownerPhone
     ? `+91 ${ownerPhone.replace(/\D/g, "").slice(0, 1)}XXX XX XX ${ownerPhone.replace(/\D/g, "").slice(-2)}`

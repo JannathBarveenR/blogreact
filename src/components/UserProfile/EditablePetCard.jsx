@@ -3,6 +3,7 @@ import { FiEdit2, FiCheck, FiX, FiTrash2 } from "react-icons/fi";
 import fetchWithAuth from "../../utils/fetchWithAuth";
 import { PetAvatar } from "../common/PetAvatar";
 import { petTypes, breedData } from "../ProfileCreation/constants";
+import queryClient from "../../utils/queryClient";
 import "./EditablePetCard.css";
 
 import calendarIcon from "../Home/ProfileCard/calendar-icon.png";
@@ -69,7 +70,8 @@ const EditablePetCard = ({ pet, onUpdate, onClose }) => {
       if (res.ok) {
         const data = await res.json();
         setProfile(prev => ({ ...prev, pet_photo_url: data.pet_photo_url }));
-        // Removed onUpdate() call so the modal doesn't close/reload immediately
+        queryClient.invalidateQueries({ queryKey: ["pets"] });
+        if (onUpdate) onUpdate();
       } else {
         alert("Failed to upload pet photo.");
       }
@@ -110,6 +112,7 @@ const EditablePetCard = ({ pet, onUpdate, onClose }) => {
       });
       
       if (res.ok) {
+        queryClient.invalidateQueries({ queryKey: ["pets"] });
         if (onUpdate) onUpdate(); // Refresh parent data
       } else {
         setError("Failed to update pet profile.");
@@ -135,6 +138,7 @@ const EditablePetCard = ({ pet, onUpdate, onClose }) => {
         method: "DELETE"
       });
       if (res.ok) {
+        queryClient.invalidateQueries({ queryKey: ["pets"] });
         if (onUpdate) onUpdate(); // Refresh parent data (this should remove the pet from the list)
       } else {
         setError("Failed to delete pet profile.");

@@ -31,14 +31,14 @@ export default function PostIdScreen({ inlineData }) {
 
   // Parse owner name & phone from dataToUse or user metadata
   const getOwnerInfo = () => {
-    let name = dataToUse.owner_name || dataToUse.pet_parent || dataToUse.owner_info?.full_name || '';
-    let phone = dataToUse.owner_phone || dataToUse.owner_info?.phone || '';
+    let name = dataToUse.owner_name || dataToUse.pet_parent || dataToUse.owner_info?.owner_name || dataToUse.owner_info?.full_name || '';
+    let phone = dataToUse.owner_phone || dataToUse.owner_info?.owner_phone || dataToUse.owner_info?.phone || '';
     if (!name || name === 'Pet Parent') {
       const storedUserData = localStorage.getItem("user");
       if (storedUserData) {
         try {
           const userObj = JSON.parse(storedUserData);
-          const fullName = userObj.user_metadata?.full_name || userObj.user_metadata?.first_name || userObj.full_name;
+          const fullName = userObj.full_name || userObj.name || userObj.user_metadata?.full_name || userObj.user_metadata?.name || userObj.user_metadata?.first_name;
           if (fullName) {
             name = fullName;
             if (userObj.user_metadata?.last_name && !name.includes(userObj.user_metadata.last_name)) {

@@ -1,124 +1,107 @@
-.upload-records-action-card {
+.upload-records-card-wrapper {
   width: 100%;
-  min-height: 165px;
-  flex-shrink: 0;
-  border-radius: 20px;
-  background: linear-gradient(135deg, #004b49 0%, #00695c 60%, #003634 100%);
-  color: #ffffff;
-  padding: 22px 20px;
-  box-sizing: border-box;
-  margin: 8px 0 12px;
-  cursor: pointer;
   position: relative;
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0, 75, 73, 0.18);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  display: flex;
-  flex-direction: column;
+  margin: 12px 0 16px;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(12, 61, 47, 0.1), 0 2px 6px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 75, 73, 0.08);
+  background: #ffffff;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  box-sizing: border-box;
 }
 
-.upload-records-action-card:hover {
+.upload-records-card-wrapper:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(0, 75, 73, 0.22);
+  box-shadow: 0 12px 30px rgba(12, 61, 47, 0.16);
 }
 
-.upload-records-action-card:active {
+.upload-records-card-wrapper:active {
   transform: translateY(0);
 }
 
-.upload-records-action-card::before {
-  content: "";
-  position: absolute;
-  top: -40px;
-  right: -40px;
-  width: 140px;
-  height: 140px;
-  border-radius: 50%;
-  background: rgba(132, 182, 98, 0.18);
-  pointer-events: none;
+.upload-records-main-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+  border-radius: 20px;
 }
 
-.upload-card-content {
-  position: relative;
-  z-index: 1;
+/* CTA & Tagline Overlay Container */
+.upload-records-overlay-container {
+  position: absolute;
+  bottom: 4%;
+  right: 2%;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-}
-
-.upload-card-header {
-  display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 10px;
+  z-index: 5;
 }
 
-.upload-card-icon-wrapper {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(6px);
-  display: flex;
+.upload-my-records-btn {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #004b49 0%, #00695c 100%);
   color: #ffffff;
+  border: none;
+  padding: 17px 14px;
+  border-radius: 32px;
+  font-size: 0.84rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0, 75, 73, 0.32);
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
 }
 
-.upload-card-badge {
-  display: flex;
+.upload-my-records-btn:hover {
+  background: linear-gradient(135deg, #003634 0%, #004b49 100%);
+  box-shadow: 0 8px 24px rgba(0, 75, 73, 0.4);
+  transform: scale(1.02);
+}
+
+.upload-records-trust-tagline {
+  display: inline-flex;
   align-items: center;
   gap: 5px;
   font-size: 0.72rem;
   font-weight: 700;
-  color: #84b662;
-  background: rgba(132, 182, 98, 0.15);
-  padding: 4px 10px;
-  border-radius: 20px;
-  border: 1px solid rgba(132, 182, 98, 0.3);
-}
-
-.upload-card-text {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.upload-card-title {
-  margin: 0;
-  font-size: 1.08rem;
-  font-weight: 800;
-  color: #ffffff;
+  color: #004b49;
   letter-spacing: -0.01em;
-}
-
-.upload-card-desc {
-  margin: 0;
-  font-size: 0.82rem;
-  line-height: 1.45;
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.upload-card-footer {
-  margin-top: 4px;
-}
-
-.upload-card-btn {
-  width: 100%;
-  padding: 11px 18px;
-  background: #84b662;
-  color: #003634;
-  border: none;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(6px);
+  padding: 3px 10px;
   border-radius: 12px;
-  font-size: 0.88rem;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  cursor: pointer;
-  transition: background 0.15s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
-.upload-card-btn:hover {
-  background: #95cc6e;
+.trust-lock-icon {
+  color: #004b49;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 500px) {
+  .upload-records-overlay-container {
+    bottom: 3%;
+    right: 2%;
+    gap: 4px;
+  }
+
+  .upload-my-records-btn {
+    padding: 13px 10px;
+    font-size: 0.76rem;
+    border-radius: 26px;
+    gap: 4px;
+  }
+
+  .upload-records-trust-tagline {
+    font-size: 0.62rem;
+    padding: 2px 7px;
+  }
 }

@@ -1,23 +1,21 @@
 import React, { useState, useEffect } from "react";
 import "./TopNav.css";
 import polLogo from "../../../assets/POL_logo_tagline.webp";
-import RemindersModal from "../RemindersModal/RemindersModal";
 import useAuth from "../../../hooks/useAuth";
 import { usePets } from "../../../hooks/usePetsQuery";
 import { getReminders } from "../../../api/timelineApi";
-
-import { useNavigate } from "react-router-dom";
+import ReminderBellSheet from "../RemindersModal/ReminderBellSheet";
 
 /**
- * Shared TopNav — used by HomeScreen, ChecklistPage, and other in-app pages.
- * Displays the official PetOLife logo asset and top header reminder button.
+ * Shared TopNav — uses a bell icon (instead of paw) that opens an inline
+ * reminder bottom-sheet for today's schedule when clicked.
  */
 const TopNav = () => {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const { data: pets = [] } = usePets(user?.id);
   const [activePet, setActivePet] = useState(null);
   const [pendingCount, setPendingCount] = useState(0);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   useEffect(() => {
     if (!pets.length || !user?.id) return;
@@ -32,8 +30,11 @@ const TopNav = () => {
       try {
         const res = await getReminders(activePet.id);
         const list = res.reminders || res || [];
-        const pending = list.filter((r) => r.status !== "completed" && r.status !== "forgot");
-        setPendingCount(pending.length);
+        const today = new Date().toLocaleDateString("en-CA");
+        const active = list.filter(
+          (r) => r.status !== "completed" && r.due_date <= today
+        );
+        setPendingCount(active.length);
       } catch (err) {
         console.error("Error fetching reminder count:", err);
       }
@@ -54,10 +55,10 @@ const TopNav = () => {
             <button
               className="topnav__icon-btn"
               aria-label="Reminders"
-              onClick={() => navigate("/reminders")}
-              title="View Pet Reminders Page"
+              onClick={() => setSheetOpen(true)}
+              title="View Today's Reminders"
             >
-              <PawIcon size={35} color="#004b23" />
+              <BellIcon size={26} color="#004b23" />
               {pendingCount > 0 && (
                 <span
                   style={{
@@ -75,7 +76,7 @@ const TopNav = () => {
                     alignItems: "center",
                     justifyContent: "center",
                     border: "2px solid #ffffff",
-                    boxShadow: "0 2px 6px rgba(0,0,0,0.15)"
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
                   }}
                 >
                   {pendingCount}
@@ -85,18 +86,43 @@ const TopNav = () => {
           </div>
         </div>
       </nav>
+
+      {sheetOpen && activePet && (
+        <ReminderBellSheet
+          petId={activePet.id}
+          petName={activePet.pet_name || activePet.name}
+          onClose={() => {
+            setSheetOpen(false);
+            // Refresh pending count after closing
+            getReminders(activePet.id).then((res) => {
+              const list = res.reminders || res || [];
+              const today = new Date().toLocaleDateString("en-CA");
+              const active = list.filter(
+                (r) => r.status !== "completed" && r.due_date <= today
+              );
+              setPendingCount(active.length);
+            }).catch(() => {});
+          }}
+        />
+      )}
     </>
   );
 };
 
-function PawIcon({ size = 20, color = "#004b49" }) {
+function BellIcon({ size = 24, color = "#004b49" }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 64 64" fill={color}>
-      <ellipse cx="32" cy="42" rx="14" ry="11" />
-      <ellipse cx="14" cy="26" rx="6" ry="8" />
-      <ellipse cx="50" cy="26" rx="6" ry="8" />
-      <ellipse cx="23" cy="14" rx="5.5" ry="7" />
-      <ellipse cx="41" cy="14" rx="5.5" ry="7" />
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
     </svg>
   );
 }

@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import StepProgress from "../StepProgress/StepProgress";
 import StepHeaderBar from "../StepHeaderBar/StepHeaderBar";
 import { FiCamera, FiSkipForward, FiArrowRight } from "../icons";
-import { FiSun, FiMaximize, FiSmile } from "react-icons/fi";
+import { FiSun, FiMaximize, FiSmile, FiX, FiCheck } from "react-icons/fi";
 import { PAW_IMG } from "../constants";
 import { PetAvatar } from "../../common/PetAvatar";
+import Cropper from "react-easy-crop";
+import getCroppedImg from "../../../utils/cropImage";
 import "./Step1.css";
 
 
@@ -34,6 +36,17 @@ function Step1({ goNext, onNavigateBack, petData }) {
   const [errorMsg, setErrorMsg] = useState("");
   const progress = photoUploaded ? 25 : 0;
 
+  // Cropper states
+  const [isCropping, setIsCropping] = useState(false);
+  const [tempImage, setTempImage] = useState(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+
+  const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  }, []);
+
   const handleImageUpload = (e) => {
     setErrorMsg("");
     const file = e.target.files[0];
@@ -45,12 +58,38 @@ function Step1({ goNext, onNavigateBack, petData }) {
       }
       
       const preview = URL.createObjectURL(file);
-
-      setImage(preview);
-      setPhotoFile(file);
-      setPhotoUploaded(true);
+      setTempImage(preview);
+      setIsCropping(true);
     }
-};
+  };
+
+  const handleCropSave = async () => {
+    try {
+      const croppedBlob = await getCroppedImg(tempImage, croppedAreaPixels);
+      if (!croppedBlob) {
+        setErrorMsg("Failed to crop image.");
+        setIsCropping(false);
+        return;
+      }
+      const croppedFile = new File([croppedBlob], "profile.jpg", { type: "image/jpeg" });
+      const preview = URL.createObjectURL(croppedBlob);
+      
+      setImage(preview);
+      setPhotoFile(croppedFile);
+      setPhotoUploaded(true);
+      setIsCropping(false);
+      setTempImage(null);
+    } catch (e) {
+      console.error(e);
+      setErrorMsg("Failed to crop image.");
+      setIsCropping(false);
+    }
+  };
+
+  const handleCropCancel = () => {
+    setIsCropping(false);
+    setTempImage(null);
+  };
 
   const tips = [
     { icon: <FiSun />, text: "Natural light works best" },
@@ -81,6 +120,7 @@ function Step1({ goNext, onNavigateBack, petData }) {
               accept="image/*"
               hidden
               onChange={handleImageUpload}
+              onClick={(e) => { e.target.value = null; }} // Allow re-selecting same file
             />
           </label>
         </div>
@@ -128,6 +168,55 @@ function Step1({ goNext, onNavigateBack, petData }) {
           Skip for now
         </span>
       </div>
+
+      {isCropping && (
+        <div className="crop-modal-overlay">
+          <div className="crop-modal-content">
+            <div className="crop-modal-header">
+              <h3>Crop Photo</h3>
+              <button className="crop-close-btn" onClick={handleCropCancel}>
+                <FiX size={24} />
+              </button>
+            </div>
+            
+            <div className="crop-container">
+              <Cropper
+                image={tempImage}
+                crop={crop}
+                zoom={zoom}
+                aspect={1}
+                cropShape="round"
+                showGrid={false}
+                onCropChange={setCrop}
+                onCropComplete={onCropComplete}
+                onZoomChange={setZoom}
+              />
+            </div>
+            
+            <div className="crop-controls">
+              <input
+                type="range"
+                value={zoom}
+                min={1}
+                max={3}
+                step={0.1}
+                aria-labelledby="Zoom"
+                onChange={(e) => setZoom(e.target.value)}
+                className="zoom-slider"
+              />
+            </div>
+            
+            <div className="crop-actions">
+              <button className="crop-cancel-btn" onClick={handleCropCancel}>
+                Cancel
+              </button>
+              <button className="crop-save-btn" onClick={handleCropSave}>
+                <FiCheck size={18} /> Apply
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

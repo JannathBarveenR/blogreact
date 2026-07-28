@@ -1,17 +1,41 @@
 # backend/app/timeline/services/category_engine.py
-from app.supabase_client import supabase
+from app.supabase_client import supabase_admin as supabase
 
 CATEGORIES = ["diagnosis","medication","vaccination","deworming",
               "anti_tick_flea","grooming","other"]
 
 def _rows(pet_id):
-    events = (supabase.table("medical_events").select("*")
-            .eq("pet_id", pet_id).eq("is_deleted", False)
-            .order("event_date", desc=True).execute().data) or []
+    events = []
+    try:
+        events = (supabase.table("medical_events").select("*")
+                .eq("pet_id", pet_id).eq("is_deleted", False)
+                .order("event_date", desc=True).execute().data) or []
+    except Exception as e:
+        print(f"[CategoryEngine] Warning: Could not query medical_events: {e}")
+        events = []
+
     if not events:
         return []
-    docs = (supabase.table("medical_documents").select("*")
-            .eq("pet_id", pet_id).execute().data) or []
+
+    docs = []
+    try:
+        records = (supabase.table("medical_records").select("*")
+                   .eq("pet_profile_id", pet_id).eq("log", 1)
+                   .execute().data) or []
+        for r in records:
+            docs.append({
+                "id": r.get("id"),
+                "pet_id": r.get("pet_profile_id"),
+                "event_id": r.get("event_id"),
+                "file_url": r.get("file_url"),
+                "label": r.get("label") or r.get("title"),
+                "storage_path": r.get("storage_path"),
+                "uploaded_at": r.get("created_at"),
+            })
+    except Exception as e:
+        print(f"[CategoryEngine] Warning: Could not query medical_records: {e}")
+        docs = []
+
     docs_by_event = {}
     for d in docs:
         eid = d.get("event_id")
@@ -65,7 +89,7 @@ class CategoryEngine:
     def get_category_grouped(pet_id):
         buckets = {c: [] for c in CATEGORIES}
         for ev in _rows(pet_id):
-            for entry in ev.get("category_entries", []):
+            for entry in (ev.get("category_entries") or []):
                 cat = entry.get("category")
                 if cat in buckets:
                     buckets[cat].append(_summary(entry, ev))
@@ -75,7 +99,7 @@ class CategoryEngine:
     def get_chronological(pet_id):
         feed = []
         for ev in _rows(pet_id):   # already event_date DESC
-            for entry in ev.get("category_entries", []):
+            for entry in (ev.get("category_entries") or []):
                 feed.append(_summary(entry, ev))
         return {"view": "chronological", "events": feed}
 

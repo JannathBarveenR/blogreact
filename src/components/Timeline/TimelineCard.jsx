@@ -28,8 +28,15 @@ function formatDate(dateStr) {
 
 function formatDateShort(dateStr) {
   if (!dateStr) return "";
-  const d = new Date(dateStr + "T00:00:00");
+  const d = new Date(dateStr.includes("T") ? dateStr : dateStr + "T00:00:00");
   return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+}
+
+function formatDateFull(dateStr) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr.includes("T") ? dateStr : dateStr + "T00:00:00");
+  if (isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 }
 
 export default function TimelineCard({ entry, onClick, onPreviewDoc }) {
@@ -50,9 +57,11 @@ export default function TimelineCard({ entry, onClick, onPreviewDoc }) {
   const nextDue = entry.next_due_date;
   const status = entry.status;
 
-  // Title formatting for Vet Visit: Doctor name & Clinic name
+  // Title formatting: For Medication, display exact date added; for Vet Visit, show Doctor & Clinic
   let displayTitle = entry.item_name;
-  if (cat === "diagnosis") {
+  if (cat === "medication") {
+    displayTitle = formatDateFull(entry.date_logged || entry.date || entry.event_date) || entry.item_name;
+  } else if (cat === "diagnosis") {
     const vet = entry.vet_name ? `Dr. ${entry.vet_name.replace(/^Dr\.\s*/i, "")}` : "";
     const clinic = entry.clinic_name || "";
     if (vet && clinic) {

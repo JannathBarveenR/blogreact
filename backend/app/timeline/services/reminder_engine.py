@@ -1,7 +1,7 @@
 # backend/app/timeline/services/reminder_engine.py
 from datetime import date, timedelta
 from dateutil.relativedelta import relativedelta   # pip install python-dateutil
-from app.supabase_client import supabase
+from app.supabase_client import supabase_admin as supabase
 
 DEWORMING_DAYS = 90
 ANTI_TICK_DAYS = 30
@@ -54,7 +54,24 @@ def suggest_next_due(entry, event_date):
     return None
 
 def _insert(reminder: dict):
-    return supabase.table("reminders").insert(reminder).execute().data[0]
+    rem_copy = dict(reminder)
+    try:
+        res = supabase.table("reminders").insert(rem_copy).execute()
+        if res.data:
+            return res.data[0]
+    except Exception as e:
+        err_str = str(e)
+        if "time_slot" in err_str or "PGRST204" in err_str or "PGRST205" in err_str:
+            rem_copy.pop("time_slot", None)
+            try:
+                res = supabase.table("reminders").insert(rem_copy).execute()
+                if res.data:
+                    return res.data[0]
+            except Exception as e2:
+                print(f"[ReminderEngine] Retry _insert error: {e2}")
+                raise e2
+        print(f"[ReminderEngine] _insert error: {e}")
+        raise e
 
 def _priority_for(rtype, due):
     if rtype in ("vaccination","follow_up","medication_end"):
@@ -187,7 +204,114 @@ def complete_reminder(pet_id: str, rid: str):
 def snooze_reminder(pet_id: str, rid: str, new_date: str):
     return update_reminder(pet_id, rid, {"due_date": new_date, "status": "snoozed"})
 
+def mark_missed(pet_id: str, rid: str):
+    """Explicitly mark a single reminder as missed."""
+    res = (supabase.table("reminders").update({"status": "missed"})
+           .eq("id", rid).eq("pet_id", pet_id).execute().data)
+    return res[0] if res else None
+
+def auto_mark_missed(pet_id: str):
+    """
+    Called on every list_reminders fetch.
+    Any pending reminder whose due_date+due_time is in the past is marked missed.
+    """
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc)
+    today_str = now.date().isoformat()
+
+    # Fetch pending reminders that are today or older
+    rows = (supabase.table("reminders").select("id,due_date,due_time")
+            .eq("pet_id", pet_id).eq("status", "pending")
+            .lte("due_date", today_str).execute().data) or []
+
+    to_miss = []
+    for r in rows:
+        due_d = r["due_date"]
+        due_t = r.get("due_time")
+
+        if due_d < today_str:
+            # Past date — definitely missed
+            to_miss.append(r["id"])
+        elif due_d == today_str and due_t:
+            # Same day — check time
+            hh, mm = int(due_t[:2]), int(due_t[3:5])
+            due_dt = now.replace(hour=hh, minute=mm, second=0, microsecond=0, tzinfo=timezone.utc)
+            if now > due_dt:
+                to_miss.append(r["id"])
+
+    if to_miss:
+        (supabase.table("reminders").update({"status": "missed"})
+         .in_("id", to_miss).eq("pet_id", pet_id).execute())
+
+    return len(to_miss)
+
+
+SLOT_TIME_MAP = {
+    "morning":   "08:00:00",
+    "afternoon": "14:00:00",
+    "night":     "21:00:00",
+}
+
+def generate_dose_schedule(pet_id: str, body: dict):
+    """
+    Creates one reminder per time-slot per day for the full medication course.
+
+    body keys:
+      medication_name  str
+      frequency        list[str]  e.g. ["morning", "afternoon"]
+      start_date       str (YYYY-MM-DD)
+      duration_days    int
+      dose_labels      dict|None  e.g. {"morning": "1 tablet", "night": "2 tablets"}
+      linked_event_id  str|None
+      notes            str|None
+    """
+    med_name     = body["medication_name"]
+    frequency    = body.get("frequency", [])
+    start        = _d(body["start_date"])
+    dur          = int(body["duration_days"])
+    dose_labels  = body.get("dose_labels") or {}
+    linked_eid   = body.get("linked_event_id")
+    notes        = body.get("notes")
+
+    if linked_eid:
+        owns = (supabase.table("medical_events").select("id")
+                .eq("id", linked_eid).eq("pet_id", pet_id)
+                .eq("is_deleted", False).execute().data)
+        if not owns:
+            raise ValueError("linked_event_id does not belong to this pet")
+
+    created = []
+    for day_offset in range(dur):
+        due_day = start + timedelta(days=day_offset)
+        for slot in frequency:
+            dose_label = dose_labels.get(slot, "")
+            title = f"{med_name}{' — ' + dose_label if dose_label else ''}"
+            row = {
+                "pet_id":         pet_id,
+                "type":           "medication",
+                "time_slot":      slot,
+                "title":          title,
+                "due_date":       str(due_day),
+                "due_time":       SLOT_TIME_MAP.get(slot, "09:00:00"),
+                "status":         "pending",
+                "priority":       "medium",
+                "is_ai_generated": False,
+                "notes":          notes,
+            }
+            if linked_eid:
+                row["linked_event_id"] = linked_eid
+            created.append(_insert(row))
+
+    return {"created": len(created), "reminders": created}
+
+
 def list_reminders(pet_id: str, type=None, status=None):
+    # Auto-mark overdue pending reminders as missed on every fetch
+    try:
+        auto_mark_missed(pet_id)
+    except Exception:
+        pass  # Never block the list response due to auto-mark failure
+
     q = supabase.table("reminders").select("*").eq("pet_id", pet_id)
     if type:   q = q.eq("type", type)
     if status: q = q.eq("status", status)

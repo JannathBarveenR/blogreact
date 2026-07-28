@@ -3,6 +3,7 @@ Pet Profile routes — secure, user-scoped endpoints.
 
 POST /api/pet-profile          — Create pet profile with photo upload
 GET  /api/pet-profile          — Fetch all pets for the authenticated user
+GET  /api/pet-profile/by-user/{user_id} — Fetch all pets for user (self only)
 GET  /api/pet-profile/{id}     — Fetch by UUID (ownership enforced)
 PATCH /api/pet-profile/{id}    — Update pet profile (ownership enforced)
 POST /api/pet-profile/{id}/photo — Update pet photo (ownership enforced)
@@ -16,6 +17,30 @@ import time
 from datetime import datetime, date
 from typing import Optional
 
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
+from fastapi.responses import RedirectResponse, JSONResponse
+from pydantic import BaseModel
+from supabase import Client
+from app.s3_client import upload_public_file, delete_file, AWS_PET_PHOTOS_BUCKET
+
+from app.config import FRONTEND_URL
+from app.supabase_client import supabase as global_supabase, supabase_admin
+from app.routers.pet_health_id import generate_pet_health_id
+from app.utils.auth import get_current_user_id, get_user_supabase
+
+router = APIRouter()
+
+
+class PetProfileUpdate(BaseModel):
+    pet_name: Optional[str] = None
+    breed: Optional[str] = None
+    gender: Optional[str] = None
+    birth_date: Optional[str] = None
+    approx_age: Optional[str] = None
+    weight: Optional[str] = None
+    blood_group: Optional[str] = None
+
+
 def sanitize_filename(filename: str) -> str:
     """Sanitize filename to be S3/Supabase storage compatible (removes colons, spaces, special chars)."""
     if not filename:
@@ -23,6 +48,7 @@ def sanitize_filename(filename: str) -> str:
     sanitized = re.sub(r'[^a-zA-Z0-9_.-]', '_', filename)
     sanitized = re.sub(r'_+', '_', sanitized)
     return sanitized.strip('_')
+
 
 def calculate_dob_from_approx_age(approx_age_str: Optional[str]) -> Optional[str]:
     """Calculates approximate YYYY-MM-DD birth_date from an age string like '2y 3m', '2 Years', '6 Months'."""
@@ -81,17 +107,50 @@ def calculate_approx_age_from_dob(dob_str: Optional[str]) -> Optional[str]:
 
 
 def get_user_owner_info(user_id: str) -> dict:
-    """Fetch user's full name and phone from user_profiles table."""
+    """Fetch user's full name and phone from user_profiles table, or auth.users fallback."""
+    name = None
+    phone = ""
+
+    # 1. Try public.user_profiles table
     try:
-        res = global_supabase.table("user_profiles").select("full_name, phone").eq("id", user_id).execute()
-        if res.data and res.data[0].get("full_name"):
-            return {
-                "owner_name": res.data[0]["full_name"],
-                "owner_phone": res.data[0].get("phone", "") or ""
-            }
-    except Exception:
-        pass
-    return {"owner_name": "Pet Parent", "owner_phone": ""}
+        res = global_supabase.table("user_profiles").select("full_name, phone, email").eq("id", user_id).execute()
+        if res.data and len(res.data) > 0:
+            row = res.data[0]
+            if row.get("full_name") and str(row.get("full_name")).strip():
+                name = str(row["full_name"]).strip()
+            phone = row.get("phone", "") or ""
+            if not name and row.get("email"):
+                name = str(row["email"]).split("@")[0].replace(".", " ").replace("_", " ").title()
+    except Exception as e:
+        print(f"[get_user_owner_info] Error querying user_profiles: {e}")
+
+    if name:
+        return {"owner_name": name, "owner_phone": phone}
+
+    # 2. Fallback: Check auth.users user_metadata via Supabase Admin API
+    try:
+        if supabase_admin:
+            user_resp = supabase_admin.auth.admin.get_user_by_id(user_id)
+            user_obj = getattr(user_resp, "user", user_resp) if user_resp else None
+            if user_obj:
+                meta = getattr(user_obj, "user_metadata", {}) or {}
+                if isinstance(meta, dict):
+                    name = meta.get("full_name") or meta.get("name") or meta.get("display_name")
+                    if not name and meta.get("first_name"):
+                        name = f"{meta.get('first_name', '')} {meta.get('last_name', '')}".strip()
+
+                if not phone:
+                    phone = getattr(user_obj, "phone", "") or (meta.get("phone", "") if isinstance(meta, dict) else "") or ""
+
+                if not name and getattr(user_obj, "email", None):
+                    name = str(user_obj.email).split("@")[0].replace(".", " ").replace("_", " ").title()
+    except Exception as e:
+        print(f"[get_user_owner_info] Error fetching auth user by id: {e}")
+
+    return {
+        "owner_name": name or "Pet Parent",
+        "owner_phone": phone or ""
+    }
 
 
 def enrich_pet_profile(profile: dict, owner_info: Optional[dict] = None) -> dict:
@@ -107,7 +166,6 @@ def enrich_pet_profile(profile: dict, owner_info: Optional[dict] = None) -> dict
     elif b_date and a_age:
         p["approx_age"] = calculate_approx_age_from_dob(b_date) or a_age
 
-    # Also map age key for legacy components expecting `age`
     p["age"] = p.get("approx_age") or "Not specified"
 
     if owner_info:
@@ -116,10 +174,6 @@ def enrich_pet_profile(profile: dict, owner_info: Optional[dict] = None) -> dict
         p["owner_phone"] = owner_info.get("owner_phone") or ""
     return p
 
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
-from fastapi.responses import RedirectResponse
-from pydantic import BaseModel
-from app.config import FRONTEND_URL
 
 class PetProfileUpdate(BaseModel):
     pet_name: Optional[str] = None
@@ -130,22 +184,16 @@ class PetProfileUpdate(BaseModel):
     weight: Optional[str] = None
     blood_group: Optional[str] = None
 
+class PetLifestyleUpdate(BaseModel):
+    answers: dict
+
+
 from app.supabase_client import supabase as global_supabase, supabase_admin
 from app.routers.pet_health_id import generate_pet_health_id, store_pet_health_id
 from app.utils.auth import get_current_user_id, get_user_supabase
 from supabase import Client
+# pet-photos bucket now on AWS S3
 
-router = APIRouter()
-
-def ensure_pet_photos_bucket_exists():
-    try:
-        buckets = supabase_admin.storage.list_buckets()
-        bucket_names = [b.name for b in buckets] if buckets else []
-        if "pet-photos" not in bucket_names:
-            supabase_admin.storage.create_bucket("pet-photos", options={"public": True})
-            print("[Storage] Created public bucket 'pet-photos'")
-    except Exception as e:
-        print(f"[Storage] Note during pet-photos bucket check: {e}")
 
 def parse_float(val: Optional[str]) -> Optional[float]:
     if not val:
@@ -169,21 +217,17 @@ async def create_pet_profile(
     blood_group: Optional[str] = Form(None),
     approx_age: Optional[str] = Form(None),
     identification_marks: Optional[str] = Form(None),
-    pet_ids: Optional[str] = Form(None),  # JSON string: [{"idName":"...", "idNumber":"..."}]
+    pet_ids: Optional[str] = Form(None),
     pet_photo: Optional[UploadFile] = File(None),
     auth_user_id: str = Depends(get_current_user_id),
     supabase: Client = Depends(get_user_supabase)
 ):
     """Create a new pet profile with photo upload + PetOLife ID generation."""
-    print("--- POST /api/pet-profile ---")
-    print(f"pet_type={pet_type}, pet_name={pet_name}, city={city}")
-
     effective_user_id = auth_user_id
 
     if not pet_type or not pet_name:
         raise HTTPException(status_code=400, detail="pet_type and pet_name are required")
 
-    # Parse pet_ids from the form
     parsed_ids: list[dict] = []
     if pet_ids:
         try:
@@ -198,38 +242,23 @@ async def create_pet_profile(
     ]
 
     petolife_id = generate_pet_health_id(city or "Unknown", pet_type)
-    print(f"Generated PetOLife ID: {petolife_id}")
 
     pet_photo_url = None
     if pet_photo and pet_photo.filename:
         try:
-            ensure_pet_photos_bucket_exists()
             clean_filename = sanitize_filename(pet_photo.filename)
             file_name = f"{int(time.time() * 1000)}-{clean_filename}"
             file_bytes = await pet_photo.read()
-            print(f"Uploading photo: {file_name}")
 
-            try:
-                supabase_admin.storage.from_("pet-photos").upload(
-                    file_name,
-                    file_bytes,
-                    file_options={"content-type": pet_photo.content_type or "image/jpeg", "upsert": "true"},
-                )
-            except Exception as upload_err:
-                print(f"Photo upload error via admin, retrying user client: {upload_err}")
-                supabase.storage.from_("pet-photos").upload(
-                    file_name,
-                    file_bytes,
-                    file_options={"content-type": pet_photo.content_type or "image/jpeg", "upsert": "true"},
-                )
-
-            url_data = supabase_admin.storage.from_("pet-photos").get_public_url(file_name)
-            pet_photo_url = url_data
-            print(f"Photo URL: {pet_photo_url}")
+            pet_photo_url = upload_public_file(
+                file_bytes=file_bytes,
+                bucket=AWS_PET_PHOTOS_BUCKET,
+                filename=file_name,
+                content_type=pet_photo.content_type or "image/jpeg"
+            )
         except Exception as photo_err:
             print(f"Non-fatal photo upload warning: {photo_err}")
 
-    # Auto-calculate bidirectional birth_date <-> approx_age
     calc_birth_date = birth_date or None
     calc_approx_age = approx_age or None
 
@@ -240,7 +269,6 @@ async def create_pet_profile(
     elif calc_birth_date and calc_approx_age:
         calc_approx_age = calculate_approx_age_from_dob(calc_birth_date) or calc_approx_age
 
-    print("Inserting pet profile into database...")
     insert_data = {
         "petolife_id": petolife_id,
         "user_id": effective_user_id,
@@ -263,23 +291,18 @@ async def create_pet_profile(
         print(f"Profile insert via user client failed, retrying admin: {insert_err}")
         try:
             result = supabase_admin.table("pet_profiles").insert(insert_data).execute()
-        except Exception as admin_insert_err:
-            print(f"Profile insert error via admin: {admin_insert_err}")
-            raise HTTPException(status_code=500, detail=f"Failed to create pet profile: {str(admin_insert_err)}")
+        except Exception as admin_err:
+            print(f"Profile insert via admin ALSO failed: {admin_err}")
+            raise HTTPException(status_code=500, detail=f"Database error creating profile: {str(admin_err)}")
 
     if not result.data:
-        print(f"Profile insert error: {result}")
         raise HTTPException(status_code=500, detail="Failed to create pet profile")
 
     profile = result.data[0]
-    print(f"Profile created: {profile['id']}")
-
-    store_pet_health_id(petolife_id, profile["id"])
 
     owner_info = get_user_owner_info(effective_user_id)
     enriched_data = enrich_pet_profile(profile, owner_info)
 
-    print("--- Profile created successfully ---")
     return {
         "message": "Pet profile created successfully",
         "pet_profile_id": profile["id"],
@@ -319,20 +342,7 @@ async def get_pets_by_user(
     """Fetch all pet profiles for a specific user (only if it's the authenticated user)."""
     if user_id != auth_user_id:
         raise HTTPException(status_code=403, detail="You can only view your own pet profiles")
-    try:
-        owner_info = get_user_owner_info(user_id)
-        result = (
-            supabase.table("pet_profiles")
-            .select("id, user_id, petolife_id, pet_name, pet_type, breed, gender, birth_date, approx_age, weight, blood_group, identification_marks, pet_photo_url, created_at, identification_ids")
-            .eq("user_id", user_id)
-            .order("created_at", desc=True)
-            .execute()
-        )
-        raw_list = result.data or []
-        return [enrich_pet_profile(p, owner_info) for p in raw_list]
-    except Exception as e:
-        print(f"Fetch user pets error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to fetch user pets: {str(e)}")
+    return await get_my_profiles(auth_user_id, supabase)
 
 
 @router.get("/by-petolife-id/{petolife_id:path}")
@@ -346,8 +356,6 @@ async def get_by_petolife_id_redirect(petolife_id: str):
 @router.get("/public/{petolife_id:path}")
 async def get_public_pet_data(petolife_id: str):
     """JSON data endpoint — called by the frontend pet profile UI page. (Public)"""
-    from fastapi.responses import JSONResponse
-
     result = (
         global_supabase.table("pet_profiles")
         .select("id, user_id, petolife_id, pet_type, pet_name, breed, gender, birth_date, approx_age, weight, blood_group, identification_marks, pet_photo_url, created_at, identification_ids, pet_attributes")
@@ -359,7 +367,6 @@ async def get_public_pet_data(petolife_id: str):
         raise HTTPException(status_code=404, detail="Pet not found")
 
     profile = result.data[0]
-
     owner_info = None
     owner_user_id = profile.get("user_id")
     if owner_user_id:
@@ -442,16 +449,16 @@ async def update_pet_photo(
         if res.data[0]["user_id"] != user_id:
             raise HTTPException(status_code=403, detail="Not authorized")
 
-        file_name = f"{profile_id}-{int(time.time() * 1000)}-{file.filename.replace(' ', '-')}"
+        clean_name = sanitize_filename(file.filename or "photo")
+        file_name = f"{profile_id}-{int(time.time() * 1000)}-{clean_name}"
         file_bytes = await file.read()
 
-        supabase.storage.from_("pet-photos").upload(
-            file_name,
-            file_bytes,
-            {"content-type": file.content_type or "image/jpeg"}
+        photo_url = upload_public_file(
+            file_bytes=file_bytes,
+            bucket=AWS_PET_PHOTOS_BUCKET,
+            filename=file_name,
+            content_type=file.content_type or "image/jpeg"
         )
-
-        photo_url = supabase.storage.from_("pet-photos").get_public_url(file_name)
 
         supabase.table("pet_profiles").update({"pet_photo_url": photo_url}).eq("id", profile_id).execute()
 
@@ -482,11 +489,11 @@ async def delete_pet_profile(
                 filename = photo_url.split("/")[-1]
                 if filename:
                     try:
-                        supabase.storage.from_("pet-photos").remove([filename])
+                        delete_file(AWS_PET_PHOTOS_BUCKET, filename)
                     except Exception as e:
-                        print(f"Error deleting photo from bucket: {e}")
+                        print(f"Error deleting photo from AWS S3: {e}")
 
-        delete_result = supabase.table("pet_profiles").delete().eq("id", profile_id).execute()
+        supabase.table("pet_profiles").delete().eq("id", profile_id).execute()
 
         return {"message": "Pet profile deleted successfully"}
     except HTTPException:
@@ -494,3 +501,65 @@ async def delete_pet_profile(
     except Exception as e:
         print(f"Delete profile error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to delete profile: {str(e)}")
+
+
+@router.get("/{profile_id}/lifestyle")
+async def get_pet_lifestyle(
+    profile_id: str,
+    user_id: str = Depends(get_current_user_id),
+    supabase: Client = Depends(get_user_supabase)
+):
+    """Fetch pet lifestyle data."""
+    try:
+        # Check ownership
+        pet_check = supabase.table("pet_profiles").select("user_id").eq("id", profile_id).execute()
+        if not pet_check.data or pet_check.data[0]["user_id"] != user_id:
+            raise HTTPException(status_code=403, detail="Not authorized")
+
+        result = supabase.table("pet_lifestyle").select("*").eq("pet_id", profile_id).execute()
+        if not result.data:
+            return {"answers": {}}
+        return {"answers": result.data[0].get("answers", {})}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Fetch lifestyle error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch lifestyle: {str(e)}")
+
+
+@router.post("/{profile_id}/lifestyle")
+async def update_pet_lifestyle(
+    profile_id: str,
+    payload: PetLifestyleUpdate,
+    user_id: str = Depends(get_current_user_id),
+    supabase: Client = Depends(get_user_supabase)
+):
+    """Create or update pet lifestyle data (Upsert)."""
+    try:
+        # Check ownership
+        pet_check = supabase.table("pet_profiles").select("user_id").eq("id", profile_id).execute()
+        if not pet_check.data or pet_check.data[0]["user_id"] != user_id:
+            raise HTTPException(status_code=403, detail="Not authorized")
+
+        # Check if exists
+        existing = supabase.table("pet_lifestyle").select("id").eq("pet_id", profile_id).execute()
+        
+        if existing.data:
+            res = supabase.table("pet_lifestyle").update(
+                {"answers": payload.answers, "updated_at": "now()"}
+            ).eq("pet_id", profile_id).execute()
+        else:
+            res = supabase.table("pet_lifestyle").insert({
+                "pet_id": profile_id,
+                "answers": payload.answers
+            }).execute()
+
+        if not res.data:
+            raise HTTPException(status_code=500, detail="Failed to save lifestyle data")
+            
+        return {"message": "Lifestyle updated successfully", "data": res.data[0]}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Update lifestyle error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to update lifestyle: {str(e)}")
