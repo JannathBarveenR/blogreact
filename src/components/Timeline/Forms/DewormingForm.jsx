@@ -155,7 +155,11 @@ export default function DewormingForm({ petId, petName, onClose, onSaved, editDa
         categoryLabel="Deworming"
         summary={savedData}
         onViewTimeline={onSaved}
-        onAddAnother={() => setSavedData(null)}
+        onAddAnother={() => {
+          setSavedData(null);
+          if (onClose) onClose();
+          else navigate("/timeline/home", { state: { openAddNote: true } });
+        }}
       />
     );
   }

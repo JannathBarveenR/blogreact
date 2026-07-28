@@ -521,6 +521,8 @@ export default function MedicationForm({ petId, petName, onClose, onSaved, editD
           setAddedMedicines([]);
           setMedName("");
           setFiles([]);
+          if (onClose) onClose();
+          else navigate("/timeline/home", { state: { openAddNote: true } });
         }}
       />
     );

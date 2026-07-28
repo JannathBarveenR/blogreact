@@ -11,7 +11,7 @@ import UploadRecordsCard from "./UploadRecordsCard/UploadRecordsCard";
 import ProfileCard from "./ProfileCard/ProfileCard";
 
 import polLogo from "../../assets/logo.webp";
-import educationBannerImg from "../../assets/education-banner.png";
+import ppacBannerImg from "../../assets/ppac.jpeg";
 import fetchWithAuth from "../../utils/fetchWithAuth";
 import PetLifestyleSurveyCard from "./PetLifestyleSurveyCard";
 
@@ -103,18 +103,21 @@ export default function PetHome({
         <UploadRecordsCard onNavigateTab={onNavigateTab} />
 
         <div className="education-section" style={{ marginTop: '8px' }}>
-          <h3 className="education-title">Be the Best Pet Parent</h3>
           <div 
             className="education-card" 
-            style={{ backgroundImage: `url(${educationBannerImg})` }}
-            onClick={() => navigate("/app/blogs")}
+            style={{ backgroundImage: `url(${ppacBannerImg})` }}
+            onClick={() => window.open(`${window.location.origin}/pet-parent-academy`, "_blank")}
           >
             <div className="education-card-content">
-              <img src={polLogo} alt="PetOLife" className="education-logo-img" />
-              <span className="education-text">Education</span>
-              <p className="education-desc">
-                Learn what experts say about pets
-              </p>
+              <button 
+                className="education-learn-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  window.open(`${window.location.origin}/pet-parent-academy`, "_blank");
+                }}
+              >
+                Learn now
+              </button>
             </div>
           </div>
         </div>
@@ -143,19 +146,22 @@ export default function PetHome({
 
       <UploadRecordsCard onNavigateTab={onNavigateTab} />
 
-      <div className="education-section" style={{ marginTop: '8px', marginBottom: '16px' }}>
-        <h3 className="education-title">Be the Best Pet Parent</h3>
+      <div className="education-section" style={{ marginTop: '24px', marginBottom: '16px' }}>
         <div 
           className="education-card" 
-          style={{ backgroundImage: `url(${educationBannerImg})` }}
-          onClick={() => navigate("/app/blogs")}
+          style={{ backgroundImage: `url(${ppacBannerImg})` }}
+          onClick={() => window.open(`${window.location.origin}/pet-parent-academy`, "_blank")}
         >
           <div className="education-card-content">
-            <img src={polLogo} alt="PetOLife" className="education-logo-img" />
-            <span className="education-text">Education</span>
-            <p className="education-desc">
-              Learn what experts say about pets
-            </p>
+            <button 
+              className="education-learn-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                window.open(`${window.location.origin}/pet-parent-academy`, "_blank");
+              }}
+            >
+              Learn now
+            </button>
           </div>
         </div>
       </div>

@@ -116,19 +116,26 @@ img {
 .education-card {
   position: relative;
   width: 100%;
-  height: 140px;
-  border-radius: var(--radius-card, 16px);
+  border-radius: var(--radius-card, 18px);
   background-size: cover;
   background-position: center;
+  background-repeat: no-repeat;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: 20px 24px;
+  justify-content: flex-end;
+  align-items: flex-start;
+  padding: 0;
   cursor: pointer;
   box-shadow: var(--shadow-card);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   box-sizing: border-box;
+  aspect-ratio: 4 / 3;
+}
+
+.education-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(12, 61, 47, 0.16);
 }
 
 .education-card:active {
@@ -139,37 +146,29 @@ img {
   position: relative;
   z-index: 2;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-width: 42%; /* Keep text aligned inside the light green left segment of the banner */
-  height: 95%;
-  justify-content: center;
-  align-items: flex-start;
-  text-align: left;
+  justify-content: flex-start;
+  align-items: flex-end;
+  width: 100%;
+  padding: 16px 20px;
 }
 
-.education-logo-img {
-  height: 46px;
-  width: auto;
-  align-self: flex-start;
-  object-fit: contain;
+.education-learn-btn {
+  background: #064e3b;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 10px 22px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(6, 78, 59, 0.35);
+  transition: background-color 0.2s ease, transform 0.15s ease;
+  letter-spacing: 0.3px;
 }
 
-.education-text {
-  font-size: 17px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: #004b49; /* High-contrast brand green on light background */
-  margin-top: 1px;
-}
-
-.education-desc {
-  font-size: 12px;
-  font-weight: 500;
-  color: #2d3748; /* High-contrast charcoal grey */
-  margin-top: 2px;
-  line-height: 1.4;
+.education-learn-btn:hover {
+  background: #043f30;
+  transform: scale(1.04);
 }
 
 /* Checklist Styling */

@@ -15,6 +15,7 @@ const ParentProfile = lazy(() => import("./components/ParentProfile/ParentProfil
 const RemindersPage = lazy(() => import("./components/Reminders/RemindersPage"));
 const EventDetailPage = lazy(() => import("./components/Timeline/EventDetailPage/EventDetailPage"));
 const PetLifestyleSurveyPage = lazy(() => import("./components/Home/PetLifestyleSurveyPage"));
+const NotFoundPage = lazy(() => import("./components/NotFound/NotFoundPage"));
 
 function LoadingFallback() {
   return (
@@ -62,10 +63,11 @@ function App() {
             <Route path="/timeline/event/:eventId" element={<EventDetailPage />} />
             <Route path="/records/event/:eventId" element={<EventDetailPage />} />
             <Route path="/survey/:petId" element={<PetLifestyleSurveyPage />} />
+            <Route path="/pet-parent-academy" element={<NotFoundPage />} />
           </Route>
 
           {/* Fallback */}
-          <Route path="*" element={<Navigate to="/landing" replace />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
     </Router>

@@ -191,7 +191,11 @@ export default function VetVisitForm({ petId, petName, onClose, onSaved, editDat
         categoryLabel="Vet Visit"
         summary={savedData}
         onViewTimeline={onSaved}
-        onAddAnother={() => setSavedData(null)}
+        onAddAnother={() => {
+          setSavedData(null);
+          if (onClose) onClose();
+          else navigate("/timeline/home", { state: { openAddNote: true } });
+        }}
       />
     );
   }

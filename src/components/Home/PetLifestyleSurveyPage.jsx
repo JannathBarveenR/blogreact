@@ -3,7 +3,7 @@ import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { FiX, FiCheck } from 'react-icons/fi';
 import fetchWithAuth from '../../utils/fetchWithAuth';
 import polLogo from "../../assets/logo.webp";
-import educationBannerImg from "../../assets/education-banner.png";
+import ppacBannerImg from "../../assets/ppac.jpeg";
 import './PetDashboard.css'; // Import for education banner styles
 import './PetLifestyleSurveyPage.css';
 
@@ -117,15 +117,19 @@ const PetLifestyleSurveyPage = () => {
             <h3 className="education-title">Be the Best Pet Parent</h3>
             <div 
               className="education-card" 
-              style={{ backgroundImage: `url(${educationBannerImg})` }}
-              onClick={() => navigate("/app/blogs")}
+              style={{ backgroundImage: `url(${ppacBannerImg})` }}
+              onClick={() => window.open(`${window.location.origin}/pet-parent-academy`, "_blank")}
             >
               <div className="education-card-content">
-                <img src={polLogo} alt="PetOLife" className="education-logo-img" />
-                <span className="education-text">Education</span>
-                <p className="education-desc">
-                  Learn what experts say about pets
-                </p>
+                <button 
+                  className="education-learn-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(`${window.location.origin}/pet-parent-academy`, "_blank");
+                  }}
+                >
+                  Learn now
+                </button>
               </div>
             </div>
           </div>

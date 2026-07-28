@@ -17,7 +17,7 @@ import time
 from datetime import datetime, date
 from typing import Optional
 
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends, Response
 from fastapi.responses import RedirectResponse, JSONResponse
 from pydantic import BaseModel
 from supabase import Client
@@ -386,6 +386,32 @@ async def get_public_pet_data(petolife_id: str):
     )
 
 
+@router.get("/proxy-image")
+async def proxy_image(url: str):
+    """Proxy image request to bypass browser S3 CORS limitations on HTML5 Canvas export."""
+    if not url or not (url.startswith("http://") or url.startswith("https://")):
+        raise HTTPException(status_code=400, detail="Invalid image URL")
+    try:
+        import urllib.request
+        req = urllib.request.Request(url, headers={'User-Agent': 'PetOLife-Proxy/1.0'})
+        with urllib.request.urlopen(req, timeout=10.0) as resp:
+            content = resp.read()
+            content_type = resp.headers.get("content-type", "image/jpeg")
+            return Response(
+                content=content,
+                media_type=content_type,
+                headers={
+                    "Access-Control-Allow-Origin": "*",
+                    "Cache-Control": "public, max-age=86400"
+                }
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Proxy image error: {e}")
+        raise HTTPException(status_code=500, detail=f"Image proxy error: {str(e)}")
+
+
 @router.get("/{profile_id}")
 async def get_pet_profile(
     profile_id: str,
@@ -563,3 +589,4 @@ async def update_pet_lifestyle(
     except Exception as e:
         print(f"Update lifestyle error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to update lifestyle: {str(e)}")
+
