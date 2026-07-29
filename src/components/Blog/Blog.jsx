@@ -130,51 +130,6 @@ const catsTrendingItems = [
     { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'Keeping Your Cat Hydrated', desc: 'Upcoming lesson on keeping your cat hydrated.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/vaccination/cvimage2.webp', upcoming: true },
 ];
 
-const birdsTrendingItems = [
-    { cat: 'health', tagLabel: 'HEALTH', title: 'Why Do Pet Birds Need Regular Health Check-ups?', desc: 'Upcoming lesson on preventive care to keep your bird healthy.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
-    { cat: 'nutrition', tagLabel: 'NUTRITION', title: 'What Should You Feed Your Pet Bird Every Day?', desc: 'Upcoming lesson on a balanced diet for optimal bird health.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
-    // Health
-    { cat: 'health', tagLabel: 'HEALTH', title: 'Early Signs Your Bird May Be Sick', desc: 'Upcoming lesson on early signs of sickness.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
-    { cat: 'health', tagLabel: 'HEALTH', title: 'Common Bird Diseases Every Owner Should Know', desc: 'Upcoming lesson on common bird diseases.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
-    { cat: 'health', tagLabel: 'HEALTH', title: "Understanding Your Bird's Vital Signs", desc: 'Upcoming lesson on vital signs.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
-    { cat: 'health', tagLabel: 'HEALTH', title: 'Basic First Aid for Pet Birds', desc: 'Upcoming lesson on basic first aid.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
-
-    // Nutrition
-    { cat: 'nutrition', tagLabel: 'NUTRITION', title: 'Choosing the Right Diet for Your Bird Species', desc: 'Upcoming lesson on choosing the right diet.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
-    { cat: 'nutrition', tagLabel: 'NUTRITION', title: 'Safe and Toxic Foods for Birds', desc: 'Upcoming lesson on safe and toxic foods.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
-    { cat: 'nutrition', tagLabel: 'NUTRITION', title: 'Preventing Nutritional Deficiencies', desc: 'Upcoming lesson on preventing nutritional deficiencies.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
-    { cat: 'nutrition', tagLabel: 'NUTRITION', title: 'Healthy Feeding Schedule and Portion Control', desc: 'Upcoming lesson on feeding schedule.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
-    { cat: 'nutrition', tagLabel: 'NUTRITION', title: 'Reading Bird Food Labels', desc: 'Upcoming lesson on reading food labels.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
-
-    // Everyday Care
-    { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'Setting Up the Ideal Bird Cage', desc: 'Upcoming lesson on setting up the ideal bird cage.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
-    { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'Daily Cage Cleaning and Hygiene', desc: 'Upcoming lesson on cage cleaning.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
-    { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'Water, Temperature, and Lighting Needs', desc: 'Upcoming lesson on water, temperature, and lighting.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
-    { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'Safe Toys and Environmental Enrichment', desc: 'Upcoming lesson on safe toys.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
-    { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'Travel and Transportation Tips', desc: 'Upcoming lesson on travel and transportation.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
-
-    // Behaviour
-    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Understanding Bird Body Language', desc: 'Upcoming lesson on bird body language.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
-    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Why Birds Bite and How to Prevent It', desc: 'Upcoming lesson on why birds bite.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
-    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Managing Excessive Screaming', desc: 'Upcoming lesson on managing excessive screaming.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
-    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Building Trust and Bonding with Your Bird', desc: 'Upcoming lesson on building trust.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
-    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Understanding Hormonal Behaviour', desc: 'Upcoming lesson on hormonal behaviour.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
-
-    // Grooming
-    { cat: 'grooming', tagLabel: 'GROOMING', title: 'Bathing Your Bird Safely', desc: 'Upcoming lesson on bathing your bird.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
-    { cat: 'grooming', tagLabel: 'GROOMING', title: 'Feather Care and Molting', desc: 'Upcoming lesson on feather care and molting.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
-    { cat: 'grooming', tagLabel: 'GROOMING', title: 'Nail Trimming Basics', desc: 'Upcoming lesson on nail trimming.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
-    { cat: 'grooming', tagLabel: 'GROOMING', title: 'Beak Care and Maintenance', desc: 'Upcoming lesson on beak care.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
-    { cat: 'grooming', tagLabel: 'GROOMING', title: 'Wing Care and Flight Safety', desc: 'Upcoming lesson on wing care.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
-
-    // Lifestyle
-    { cat: 'lifestyle', tagLabel: 'LIFESTYLE', title: 'Creating a Bird-Friendly Home', desc: 'Upcoming lesson on creating a bird-friendly home.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
-    { cat: 'lifestyle', tagLabel: 'LIFESTYLE', title: 'Daily Exercise and Flight Time', desc: 'Upcoming lesson on daily exercise and flight time.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
-    { cat: 'lifestyle', tagLabel: 'LIFESTYLE', title: 'Mental Stimulation and Enrichment Activities', desc: 'Upcoming lesson on mental stimulation.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
-    { cat: 'lifestyle', tagLabel: 'LIFESTYLE', title: 'Introducing New Birds Safely', desc: 'Upcoming lesson on introducing new birds safely.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
-    { cat: 'lifestyle', tagLabel: 'LIFESTYLE', title: 'Seasonal Care and Weather Protection', desc: 'Upcoming lesson on seasonal care.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
-];
-
 const reverseStoryIdMap = {
   '101': 'vaccinations',
   '102': 'deworming',
@@ -314,15 +269,11 @@ const Blog = () => {
         } else if (petType === 'cats') {
             title = 'Cats';
             subtitle = 'Everything your cat needs, all in one place.';
-        } else if (petType === 'birds') {
-            title = 'Birds';
-            subtitle = 'Everything your bird needs, all in one place.';
         }
         const trendingHeading = activeDetailCategory ? `${activeDetailCategory.charAt(0).toUpperCase() + activeDetailCategory.slice(1)} Topics` : 'Trending Topics';
         
         let sourceItems = dogsTrendingItems;
         if (petType === 'cats') sourceItems = catsTrendingItems;
-        if (petType === 'birds') sourceItems = birdsTrendingItems;
 
         const filteredItems = sourceItems.filter(item => {
             let matchesCategory = true;
