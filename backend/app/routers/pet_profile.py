@@ -33,12 +33,15 @@ router = APIRouter()
 
 class PetProfileUpdate(BaseModel):
     pet_name: Optional[str] = None
+    pet_type: Optional[str] = None
     breed: Optional[str] = None
     gender: Optional[str] = None
     birth_date: Optional[str] = None
     approx_age: Optional[str] = None
     weight: Optional[str] = None
     blood_group: Optional[str] = None
+    identification_marks: Optional[str] = None
+    identification_ids: Optional[str] = None
 
 
 def sanitize_filename(filename: str) -> str:

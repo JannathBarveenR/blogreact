@@ -11,7 +11,7 @@ import UploadRecordsCard from "./UploadRecordsCard/UploadRecordsCard";
 import ProfileCard from "./ProfileCard/ProfileCard";
 
 import polLogo from "../../assets/logo.webp";
-import ppacBannerImg from "../../assets/ppac.jpeg";
+import ppacBannerImg from "../../assets/ppac.png";
 import fetchWithAuth from "../../utils/fetchWithAuth";
 import PetLifestyleSurveyCard from "./PetLifestyleSurveyCard";
 
@@ -146,7 +146,7 @@ export default function PetHome({
 
       <UploadRecordsCard onNavigateTab={onNavigateTab} />
 
-      <div className="education-section" style={{ marginTop: '24px', marginBottom: '16px' }}>
+      <div className="education-section" style={{ marginTop: '8px', marginBottom: '4px' }}>
         <div 
           className="education-card" 
           style={{ backgroundImage: `url(${ppacBannerImg})` }}
@@ -166,7 +166,7 @@ export default function PetHome({
         </div>
       </div>
 
-      <div style={{ marginTop: '16px' }}>
+      <div style={{ marginTop: '4px' }}>
         <QuickActions onNavigateTab={onNavigateTab} />
       </div>
     </div>

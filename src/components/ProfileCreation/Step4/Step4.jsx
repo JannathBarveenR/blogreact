@@ -1,11 +1,14 @@
 import React, { useState } from "react";
+import Cropper from "react-easy-crop";
 import StepProgress from "../StepProgress/StepProgress";
 import StepHeaderBar from "../StepHeaderBar/StepHeaderBar";
 import { FiEdit2, FiCheck } from "../icons";
+import { FiX } from "react-icons/fi";
 import { API_BASE, petTypes, breedData } from "../constants";
 import fetchWithAuth from "../../../utils/fetchWithAuth";
 import { PetAvatar } from "../../common/PetAvatar";
 import queryClient from "../../../utils/queryClient";
+import getCroppedImg from "../../../utils/cropImage";
 import "./Step4.css";
 
 // Centralized age calculation so every consumer of pet data gets the
@@ -31,24 +34,33 @@ function calculateAgeString(birthDate) {
 }
 
 function Step4({ goBack, petData, setStep, isSubmitting, setIsSubmitting, submitError, setSubmitError, onNavigateToPetHome }) {
-  const progress = 100;
-
   const [localPetData, setLocalPetData] = useState({
-    petName: petData.petName || "",
     petType: petData.petType || "",
+    petName: petData.petName || "",
     breed: petData.breed || "",
     gender: petData.gender || "",
+    approxAge: petData.approxAge || (petData.birthDate ? calculateAgeString(petData.birthDate) : ""),
     birthDate: petData.birthDate || "",
-    approxAge: petData.approxAge || "",
-    petPhotoFile: petData.petPhotoFile || null
+    petPhotoFile: petData.petPhotoFile || null,
   });
 
+  const progress = 100;
   const [isEditing, setIsEditing] = useState(false);
-
   const [showBreedDropdown, setShowBreedDropdown] = useState(false);
   const [breedSearch, setBreedSearch] = useState("");
   const [showOtherBreedPopup, setShowOtherBreedPopup] = useState(false);
   const [customBreed, setCustomBreed] = useState("");
+
+  // Cropper states
+  const [isCropping, setIsCropping] = useState(false);
+  const [tempImage, setTempImage] = useState(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+
+  const onCropComplete = (croppedArea, pixels) => {
+    setCroppedAreaPixels(pixels);
+  };
 
   const [showCalendar, setShowCalendar] = useState(false);
   const [calendarYear, setCalendarYear] = useState(
@@ -163,8 +175,33 @@ function Step4({ goBack, petData, setStep, isSubmitting, setIsSubmitting, submit
         alert("Max size to photo upload is 5mb");
         return;
       }
-      setLocalPetData((prev) => ({ ...prev, petPhotoFile: file }));
+      const preview = URL.createObjectURL(file);
+      setTempImage(preview);
+      setIsCropping(true);
+      e.target.value = "";
     }
+  };
+
+  const handleCropSave = async () => {
+    try {
+      const croppedBlob = await getCroppedImg(tempImage, croppedAreaPixels);
+      if (!croppedBlob) {
+        alert("Failed to crop image.");
+        setIsCropping(false);
+        return;
+      }
+      const croppedFile = new File([croppedBlob], "profile.jpg", { type: "image/jpeg" });
+      setLocalPetData((prev) => ({ ...prev, petPhotoFile: croppedFile }));
+      setIsCropping(false);
+    } catch (err) {
+      console.error("Crop save error:", err);
+      setIsCropping(false);
+    }
+  };
+
+  const handleCropCancel = () => {
+    setIsCropping(false);
+    setTempImage(null);
   };
 
   const inputStyle = { padding: '9px 10px', borderRadius: '10px', border: '1.5px solid #dce8d8', outline: 'none', width: '100%', maxWidth: '150px', textAlign: 'left', fontFamily: 'inherit', fontSize: '13.5px', color: '#16211f', background: '#fbfdf9' };
@@ -172,7 +209,7 @@ function Step4({ goBack, petData, setStep, isSubmitting, setIsSubmitting, submit
   return (
     <div className="confirm-container">
       <StepHeaderBar onBack={goBack} />
-      <StepProgress progress={progress} stepNumber={4} />
+      <StepProgress progress={progress} stepNumber={3} />
 
 
       <div className="confirm-header">
@@ -532,6 +569,56 @@ function Step4({ goBack, petData, setStep, isSubmitting, setIsSubmitting, submit
                 }
                 return cells;
               })()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Photo Crop Modal */}
+      {isCropping && (
+        <div className="crop-modal-overlay">
+          <div className="crop-modal-content">
+            <div className="crop-modal-header">
+              <h3>Crop Photo</h3>
+              <button type="button" className="crop-close-btn" onClick={handleCropCancel}>
+                <FiX size={24} />
+              </button>
+            </div>
+            
+            <div className="crop-container">
+              <Cropper
+                image={tempImage}
+                crop={crop}
+                zoom={zoom}
+                aspect={1}
+                cropShape="round"
+                showGrid={false}
+                onCropChange={setCrop}
+                onCropComplete={onCropComplete}
+                onZoomChange={setZoom}
+              />
+            </div>
+            
+            <div className="crop-controls">
+              <input
+                type="range"
+                value={zoom}
+                min={1}
+                max={3}
+                step={0.1}
+                aria-labelledby="Zoom"
+                onChange={(e) => setZoom(parseFloat(e.target.value))}
+                className="zoom-slider"
+              />
+            </div>
+            
+            <div className="crop-actions">
+              <button type="button" className="crop-cancel-btn" onClick={handleCropCancel}>
+                Cancel
+              </button>
+              <button type="button" className="crop-save-btn" onClick={handleCropSave}>
+                <FiCheck size={18} /> Apply
+              </button>
             </div>
           </div>
         </div>

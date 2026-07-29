@@ -94,7 +94,7 @@ img {
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  margin: 20px 0 16px 0;
+  margin: 8px 0 12px 0;
 }
 
 .education-brand-label {
@@ -118,7 +118,7 @@ img {
   width: 100%;
   border-radius: var(--radius-card, 18px);
   background-size: cover;
-  background-position: center;
+  background-position: top center;
   background-repeat: no-repeat;
   overflow: hidden;
   display: flex;
@@ -130,7 +130,7 @@ img {
   box-shadow: var(--shadow-card);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   box-sizing: border-box;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 16 / 10;
 }
 
 .education-card:hover {

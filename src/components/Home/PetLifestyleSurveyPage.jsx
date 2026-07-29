@@ -3,7 +3,7 @@ import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { FiX, FiCheck } from 'react-icons/fi';
 import fetchWithAuth from '../../utils/fetchWithAuth';
 import polLogo from "../../assets/logo.webp";
-import ppacBannerImg from "../../assets/ppac.jpeg";
+import ppacBannerImg from "../../assets/ppac.png";
 import './PetDashboard.css'; // Import for education banner styles
 import './PetLifestyleSurveyPage.css';
 
