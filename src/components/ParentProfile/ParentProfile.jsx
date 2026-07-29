@@ -315,7 +315,7 @@ export default function ParentProfile() {
             </div>
 
             <button type="submit" className="btn-primary parent-profile-submit-btn" disabled={loading}>
-              {loading ? "Saving Profile…" : (isAlreadyCompleted ? "Save Profile" : "Complete Profile")}
+              {loading ? "Submitting…" : (isAlreadyCompleted ? "Save Profile" : "Submit")}
             </button>
           </form>
         </div>

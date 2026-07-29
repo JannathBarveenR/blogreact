@@ -129,6 +129,24 @@
   border-radius: 16px !important;
   font-size: 16px !important;
   font-weight: 700 !important;
+  background: #06402b !important;
+  color: #ffffff !important;
+  border: 2px solid #002d1d !important;
+  box-shadow: 0 4px 14px rgba(6, 64, 43, 0.35) !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.parent-profile-submit-btn:hover {
+  background: #085439 !important;
+  border-color: #06402b !important;
+  box-shadow: 0 6px 18px rgba(6, 64, 43, 0.45) !important;
+  transform: translateY(-1px) !important;
+}
+
+.parent-profile-submit-btn:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 2px 8px rgba(6, 64, 43, 0.3) !important;
 }
 
 .onboarding-pincode-spinner {
