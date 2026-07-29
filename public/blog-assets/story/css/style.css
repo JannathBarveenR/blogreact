@@ -1,0 +1,290 @@
+:root{
+  --green-primary:#4CAF50;
+  --green-button:#43A047;
+  --bg-light:#F3FBF5;
+  --green-secondary:#A5D6A7;
+  --card-white:#FFFFFF;
+  --border:#DCEFD9;
+  --ink:#2F3A33;
+  --ink-soft:#5B6B60;
+  --ink-faint:#8AA096;
+
+  /* height of the tap/arrow zone reserved at the top of every card,
+     kept clear of the caption panel so nothing overlaps survey
+     options, CTA, or recommendation buttons */
+  --nav-zone-height: 210px;
+}
+
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+html,body{
+  margin:0; padding:0; height:100%;
+  background: var(--bg-light);
+  font-family:'Karla', sans-serif;
+  color:var(--ink);
+  overflow:hidden;
+}
+body{ display:flex; align-items:center; justify-content:center; min-height:100vh; }
+
+.stage{
+  width:100%; max-width:400px; height:100vh; max-height:820px;
+  position:relative; display:flex; align-items:center; justify-content:center; padding:14px;
+}
+
+.phone{
+  position:relative; width:100%; height:100%;
+  background:var(--card-white);
+  border-radius:32px; overflow:hidden;
+  box-shadow:0 24px 60px rgba(47,58,51,0.18), 0 0 0 1px var(--border);
+  display:flex; flex-direction:column;
+}
+
+/* ---------- HEADER (always on top) ---------- */
+.head{
+  position:absolute; top:0; left:0; right:0; z-index:40;
+  padding:14px 14px 0 14px;
+  background:linear-gradient(180deg, rgba(0,0,0,0.38) 0%, rgba(0,0,0,0) 100%);
+}
+.bars{ display:flex; gap:5px; margin-bottom:12px; }
+.bar{ flex:1; height:3px; border-radius:3px; background:rgba(255,255,255,0.38); overflow:hidden; position:relative; }
+.bar-fill{ position:absolute; top:0; left:0; bottom:0; width:0%; background:#fff; border-radius:3px; transition:width .35s ease; }
+
+.profile-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.meta{ font-size:12px; color:#fff; font-weight:700; text-shadow:0 1px 4px rgba(0,0,0,0.35); }
+.close-btn{
+  width:44px; height:44px; border:none; border-radius:50%;
+  background:rgba(255,255,255,0.95); color:var(--green-primary);
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+  box-shadow:0 8px 20px rgba(47,58,51,0.16);
+  border:1px solid rgba(76,175,80,0.16);
+  backdrop-filter:blur(6px);
+  transition:transform .15s ease, background-color .15s ease, color .15s ease;
+}
+.close-btn:hover, .close-btn:active{ transform:scale(1.04); background:var(--green-primary); color:#fff; }
+.close-btn svg{ width:20px; height:20px; }
+.close-btn:focus-visible, .navzone:focus-visible, .opt:focus-visible{
+  outline:2px solid var(--green-button); outline-offset:2px;
+}
+
+/* ---------- NAV ----------
+   Tap zones and arrow buttons cover only the top photo band, never the
+   caption panel, so survey options / CTA / recommendation buttons
+   underneath stay fully clickable. */
+.navzone{
+  position:absolute;
+  top:70px;
+  height:var(--nav-zone-height);
+  width:38%;
+  z-index:20;
+  background:transparent; border:none; padding:0; margin:0; cursor:pointer;
+}
+.navzone.left{ left:0; display:flex; align-items:center; justify-content:flex-start; }
+.navzone.right{ right:0; width:62%; display:flex; align-items:center; justify-content:flex-end; }
+
+/* Visible arrow button rendered inside each tap zone, vertically centered
+   in the photo band. Doesn't shrink the tappable zone underneath it. */
+.nav-arrow{
+  width:44px; height:44px; border-radius:50%;
+  background:rgba(20,30,24,0.32);
+  border:1px solid rgba(255,255,255,0.4);
+  backdrop-filter:blur(3px);
+  display:flex; align-items:center; justify-content:center;
+  pointer-events:none;
+}
+.nav-arrow svg{ width:22px; height:22px; }
+.nav-arrow-left{ margin-left:10px; }
+.nav-arrow-right{ margin-right:10px; }
+
+/* ---------- BRAND LOGO (cover slide only) ---------- */
+.brand-logo{
+  position:absolute; top:58px; left:14px; z-index:15;
+  display:flex; align-items:center;
+}
+.brand-logo img{
+  display:block; height:55px; width:auto;
+}
+
+/* ---------- SLIDES ---------- */
+.slides{ position:relative; flex:1; width:100%; height:100%; z-index:1; }
+.slide{
+  position:absolute; inset:0; overflow:hidden;
+  opacity:0; pointer-events:none; transition:opacity .3s ease;
+}
+.slide.active{ opacity:1; pointer-events:auto; }
+
+.scene{
+  position:absolute; inset:0;
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
+  background-color:var(--green-secondary);
+}
+.scene::after{
+  /* Times-of-India-style scrim: soft at the top (header legibility),
+     deepening toward the bottom so the overlaid text stays readable
+     directly on the photo. */
+  content:"";
+  position:absolute; inset:0;
+  background:
+    linear-gradient(180deg,
+      rgba(20,30,24,0.42) 0%,
+      rgba(20,30,24,0.05) 20%,
+      rgba(20,30,24,0.05) 40%,
+      rgba(20,30,24,0.60) 60%,
+      rgba(20,30,24,0.86) 100%);
+}
+
+/* ---------- CAPTION OVERLAY (sits directly on the photo, no card) ---------- */
+.panel{
+  position:absolute; left:0; right:0; bottom:0;
+  min-height:40%; max-height:88%;
+  box-sizing:border-box;
+  justify-content:center;
+  overflow-y:auto;
+  z-index:10;
+  padding:20px 16px 30px 16px;
+  color:#fff;
+  text-align:center;
+  display:flex; flex-direction:column; align-items:center;
+  transform:translateY(16px);
+  opacity:0;
+  transition:transform .5s cubic-bezier(.2,.8,.2,1), opacity .5s ease;
+}
+.slide.active .panel{ transform:translateY(0); opacity:1; }
+
+.eyebrow{
+  font-weight:800; font-size:14px; letter-spacing:1.8px; text-transform:uppercase;
+  color:#B9F0BE; margin-bottom:6px;
+}
+.eyebrow.eyebrow-dark{
+  color:#00f9a2ea;
+  font-weight:800;
+}
+h1.slide-title{
+  font-family:'Fraunces', serif; font-weight:700; font-size:22px; line-height:1.2;
+  margin:0 0 12px 0; color:#fff; text-shadow:0 2px 10px rgba(0,0,0,0.25);
+}
+.underline{
+  width:44px; height:2px; border-radius:3px; background:rgba(255,255,255,0.75);
+  margin:0 0 14px 0;
+}
+p.body-text{ font-size:14.5px; line-height:1.6; color:rgba(255,255,255,0.92); margin:0 0 12px 0; max-width:280px; }
+
+ul.check-list, ul.bullet-list{ list-style:none; margin: 4px 0px 12px 0; padding:0; display:flex; flex-direction:column; gap:8px; width:100%; text-align:left; }
+ul.check-list li{ font-size:14px; line-height:1.4; color:#fff; display:flex; align-items:flex-start; gap:9px; font-weight:500; }
+ul.check-list li svg{ width:16px; height:16px; flex-shrink:0; margin-top:1px; stroke:#B9F0BE; }
+
+/* Bullet items align neatly with the text block and keep the marker
+   visually attached to the left edge without shifting the copy. */
+ul.bullet-list li{
+  position:relative;
+  padding-left:36px;
+  display:flex;
+  align-items:flex-start;
+  gap:8px;
+}
+ul.bullet-list li svg{
+  flex-shrink:0;
+  width:6px;
+  height:6px;
+  fill:#B9F0BE;
+  margin-top:7px;
+}
+
+.footnote{
+  font-size:12.5px; color:rgba(255,255,255,0.8); font-style:italic; text-align:left; width:100%;
+  border-left:3px solid #B9F0BE; padding-left:10px; margin-top:2px;
+}
+
+/* ---------- AUTHOR BYLINE (cover slide only) ---------- */
+.author-row{
+  display:flex; align-items:center; gap:8px; margin-top:28px; margin-bottom:10px; padding-top:14px; width:100%;
+  border-top:1px solid rgba(255,255,255,0.28); justify-content:center;
+}
+.panel-cover{ padding-bottom:42px; }
+.author-name{ font-size:12px; color:rgba(255,255,255,0.85); font-weight:600; }
+.author-name b{ color:#fff; font-weight:800; }
+
+/* ---------- SURVEY / POLL (no percentages, no analytics shown) ---------- */
+.poll-q{ font-family:'Fraunces', serif; font-weight:700; font-size:19px; line-height:1.3; margin:0 0 16px 0; color:#fff; text-shadow:0 2px 10px rgba(0,0,0,0.25); }
+.opts-wrap{ width:100%; display:flex; flex-direction:column; align-items:center; }
+.opt{
+  width:80%; text-align:left; background:rgba(255,255,255,0.14);
+  backdrop-filter:blur(6px);
+  border:1.5px solid rgba(255,255,255,0.38); border-radius:13px; padding:12px 14px;
+  font-weight:700; font-size:14px; color:#fff; margin-bottom:8px; cursor:pointer;
+  position:relative; display:flex; align-items:center; justify-content:space-between; gap:8px;
+  min-height:52px; box-sizing:border-box;
+}
+.opt .check{ width:16px; height:16px; flex-shrink:0; display:none; stroke:#B9F0BE; }
+.opt.answered{ cursor:default; opacity:0.6; }
+.opt.selected{ border-color:#B9F0BE; background:rgba(76,175,80,0.35); opacity:1; }
+.opt.selected .check{ display:block; }
+
+.poll-caption{ font-size:12px; color:#B9F0BE; font-weight:700; margin:2px 0 10px 0; display:flex; align-items:center; gap:6px; }
+.poll-caption svg{ width:14px; height:14px; stroke:#B9F0BE; }
+
+.response-box{
+  width:100%; align-items:flex-start; gap:9px; text-align:left;
+  background:rgba(255,255,255,0.16); backdrop-filter:blur(6px);
+  border:1px solid rgba(255,255,255,0.35); border-radius:13px; padding:11px 13px;
+  font-size:13px; line-height:1.45; color:#fff; font-weight:600; margin:2px 0 10px 0;
+}
+.response-box svg{ width:16px; height:16px; flex-shrink:0; margin-top:1px; stroke:#B9F0BE; }
+
+/* ---------- MYTH VS FACT ---------- */
+.myth-row{
+  width:100%; text-align:left; display:flex; align-items:flex-start; gap:10px;
+  font-size:14px; line-height:1.45; font-weight:600; color:#fff; margin-bottom:10px;
+  background:rgba(255,255,255,0.12); backdrop-filter:blur(6px);
+  border:1px solid rgba(255,255,255,0.28); border-radius:12px; padding:11px 13px;
+}
+.myth-tag{ flex-shrink:0; }
+
+/* ---------- SUMMARY ---------- */
+.summary-list{ list-style:none; margin:4px 0 4px 0; padding:0; display:flex; flex-direction:column; gap:10px; width:100%; text-align:left; }
+.summary-list li{
+  font-size:13.5px; line-height:1.4; color:#fff; font-weight:600;
+  display:flex; align-items:flex-start; gap:10px;
+  background:rgba(255,255,255,0.14); backdrop-filter:blur(6px);
+  border:1px solid rgba(255,255,255,0.32); border-radius:12px; padding:10px 12px;
+}
+.summary-list li svg{ width:16px; height:16px; flex-shrink:0; margin-top:1px; stroke:#B9F0BE; }
+
+/* ---------- RECOMMENDATION SCREEN (Times of India style) ---------- */
+.reco-label{ font-weight:800; font-size:10.5px; letter-spacing:1.8px; text-transform:uppercase; color:rgba(255,255,255,0.7); margin-bottom:12px; }
+.reco-card{
+  width:100%; display:flex; align-items:center; gap:12px; background:#fff;
+  border:1px solid var(--border); border-radius:18px; padding:12px; cursor:pointer;
+  box-shadow:0 10px 26px rgba(0,0,0,0.30);
+  transition:transform .15s ease, box-shadow .15s ease;
+}
+.reco-card:active{ transform:scale(0.98); }
+.reco-thumb{
+  width:64px; height:64px; border-radius:14px; background-size:cover; background-position:center; flex-shrink:0;
+}
+.reco-info{ flex:1; min-width:0; text-align:left; }
+.reco-title{ font-family:'Fraunces', serif; font-weight:700; font-size:15.5px; color:var(--ink); margin:0 0 4px 0; line-height:1.25; }
+.reco-meta{ font-size:11.5px; color:var(--ink-soft); font-weight:600; display:flex; align-items:center; gap:5px; }
+.reco-meta svg{ width:12px; height:12px; stroke:var(--green-button); }
+.reco-arrow{ width:20px; height:20px; flex-shrink:0; stroke:var(--green-button); }
+
+/* ---------- END-OF-STORY ---------- */
+.end-icon{
+  width:56px; height:56px; border-radius:50%; background:rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.35);
+  backdrop-filter:blur(4px);
+  display:flex; align-items:center; justify-content:center; margin-bottom:14px;
+}
+.end-icon svg{ width:28px; height:28px; stroke:#fff; }
+.replay-btn{
+  margin-top:14px; background:var(--green-button); color:#fff; border:none; border-radius:24px;
+  padding:11px 20px; font-weight:800; font-size:13px; cursor:pointer; box-shadow:0 6px 16px rgba(0,0,0,0.35);
+}
+
+@media (prefers-reduced-motion: reduce){
+  .panel{ transition:none; }
+}
+
+@media (max-height: 700px){
+  :root{ --nav-zone-height: 150px; }
+}
