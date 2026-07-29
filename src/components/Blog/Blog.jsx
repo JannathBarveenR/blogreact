@@ -36,40 +36,40 @@ const dogsTrendingItems = [
     { cat: 'health', tagLabel: 'HEALTH', title: 'Why Do Dogs Need Regular Deworming?', desc: 'Schedule and tips to keep your dog worm-free.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/deworming/d1.webp', story: 'deworming' },
     { cat: 'health', tagLabel: 'HEALTH', title: '10 Early Warning Signs Your Dog May Be Sick', desc: 'Notice early warning signs that your dog may be sick.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/signs/sign1.webp', story: 'signs' },
     { cat: 'health', tagLabel: 'HEALTH', title: 'Why Is Tick and Flea Prevention Important for Dogs?', desc: 'Keep your pet safe from common parasites.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/prevention/pimage1.webp', story: 'prevention' },
-    { cat: 'health', tagLabel: 'HEALTH', title: 'When Should Puppies Get Their First Vaccination?', desc: 'A complete guide to puppy vaccination schedules.', img: '/blog-assets/vacci.jfif', upcoming: true },
+    { cat: 'health', tagLabel: 'HEALTH', title: 'When Should Puppies Get Their First Vaccination?', desc: 'A complete guide to puppy vaccination schedules.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training6/s_image3.webp', upcoming: true },
     { cat: 'nutrition', tagLabel: 'NUTRITION', title: 'Which Human Foods Can Be Dangerous for Dogs?', desc: 'Learn which common human foods are toxic to dogs.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/nutrition/food/foimage1.webp', story: 'foods' },
     { cat: 'nutrition', tagLabel: 'NUTRITION', title: 'How Often Should You Feed Your Dog?', desc: 'Best practices and schedules for feeding your dog.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/nutrition/feed/feimage1.webp', story: 'feeding' },
-    { cat: 'nutrition', tagLabel: 'NUTRITION', title: 'How Much Food Does Your Dog Really Need?', desc: 'Portion control and calorie needs for different breeds.', img: '/blog-assets/birds.jfif', upcoming: true },
-    { cat: 'nutrition', tagLabel: 'NUTRITION', title: 'Choosing the Right Food for Your Dog', desc: 'Dry, wet, or raw? Find the best diet for your dog.', img: '/blog-assets/dog.jfif', upcoming: true },
-    { cat: 'nutrition', tagLabel: 'NUTRITION', title: 'Healthy Fruits & Vegetables for Dogs', desc: 'Safe and nutritious natural snacks for your pet.', img: '/blog-assets/hero.jfif', upcoming: true },
+    { cat: 'nutrition', tagLabel: 'NUTRITION', title: 'How Much Food Does Your Dog Really Need?', desc: 'Portion control and calorie needs for different breeds.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training5/training5(3).webp', upcoming: true },
+    { cat: 'nutrition', tagLabel: 'NUTRITION', title: 'Choosing the Right Food for Your Dog', desc: 'Dry, wet, or raw? Find the best diet for your dog.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training4/training4(3).webp', upcoming: true },
+    { cat: 'nutrition', tagLabel: 'NUTRITION', title: 'Healthy Fruits & Vegetables for Dogs', desc: 'Safe and nutritious natural snacks for your pet.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training3/training3(3).webp', upcoming: true },
     { cat: 'training', tagLabel: 'TRAINING', title: 'Why Should You Start Training Your Dog Early?', desc: 'Training isn\'t just about teaching commands.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training1/training1(1).webp', story: 'trainingEarly' },
     { cat: 'training', tagLabel: 'TRAINING', title: 'Why Is Positive Reinforcement the Best Way to Train Your Dog?', desc: 'Dogs learn best when good behavior is rewarded.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training2/training2(1).webp', story: 'trainingPositive' },
     { cat: 'training', tagLabel: 'TRAINING', title: 'How to Teach Your Dog to Sit', desc: '"Sit" is one of the easiest and most useful commands.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training3/training3(1).webp', story: 'trainingSit' },
     { cat: 'training', tagLabel: 'TRAINING', title: 'How to Teach Your Dog to Stay', desc: '"Stay" helps your dog learn patience and self-control.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training4/training4(1).webp', story: 'trainingStay' },
     { cat: 'training', tagLabel: 'TRAINING', title: 'How to Teach Your Dog to Come When Called', desc: '"Come" can help keep your dog safe in everyday situations.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training5/training5(1).webp', story: 'trainingCome' },
     { cat: 'training', tagLabel: 'TRAINING', title: 'Potty Training Basics', desc: 'Every puppy has accidents while learning.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training6/s_image1.webp', story: 'trainingPotty' },
-    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Why Do Dogs Bark?', desc: 'Understand the different types of dog vocalizations.', img: '/blog-assets/hero.jfif', upcoming: true },
-    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Why Do Dogs Wag Their Tail?', desc: 'Decoding your dog\'s body language.', img: '/blog-assets/dog.jfif', upcoming: true },
-    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Why Do Dogs Lick People?', desc: 'Is it affection, grooming, or something else?', img: '/blog-assets/vacci.jfif', upcoming: true },
-    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Why Do Dogs Eat Grass?', desc: 'Exploring this common yet puzzling canine habit.', img: '/blog-assets/dog.jfif', upcoming: true },
-    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Why Do Dogs Dig Holes?', desc: 'Find out why your garden is full of craters.', img: '/blog-assets/hero.jfif', upcoming: true },
-    { cat: 'grooming', tagLabel: 'GROOMING', title: 'How Often Should You Bathe Your Dog?', desc: 'Best bathing practices for different coat types.', img: '/blog-assets/vacci.jfif', upcoming: true },
-    { cat: 'grooming', tagLabel: 'GROOMING', title: 'Why Regular Brushing Matters', desc: 'Keep your dog\'s coat healthy and tangle-free.', img: '/blog-assets/dog.jfif', upcoming: true },
-    { cat: 'grooming', tagLabel: 'GROOMING', title: 'How to Trim Your Dog\'s Nails Safely', desc: 'A step-by-step guide to stress-free nail clipping.', img: '/blog-assets/hero.jfif', upcoming: true },
-    { cat: 'grooming', tagLabel: 'GROOMING', title: 'How to Clean Your Dog\'s Ears', desc: 'Prevent ear infections with proper hygiene.', img: '/blog-assets/dog.jfif', upcoming: true },
-    { cat: 'grooming', tagLabel: 'GROOMING', title: 'Brushing Your Dog\'s Teeth Made Easy', desc: 'Tips for maintaining your dog\'s dental health.', img: '/blog-assets/vacci.jfif', upcoming: true },
+    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Why Do Dogs Bark?', desc: 'Understand the different types of dog vocalizations.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training6/s_image3.webp', upcoming: true },
+    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Why Do Dogs Wag Their Tail?', desc: 'Decoding your dog\'s body language.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training5/training5(3).webp', upcoming: true },
+    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Why Do Dogs Lick People?', desc: 'Is it affection, grooming, or something else?', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training4/training4(3).webp', upcoming: true },
+    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Why Do Dogs Eat Grass?', desc: 'Exploring this common yet puzzling canine habit.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training3/training3(3).webp', upcoming: true },
+    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Why Do Dogs Dig Holes?', desc: 'Find out why your garden is full of craters.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training6/s_image3.webp', upcoming: true },
+    { cat: 'grooming', tagLabel: 'GROOMING', title: 'How Often Should You Bathe Your Dog?', desc: 'Best bathing practices for different coat types.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training5/training5(3).webp', upcoming: true },
+    { cat: 'grooming', tagLabel: 'GROOMING', title: 'Why Regular Brushing Matters', desc: 'Keep your dog\'s coat healthy and tangle-free.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training4/training4(3).webp', upcoming: true },
+    { cat: 'grooming', tagLabel: 'GROOMING', title: 'How to Trim Your Dog\'s Nails Safely', desc: 'A step-by-step guide to stress-free nail clipping.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training3/training3(3).webp', upcoming: true },
+    { cat: 'grooming', tagLabel: 'GROOMING', title: 'How to Clean Your Dog\'s Ears', desc: 'Prevent ear infections with proper hygiene.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training6/s_image3.webp', upcoming: true },
+    { cat: 'grooming', tagLabel: 'GROOMING', title: 'Brushing Your Dog\'s Teeth Made Easy', desc: 'Tips for maintaining your dog\'s dental health.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training5/training5(3).webp', upcoming: true },
     { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'How Often Should You Change Your Dog’s Drinking Water?', desc: 'Hydration tips and water bowl hygiene.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/deworming/d1.webp', story: 'drinking' },
     { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'How Much Exercise Does Your Dog Need Every Day?', desc: 'Keep your dog active, healthy, and happy.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/care/exercise/eimage1.webp', story: 'exercise' },
-    { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'Choosing Safe Toys for Your Dog', desc: 'Find toys that are fun and safe for heavy chewers.', img: '/blog-assets/dog.jfif', upcoming: true },
-    { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'How Much Sleep Does Your Dog Need?', desc: 'Understand your dog\'s sleeping patterns.', img: '/blog-assets/hero.jfif', upcoming: true },
-    { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'Summer Care Tips for Dogs', desc: 'Keep your dog cool and safe during hot days.', img: '/blog-assets/vacci.jfif', upcoming: true },
-    { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'Monsoon Care Tips for Dogs', desc: 'Protect your pet from rain-related illnesses.', img: '/blog-assets/dog.jfif', upcoming: true },
+    { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'Choosing Safe Toys for Your Dog', desc: 'Find toys that are fun and safe for heavy chewers.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training4/training4(3).webp', upcoming: true },
+    { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'How Much Sleep Does Your Dog Need?', desc: 'Understand your dog\'s sleeping patterns.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training3/training3(3).webp', upcoming: true },
+    { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'Summer Care Tips for Dogs', desc: 'Keep your dog cool and safe during hot days.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training6/s_image3.webp', upcoming: true },
+    { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'Monsoon Care Tips for Dogs', desc: 'Protect your pet from rain-related illnesses.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training5/training5(3).webp', upcoming: true },
 
-    { cat: 'lifestyle', tagLabel: 'LIFESTYLE', title: 'Creating a Dog-Friendly Home', desc: 'Tips for living harmoniously with your pet indoors.', img: '/blog-assets/hero.jfif', upcoming: true },
-    { cat: 'lifestyle', tagLabel: 'LIFESTYLE', title: 'Traveling with Your Pet', desc: 'Essential checklist for road trips with your furry friend.', img: '/blog-assets/dog.jfif', upcoming: true },
-    { cat: 'lifestyle', tagLabel: 'LIFESTYLE', title: 'Introducing a New Pet to the Family', desc: 'How to ensure a smooth transition for everyone.', img: '/blog-assets/vacci.jfif', upcoming: true },
-    { cat: 'lifestyle', tagLabel: 'LIFESTYLE', title: 'Fresh Bowls and Happy Tails', desc: 'Upcoming lesson on fresh bowls and happy tails.', img: '/blog-assets/hero.jfif', upcoming: true },
-    { cat: 'lifestyle', tagLabel: 'LIFESTYLE', title: 'Healthy Paws, Happy Life', desc: 'Upcoming lesson on healthy paws and happy life.', img: '/blog-assets/dog.jfif', upcoming: true },
+    { cat: 'lifestyle', tagLabel: 'LIFESTYLE', title: 'Creating a Dog-Friendly Home', desc: 'Tips for living harmoniously with your pet indoors.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training4/training4(3).webp', upcoming: true },
+    { cat: 'lifestyle', tagLabel: 'LIFESTYLE', title: 'Traveling with Your Pet', desc: 'Essential checklist for road trips with your furry friend.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training3/training3(3).webp', upcoming: true },
+    { cat: 'lifestyle', tagLabel: 'LIFESTYLE', title: 'Introducing a New Pet to the Family', desc: 'How to ensure a smooth transition for everyone.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training6/s_image3.webp', upcoming: true },
+    { cat: 'lifestyle', tagLabel: 'LIFESTYLE', title: 'Fresh Bowls and Happy Tails', desc: 'Upcoming lesson on fresh bowls and happy tails.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training5/training5(3).webp', upcoming: true },
+    { cat: 'lifestyle', tagLabel: 'LIFESTYLE', title: 'Healthy Paws, Happy Life', desc: 'Upcoming lesson on healthy paws and happy life.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training4/training4(3).webp', upcoming: true },
 ];
 
 const catsTrendingItems = [
@@ -81,98 +81,53 @@ const catsTrendingItems = [
     { cat: 'nutrition', tagLabel: 'NUTRITION', title: 'How Often Should You Feed Your Cat?', desc: 'Finding the right feeding schedule for your cat.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/nutrition/feed/cfimage1.webp', story: 'cats_feeding' },
     { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'Is Your Cat Drinking Enough Water?', desc: 'Tips to encourage your cat to stay hydrated.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/everyday/drinking/cdimage10.webp', story: 'cats_drinking' },
     // Health
-    { cat: 'health', tagLabel: 'HEALTH', title: "Understanding Your Cat's Vital Signs", desc: 'Upcoming lesson on vital signs.', img: '/blog-assets/hero.jfif', upcoming: true },
+    { cat: 'health', tagLabel: 'HEALTH', title: "Understanding Your Cat's Vital Signs", desc: 'Upcoming lesson on vital signs.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/vaccination/cvimage2.webp', upcoming: true },
 
     // Nutrition
-    { cat: 'nutrition', tagLabel: 'NUTRITION', title: 'Choosing the Right Food for Kittens, Adults, and Senior Cats', desc: 'Upcoming lesson on cat food.', img: '/blog-assets/dog.jfif', upcoming: true },
-    { cat: 'nutrition', tagLabel: 'NUTRITION', title: 'Human Foods That Are Safe and Toxic for Cats', desc: 'Upcoming lesson on safe and toxic human foods.', img: '/blog-assets/vacci.jfif', upcoming: true },
+    { cat: 'nutrition', tagLabel: 'NUTRITION', title: 'Choosing the Right Food for Kittens, Adults, and Senior Cats', desc: 'Upcoming lesson on cat food.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/vaccination/cvimage3.webp', upcoming: true },
+    { cat: 'nutrition', tagLabel: 'NUTRITION', title: 'Human Foods That Are Safe and Toxic for Cats', desc: 'Upcoming lesson on safe and toxic human foods.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/vaccination/cvimage4.webp', upcoming: true },
 
     // Training
-    { cat: 'training', tagLabel: 'TRAINING', title: 'Understanding Cat Body Language', desc: 'Upcoming lesson on cat body language.', img: '/blog-assets/hero.jfif', upcoming: true },
-    { cat: 'training', tagLabel: 'TRAINING', title: 'Why Cats Scratch and How to Redirect It', desc: 'Upcoming lesson on scratching.', img: '/blog-assets/dog.jfif', upcoming: true },
-    { cat: 'training', tagLabel: 'TRAINING', title: 'Litter Training Tips for Kittens', desc: 'Upcoming lesson on litter training.', img: '/blog-assets/vacci.jfif', upcoming: true },
-    { cat: 'training', tagLabel: 'TRAINING', title: 'Managing Aggression and Anxiety', desc: 'Upcoming lesson on managing aggression.', img: '/blog-assets/hero.jfif', upcoming: true },
-    { cat: 'training', tagLabel: 'TRAINING', title: 'Socializing Cats with People and Other Pets', desc: 'Upcoming lesson on socializing.', img: '/blog-assets/dog.jfif', upcoming: true },
+    { cat: 'training', tagLabel: 'TRAINING', title: 'Understanding Cat Body Language', desc: 'Upcoming lesson on cat body language.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/vaccination/cvimage5.webp', upcoming: true },
+    { cat: 'training', tagLabel: 'TRAINING', title: 'Why Cats Scratch and How to Redirect It', desc: 'Upcoming lesson on scratching.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/vaccination/cvimage2.webp', upcoming: true },
+    { cat: 'training', tagLabel: 'TRAINING', title: 'Litter Training Tips for Kittens', desc: 'Upcoming lesson on litter training.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/vaccination/cvimage3.webp', upcoming: true },
+    { cat: 'training', tagLabel: 'TRAINING', title: 'Managing Aggression and Anxiety', desc: 'Upcoming lesson on managing aggression.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/vaccination/cvimage4.webp', upcoming: true },
+    { cat: 'training', tagLabel: 'TRAINING', title: 'Socializing Cats with People and Other Pets', desc: 'Upcoming lesson on socializing.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/vaccination/cvimage5.webp', upcoming: true },
 
     // Grooming
-    { cat: 'grooming', tagLabel: 'GROOMING', title: 'How Often Should You Groom Your Cat?', desc: 'Upcoming lesson on grooming frequency.', img: '/blog-assets/vacci.jfif', upcoming: true },
-    { cat: 'grooming', tagLabel: 'GROOMING', title: 'Brushing Different Coat Types', desc: 'Upcoming lesson on brushing.', img: '/blog-assets/hero.jfif', upcoming: true },
-    { cat: 'grooming', tagLabel: 'GROOMING', title: 'Safe Nail Trimming Techniques', desc: 'Upcoming lesson on nail trimming.', img: '/blog-assets/dog.jfif', upcoming: true },
-    { cat: 'grooming', tagLabel: 'GROOMING', title: 'Exercise and Indoor Play Ideas', desc: 'Upcoming lesson on exercise and play.', img: '/blog-assets/vacci.jfif', upcoming: true },
-    { cat: 'grooming', tagLabel: 'GROOMING', title: 'Creating a Cat-Friendly Home Environment', desc: 'Upcoming lesson on home environment.', img: '/blog-assets/hero.jfif', upcoming: true },
+    { cat: 'grooming', tagLabel: 'GROOMING', title: 'How Often Should You Groom Your Cat?', desc: 'Upcoming lesson on grooming frequency.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/vaccination/cvimage2.webp', upcoming: true },
+    { cat: 'grooming', tagLabel: 'GROOMING', title: 'Brushing Different Coat Types', desc: 'Upcoming lesson on brushing.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/vaccination/cvimage3.webp', upcoming: true },
+    { cat: 'grooming', tagLabel: 'GROOMING', title: 'Safe Nail Trimming Techniques', desc: 'Upcoming lesson on nail trimming.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/vaccination/cvimage4.webp', upcoming: true },
+    { cat: 'grooming', tagLabel: 'GROOMING', title: 'Exercise and Indoor Play Ideas', desc: 'Upcoming lesson on exercise and play.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/vaccination/cvimage5.webp', upcoming: true },
+    { cat: 'grooming', tagLabel: 'GROOMING', title: 'Creating a Cat-Friendly Home Environment', desc: 'Upcoming lesson on home environment.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/vaccination/cvimage2.webp', upcoming: true },
 
     // Behaviour
-    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Understanding Cat Body Language', desc: 'Upcoming lesson on cat body language.', img: '/blog-assets/dog.jfif', upcoming: true },
-    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Why Cats Scratch and How to Redirect It', desc: 'Upcoming lesson on scratching.', img: '/blog-assets/vacci.jfif', upcoming: true },
-    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Managing Aggression and Fear', desc: 'Upcoming lesson on managing aggression and fear.', img: '/blog-assets/hero.jfif', upcoming: true },
-    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Preventing Separation Anxiety', desc: 'Upcoming lesson on separation anxiety.', img: '/blog-assets/dog.jfif', upcoming: true },
-    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Introducing Cats to New People and Pets', desc: 'Upcoming lesson on introducing cats.', img: '/blog-assets/vacci.jfif', upcoming: true },
+    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Understanding Cat Body Language', desc: 'Upcoming lesson on cat body language.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/vaccination/cvimage3.webp', upcoming: true },
+    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Why Cats Scratch and How to Redirect It', desc: 'Upcoming lesson on scratching.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/vaccination/cvimage4.webp', upcoming: true },
+    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Managing Aggression and Fear', desc: 'Upcoming lesson on managing aggression and fear.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/vaccination/cvimage5.webp', upcoming: true },
+    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Preventing Separation Anxiety', desc: 'Upcoming lesson on separation anxiety.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/vaccination/cvimage2.webp', upcoming: true },
+    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Introducing Cats to New People and Pets', desc: 'Upcoming lesson on introducing cats.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/vaccination/cvimage3.webp', upcoming: true },
 
     // Lifestyle
-    { cat: 'lifestyle', tagLabel: 'LIFESTYLE', title: 'Creating a Cat-Friendly Home', desc: 'Upcoming lesson on creating a cat-friendly home.', img: '/blog-assets/hero.jfif', upcoming: true },
-    { cat: 'lifestyle', tagLabel: 'LIFESTYLE', title: 'Indoor vs. Outdoor Cats: Pros and Cons', desc: 'Upcoming lesson on indoor vs outdoor cats.', img: '/blog-assets/dog.jfif', upcoming: true },
-    { cat: 'lifestyle', tagLabel: 'LIFESTYLE', title: 'Daily Exercise and Interactive Play', desc: 'Upcoming lesson on daily exercise.', img: '/blog-assets/vacci.jfif', upcoming: true },
-    { cat: 'lifestyle', tagLabel: 'LIFESTYLE', title: 'Mental Enrichment and Puzzle Activities', desc: 'Upcoming lesson on mental enrichment.', img: '/blog-assets/hero.jfif', upcoming: true },
-    { cat: 'lifestyle', tagLabel: 'LIFESTYLE', title: 'Traveling Safely with Your Cat', desc: 'Upcoming lesson on traveling safely.', img: '/blog-assets/dog.jfif', upcoming: true },
+    { cat: 'lifestyle', tagLabel: 'LIFESTYLE', title: 'Creating a Cat-Friendly Home', desc: 'Upcoming lesson on creating a cat-friendly home.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/vaccination/cvimage4.webp', upcoming: true },
+    { cat: 'lifestyle', tagLabel: 'LIFESTYLE', title: 'Indoor vs. Outdoor Cats: Pros and Cons', desc: 'Upcoming lesson on indoor vs outdoor cats.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/vaccination/cvimage5.webp', upcoming: true },
+    { cat: 'lifestyle', tagLabel: 'LIFESTYLE', title: 'Daily Exercise and Interactive Play', desc: 'Upcoming lesson on daily exercise.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/vaccination/cvimage2.webp', upcoming: true },
+    { cat: 'lifestyle', tagLabel: 'LIFESTYLE', title: 'Mental Enrichment and Puzzle Activities', desc: 'Upcoming lesson on mental enrichment.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/vaccination/cvimage3.webp', upcoming: true },
+    { cat: 'lifestyle', tagLabel: 'LIFESTYLE', title: 'Traveling Safely with Your Cat', desc: 'Upcoming lesson on traveling safely.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/vaccination/cvimage4.webp', upcoming: true },
 
     // Training
-    { cat: 'training', tagLabel: 'TRAINING', title: 'How to Tame a New Pet Bird', desc: 'Upcoming lesson on taming.', img: '/blog-assets/birds.jfif', upcoming: true },
-    { cat: 'training', tagLabel: 'TRAINING', title: 'Teaching Your Bird the "Step Up" Command', desc: 'Upcoming lesson on step up.', img: '/blog-assets/smallpets.jfif', upcoming: true },
-    { cat: 'training', tagLabel: 'TRAINING', title: 'How to Train Your Bird Using Positive Reinforcement', desc: 'Upcoming lesson on positive reinforcement.', img: '/blog-assets/birds.jfif', upcoming: true },
-    { cat: 'training', tagLabel: 'TRAINING', title: 'Teaching Your Bird to Come When Called', desc: 'Upcoming lesson on recall.', img: '/blog-assets/smallpets.jfif', upcoming: true },
-    { cat: 'training', tagLabel: 'TRAINING', title: 'How to Build Trust with Your Pet Bird', desc: 'Upcoming lesson on trust.', img: '/blog-assets/birds.jfif', upcoming: true },
+    { cat: 'training', tagLabel: 'TRAINING', title: 'How to Tame a New Pet Bird', desc: 'Upcoming lesson on taming.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
+    { cat: 'training', tagLabel: 'TRAINING', title: 'Teaching Your Bird the "Step Up" Command', desc: 'Upcoming lesson on step up.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
+    { cat: 'training', tagLabel: 'TRAINING', title: 'How to Train Your Bird Using Positive Reinforcement', desc: 'Upcoming lesson on positive reinforcement.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
+    { cat: 'training', tagLabel: 'TRAINING', title: 'Teaching Your Bird to Come When Called', desc: 'Upcoming lesson on recall.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
+    { cat: 'training', tagLabel: 'TRAINING', title: 'How to Build Trust with Your Pet Bird', desc: 'Upcoming lesson on trust.', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s', upcoming: true },
 
     // Everyday Care
-    { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'Creating a Daily Care Routine', desc: 'Upcoming lesson on daily care routine.', img: '/blog-assets/vacci.jfif', upcoming: true },
-    { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'Litter Box Setup and Maintenance', desc: 'Upcoming lesson on litter box setup.', img: '/blog-assets/hero.jfif', upcoming: true },
-    { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'Dental Care for Healthy Teeth and Gums', desc: 'Upcoming lesson on dental care.', img: '/blog-assets/dog.jfif', upcoming: true },
-    { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'Ear, Eye, and Paw Care Essentials', desc: 'Upcoming lesson on ear, eye, and paw care.', img: '/blog-assets/vacci.jfif', upcoming: true },
-    { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'Keeping Your Cat Hydrated', desc: 'Upcoming lesson on keeping your cat hydrated.', img: '/blog-assets/hero.jfif', upcoming: true },
-];
-
-const birdsTrendingItems = [
-    { cat: 'health', tagLabel: 'HEALTH', title: 'Why Do Pet Birds Need Regular Health Check-ups?', desc: 'Upcoming lesson on preventive care to keep your bird healthy.', img: '/blog-assets/birds.jfif', upcoming: true },
-    { cat: 'nutrition', tagLabel: 'NUTRITION', title: 'What Should You Feed Your Pet Bird Every Day?', desc: 'Upcoming lesson on a balanced diet for optimal bird health.', img: '/blog-assets/birds.jfif', upcoming: true },
-    // Health
-    { cat: 'health', tagLabel: 'HEALTH', title: 'Early Signs Your Bird May Be Sick', desc: 'Upcoming lesson on early signs of sickness.', img: '/blog-assets/birds.jfif', upcoming: true },
-    { cat: 'health', tagLabel: 'HEALTH', title: 'Common Bird Diseases Every Owner Should Know', desc: 'Upcoming lesson on common bird diseases.', img: '/blog-assets/smallpets.jfif', upcoming: true },
-    { cat: 'health', tagLabel: 'HEALTH', title: "Understanding Your Bird's Vital Signs", desc: 'Upcoming lesson on vital signs.', img: '/blog-assets/birds.jfif', upcoming: true },
-    { cat: 'health', tagLabel: 'HEALTH', title: 'Basic First Aid for Pet Birds', desc: 'Upcoming lesson on basic first aid.', img: '/blog-assets/smallpets.jfif', upcoming: true },
-
-    // Nutrition
-    { cat: 'nutrition', tagLabel: 'NUTRITION', title: 'Choosing the Right Diet for Your Bird Species', desc: 'Upcoming lesson on choosing the right diet.', img: '/blog-assets/birds.jfif', upcoming: true },
-    { cat: 'nutrition', tagLabel: 'NUTRITION', title: 'Safe and Toxic Foods for Birds', desc: 'Upcoming lesson on safe and toxic foods.', img: '/blog-assets/smallpets.jfif', upcoming: true },
-    { cat: 'nutrition', tagLabel: 'NUTRITION', title: 'Preventing Nutritional Deficiencies', desc: 'Upcoming lesson on preventing nutritional deficiencies.', img: '/blog-assets/birds.jfif', upcoming: true },
-    { cat: 'nutrition', tagLabel: 'NUTRITION', title: 'Healthy Feeding Schedule and Portion Control', desc: 'Upcoming lesson on feeding schedule.', img: '/blog-assets/smallpets.jfif', upcoming: true },
-    { cat: 'nutrition', tagLabel: 'NUTRITION', title: 'Reading Bird Food Labels', desc: 'Upcoming lesson on reading food labels.', img: '/blog-assets/birds.jfif', upcoming: true },
-
-    // Everyday Care
-    { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'Setting Up the Ideal Bird Cage', desc: 'Upcoming lesson on setting up the ideal bird cage.', img: '/blog-assets/smallpets.jfif', upcoming: true },
-    { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'Daily Cage Cleaning and Hygiene', desc: 'Upcoming lesson on cage cleaning.', img: '/blog-assets/birds.jfif', upcoming: true },
-    { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'Water, Temperature, and Lighting Needs', desc: 'Upcoming lesson on water, temperature, and lighting.', img: '/blog-assets/smallpets.jfif', upcoming: true },
-    { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'Safe Toys and Environmental Enrichment', desc: 'Upcoming lesson on safe toys.', img: '/blog-assets/birds.jfif', upcoming: true },
-    { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'Travel and Transportation Tips', desc: 'Upcoming lesson on travel and transportation.', img: '/blog-assets/smallpets.jfif', upcoming: true },
-
-    // Behaviour
-    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Understanding Bird Body Language', desc: 'Upcoming lesson on bird body language.', img: '/blog-assets/birds.jfif', upcoming: true },
-    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Why Birds Bite and How to Prevent It', desc: 'Upcoming lesson on why birds bite.', img: '/blog-assets/smallpets.jfif', upcoming: true },
-    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Managing Excessive Screaming', desc: 'Upcoming lesson on managing excessive screaming.', img: '/blog-assets/birds.jfif', upcoming: true },
-    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Building Trust and Bonding with Your Bird', desc: 'Upcoming lesson on building trust.', img: '/blog-assets/smallpets.jfif', upcoming: true },
-    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Understanding Hormonal Behaviour', desc: 'Upcoming lesson on hormonal behaviour.', img: '/blog-assets/birds.jfif', upcoming: true },
-
-    // Grooming
-    { cat: 'grooming', tagLabel: 'GROOMING', title: 'Bathing Your Bird Safely', desc: 'Upcoming lesson on bathing your bird.', img: '/blog-assets/smallpets.jfif', upcoming: true },
-    { cat: 'grooming', tagLabel: 'GROOMING', title: 'Feather Care and Molting', desc: 'Upcoming lesson on feather care and molting.', img: '/blog-assets/birds.jfif', upcoming: true },
-    { cat: 'grooming', tagLabel: 'GROOMING', title: 'Nail Trimming Basics', desc: 'Upcoming lesson on nail trimming.', img: '/blog-assets/smallpets.jfif', upcoming: true },
-    { cat: 'grooming', tagLabel: 'GROOMING', title: 'Beak Care and Maintenance', desc: 'Upcoming lesson on beak care.', img: '/blog-assets/birds.jfif', upcoming: true },
-    { cat: 'grooming', tagLabel: 'GROOMING', title: 'Wing Care and Flight Safety', desc: 'Upcoming lesson on wing care.', img: '/blog-assets/smallpets.jfif', upcoming: true },
-
-    // Lifestyle
-    { cat: 'lifestyle', tagLabel: 'LIFESTYLE', title: 'Creating a Bird-Friendly Home', desc: 'Upcoming lesson on creating a bird-friendly home.', img: '/blog-assets/birds.jfif', upcoming: true },
-    { cat: 'lifestyle', tagLabel: 'LIFESTYLE', title: 'Daily Exercise and Flight Time', desc: 'Upcoming lesson on daily exercise and flight time.', img: '/blog-assets/smallpets.jfif', upcoming: true },
-    { cat: 'lifestyle', tagLabel: 'LIFESTYLE', title: 'Mental Stimulation and Enrichment Activities', desc: 'Upcoming lesson on mental stimulation.', img: '/blog-assets/birds.jfif', upcoming: true },
-    { cat: 'lifestyle', tagLabel: 'LIFESTYLE', title: 'Introducing New Birds Safely', desc: 'Upcoming lesson on introducing new birds safely.', img: '/blog-assets/smallpets.jfif', upcoming: true },
-    { cat: 'lifestyle', tagLabel: 'LIFESTYLE', title: 'Seasonal Care and Weather Protection', desc: 'Upcoming lesson on seasonal care.', img: '/blog-assets/birds.jfif', upcoming: true },
+    { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'Creating a Daily Care Routine', desc: 'Upcoming lesson on daily care routine.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/vaccination/cvimage2.webp', upcoming: true },
+    { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'Litter Box Setup and Maintenance', desc: 'Upcoming lesson on litter box setup.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/vaccination/cvimage3.webp', upcoming: true },
+    { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'Dental Care for Healthy Teeth and Gums', desc: 'Upcoming lesson on dental care.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/vaccination/cvimage4.webp', upcoming: true },
+    { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'Ear, Eye, and Paw Care Essentials', desc: 'Upcoming lesson on ear, eye, and paw care.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/vaccination/cvimage5.webp', upcoming: true },
+    { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'Keeping Your Cat Hydrated', desc: 'Upcoming lesson on keeping your cat hydrated.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/vaccination/cvimage2.webp', upcoming: true },
 ];
 
 const reverseStoryIdMap = {
@@ -314,15 +269,11 @@ const Blog = () => {
         } else if (petType === 'cats') {
             title = 'Cats';
             subtitle = 'Everything your cat needs, all in one place.';
-        } else if (petType === 'birds') {
-            title = 'Birds';
-            subtitle = 'Everything your bird needs, all in one place.';
         }
         const trendingHeading = activeDetailCategory ? `${activeDetailCategory.charAt(0).toUpperCase() + activeDetailCategory.slice(1)} Topics` : 'Trending Topics';
         
         let sourceItems = dogsTrendingItems;
         if (petType === 'cats') sourceItems = catsTrendingItems;
-        if (petType === 'birds') sourceItems = birdsTrendingItems;
 
         const filteredItems = sourceItems.filter(item => {
             let matchesCategory = true;
@@ -480,7 +431,7 @@ const Blog = () => {
                                     {(!searchQuery || "dogs care & guides for dogs".includes(searchQuery)) && (
                                         <div className="pet-card" onClick={() => handlePetClick('dogs')}>
                                             <div className="pet-card-image">
-                                                <img src="https://plus.unsplash.com/premium_photo-1694819488591-a43907d1c5cc?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8ZG9nfGVufDB8fDB8fHww" alt="Dogs" />
+                                                <img src="https://cdn.pixabay.com/photo/2023/06/04/23/47/rufus-8041082_1280.jpg" alt="Dogs" />
                                             </div>
                                             <div className="pet-card-info">
                                                 <h4>Dogs</h4>
@@ -502,7 +453,7 @@ const Blog = () => {
                                     {(!searchQuery || "birds bird care essentials".includes(searchQuery)) && (
                                         <div className="pet-card" style={{opacity: 0.7, cursor: 'not-allowed'}}>
                                             <div className="pet-card-image">
-                                                <img src="/blog-assets/birds.jfif" alt="Birds" />
+                                                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ijZWa3JBLKwH9-oPEPReVXjdJfWXys27hw&s" alt="Birds" />
                                                 <div style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                                                     <span style={{backgroundColor: '#1C3333', color: 'white', fontSize: '9px', fontWeight: 'bold', padding: '4px 8px', borderRadius: '12px', whiteSpace: 'nowrap'}}>Upcoming Lesson</span>
                                                 </div>
@@ -516,7 +467,7 @@ const Blog = () => {
                                     {(!searchQuery || "small pets little friends, big care".includes(searchQuery)) && (
                                         <div className="pet-card" style={{opacity: 0.7, cursor: 'not-allowed'}}>
                                             <div className="pet-card-image">
-                                                <img src="/blog-assets/smallpets.jfif" alt="Small Pets" />
+                                                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQodUl23jlnqxnZpF8VR9o_0gT63iKbt0PpZQ&s" alt="Small Pets" />
                                                 <div style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                                                     <span style={{backgroundColor: '#1C3333', color: 'white', fontSize: '9px', fontWeight: 'bold', padding: '4px 8px', borderRadius: '12px', whiteSpace: 'nowrap'}}>Upcoming Lesson</span>
                                                 </div>
@@ -580,8 +531,8 @@ const Blog = () => {
                             <section className="subscribe-section">
                                 <div className={`subscribe-box ${isSubscribed ? 'success' : ''}`}>
                                     <div className="subscribe-images">
-                                        <img src="/blog-assets/dog.jfif" alt="Happy Dog" className="subscribe-dog-img left" />
-                                        <img src="/blog-assets/hero.jfif" alt="Cat and Dog" className="subscribe-dog-img right" />
+                                        <img src="https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/nutrition/food/foimage9.webp" alt="Happy Dog" className="subscribe-dog-img left" />
+                                        <img src="https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training5/training5(3).webp" alt="Cat and Dog" className="subscribe-dog-img right" />
                                     </div>
                                     <div className="subscribe-content">
                                         {isSubscribed ? (
