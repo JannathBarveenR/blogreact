@@ -364,6 +364,8 @@ Resources:
                   - "arn:aws:s3:::petolife-pet-photos-*/*"
                   - "arn:aws:s3:::petolife-medical-docs-*"
                   - "arn:aws:s3:::petolife-medical-docs-*/*"
+                  - "arn:aws:s3:::petolife-blog-images-*"
+                  - "arn:aws:s3:::petolife-blog-images-*/*"
 
   EC2InstanceProfile:
     Type: AWS::IAM::InstanceProfile
