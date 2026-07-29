@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PetOlife — Pet Parent Academy · Why Do Dogs Need Vaccinations?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&family=Karla:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="stage">
+  <div class="phone" id="phone">
+
+    <div class="head">
+      <div class="bars" id="bars"></div>
+      <div class="profile-row">
+        <div class="meta" id="storyMeta"></div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <button class="close-btn" id="closeBtn" aria-label="Close story">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- navigation: tap zones + swipe + visible arrow buttons -->
+    <button class="navzone left" id="navLeft" aria-label="Previous card">
+      <span class="nav-arrow nav-arrow-left">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </span>
+    </button>
+    <button class="navzone right" id="navRight" aria-label="Next card">
+    </button>
+
+    <div class="right-actions" style="position: absolute; right: 10px; top: calc(70px + (var(--nav-zone-height) / 2) - 22px); display: flex; flex-direction: column; align-items: center; gap: 14px; z-index: 50; pointer-events: none;">
+      <div class="nav-arrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </div>
+      <button class="nav-arrow share-btn" id="shareBtn" aria-label="Share story" style="pointer-events: auto; color:#fff; cursor:pointer;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="18" cy="5" r="3"></circle>
+          <circle cx="6" cy="12" r="3"></circle>
+          <circle cx="18" cy="19" r="3"></circle>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="slides" id="slides"></div>
+  </div>
+</div>
+
+<script src="js/script.js?v=2"></script>
+</body>
+</html>
