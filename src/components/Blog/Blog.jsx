@@ -502,7 +502,7 @@ const Blog = () => {
                                     {(!searchQuery || "birds bird care essentials".includes(searchQuery)) && (
                                         <div className="pet-card" style={{opacity: 0.7, cursor: 'not-allowed'}}>
                                             <div className="pet-card-image">
-                                                <img src="https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training4/training4(3).webp" alt="Birds" />
+                                                <img src="/blog-assets/birds.webp" alt="Birds" />
                                                 <div style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                                                     <span style={{backgroundColor: '#1C3333', color: 'white', fontSize: '9px', fontWeight: 'bold', padding: '4px 8px', borderRadius: '12px', whiteSpace: 'nowrap'}}>Upcoming Lesson</span>
                                                 </div>
@@ -516,7 +516,7 @@ const Blog = () => {
                                     {(!searchQuery || "small pets little friends, big care".includes(searchQuery)) && (
                                         <div className="pet-card" style={{opacity: 0.7, cursor: 'not-allowed'}}>
                                             <div className="pet-card-image">
-                                                <img src="https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training3/training3(3).webp" alt="Small Pets" />
+                                                <img src="/blog-assets/rabbit.webp" alt="Small Pets" />
                                                 <div style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                                                     <span style={{backgroundColor: '#1C3333', color: 'white', fontSize: '9px', fontWeight: 'bold', padding: '4px 8px', borderRadius: '12px', whiteSpace: 'nowrap'}}>Upcoming Lesson</span>
                                                 </div>
@@ -580,8 +580,8 @@ const Blog = () => {
                             <section className="subscribe-section">
                                 <div className={`subscribe-box ${isSubscribed ? 'success' : ''}`}>
                                     <div className="subscribe-images">
-                                        <img src="https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training6/s_image3.webp" alt="Happy Dog" className="subscribe-dog-img left" />
-                                        <img src="https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training5/training5(3).webp" alt="Cat and Dog" className="subscribe-dog-img right" />
+                                        <img src="/blog-assets/dog.webp" alt="Happy Dog" className="subscribe-dog-img left" />
+                                        <img src="/blog-assets/cats.webp" alt="Cat and Dog" className="subscribe-dog-img right" />
                                     </div>
                                     <div className="subscribe-content">
                                         {isSubscribed ? (
