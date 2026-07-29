@@ -581,7 +581,7 @@ const Blog = () => {
                                 <div className={`subscribe-box ${isSubscribed ? 'success' : ''}`}>
                                     <div className="subscribe-images">
                                         <img src="https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/nutrition/food/foimage9.webp" alt="Happy Dog" className="subscribe-dog-img left" />
-                                        <img src="/blog-assets/cats.webp" alt="Cat and Dog" className="subscribe-dog-img right" />
+                                        <img src="https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/training/training5/training5(3).webp" alt="Cat and Dog" className="subscribe-dog-img right" />
                                     </div>
                                     <div className="subscribe-content">
                                         {isSubscribed ? (
