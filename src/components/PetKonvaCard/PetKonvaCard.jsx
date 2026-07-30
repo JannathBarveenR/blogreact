@@ -156,6 +156,46 @@ const PetKonvaCard = forwardRef(({ petData = {}, containerWidth = 380 }, ref) =>
 
   const ownerName = getOwnerName();
   
+  // Dynamic Breed Pill Config
+  const getBreedPillConfig = (breedText) => {
+    const text = breedText || "Breed";
+    const len = text.length;
+
+    let fontSize = 36;
+    if (len > 24) fontSize = 22;
+    else if (len > 18) fontSize = 25;
+    else if (len > 14) fontSize = 28;
+    else if (len > 10) fontSize = 32;
+
+    const approxCharWidth = fontSize * 0.58;
+    const estimatedTextWidth = len * approxCharWidth;
+    
+    // Icon offset = 75px, right padding = 30px
+    const calculatedPillWidth = Math.max(240, Math.min(440, Math.round(75 + estimatedTextWidth + 30)));
+    const maxTextWidth = calculatedPillWidth - 95;
+    const textY = Math.round((76 - fontSize) / 2 - 2);
+
+    return { fontSize, pillWidth: calculatedPillWidth, maxTextWidth, textY };
+  };
+
+  const breedConfig = getBreedPillConfig(breed);
+
+  // Dynamic Gender & Age Centered Layout
+  const getGenderAgeLayout = (genderText, ageText) => {
+    const gText = genderText || "Male";
+    const genderTextWidth = gText.length * 17.5;
+    const genderRight = 34 + genderTextWidth;
+    
+    const gap = 20; // equal gap on left & right of divider line
+    const lineX = Math.round(genderRight + gap);
+    const calendarIconX = Math.round(lineX + gap);
+    const ageTextX = calendarIconX + 38;
+
+    return { lineX, calendarIconX, ageTextX };
+  };
+
+  const genderAgeLayout = getGenderAgeLayout(gender, ageDisplay);
+  
   const frontendBase = import.meta.env.VITE_FRONTEND_URL || (typeof window !== "undefined" ? window.location.origin : "");
   const qrUrl = `${frontendBase}/pet/${encodeURIComponent(petolifeId.toLowerCase())}`;
 
@@ -283,7 +323,7 @@ const PetKonvaCard = forwardRef(({ petData = {}, containerWidth = 380 }, ref) =>
           {/* Tagline "HEALTH ID" drawn cleanly below logo */}
           <Text
             x={0}
-            y={190}
+            y={155}
             width={NATIVE_WIDTH}
             align="center"
             text="HEALTH ID"
@@ -293,9 +333,9 @@ const PetKonvaCard = forwardRef(({ petData = {}, containerWidth = 380 }, ref) =>
             fontFamily="system-ui, sans-serif"
             fill="#406950"
           />
-          {/* Accent Lines for Tagline */}
-          <Line points={[240, 203, 410, 203]} stroke="#c3d2bb" strokeWidth={1.5} />
-          <Line points={[670, 203, 840, 203]} stroke="#c3d2bb" strokeWidth={1.5} />
+          {/* Accent Lines for Tagline - shortened on right to avoid overlapping Verified Pet badge */}
+          <Line points={[240, 168, 410, 168]} stroke="#c3d2bb" strokeWidth={1.5} />
+          <Line points={[670, 168, 770, 168]} stroke="#c3d2bb" strokeWidth={1.5} />
 
           {/* Verified Badge */}
           {loadedBadge && (
@@ -376,12 +416,12 @@ const PetKonvaCard = forwardRef(({ petData = {}, containerWidth = 380 }, ref) =>
           />
 
           {/* Right Side Info */}
-          {/* Name */}
-          <Text x={560} y={320} text={petName} fontSize={80} width={450} wrap="none" ellipsis={true} fontStyle="bold" fontFamily="system-ui, sans-serif" fill="#123d2f" />
-          {/* Tilted outline Heart beside Name - matching styling and position */}
+          {/* Name - moved down slightly to eliminate awkward top gap */}
+          <Text x={560} y={365} text={petName} fontSize={80} width={450} wrap="none" ellipsis={true} fontStyle="bold" fontFamily="system-ui, sans-serif" fill="#123d2f" />
+          {/* Tilted outline Heart beside Name */}
           <Path 
             x={560 + Math.min(petName.length * 48, 430) + 20} 
-            y={335} 
+            y={380} 
             data={SVG_PATHS.heartSolid} 
             stroke="#719d3f" 
             strokeWidth={2} 
@@ -396,9 +436,9 @@ const PetKonvaCard = forwardRef(({ petData = {}, containerWidth = 380 }, ref) =>
           <Path x={755} y={476} data={SVG_PATHS.paw} fill="#406950" scaleX={1.1} scaleY={1.1} />
           <Line points={[800, 490, 980, 490]} stroke="#b8c6a5" strokeWidth={2} />
 
-          {/* Breed Pill */}
+          {/* Breed Pill - flexible width & auto-scaling font size for long breed names */}
           <Group x={580} y={550}>
-            <Rect x={0} y={0} width={360} height={76} cornerRadius={38} stroke="#c3d2bb" strokeWidth={2} />
+            <Rect x={0} y={0} width={breedConfig.pillWidth} height={76} cornerRadius={38} stroke="#c3d2bb" strokeWidth={2} fill="#f4f8f2" />
             {/* Cute floppy ears dog face built using Konva shapes */}
             <Group x={25} y={15}>
               <Circle x={20} y={20} radius={11} stroke="#406950" strokeWidth={2} fill="transparent" />
@@ -409,18 +449,29 @@ const PetKonvaCard = forwardRef(({ petData = {}, containerWidth = 380 }, ref) =>
               <Path data="M 18 21 L 22 21 L 20 23 Z" fill="#406950" />
               <Path data="M 18 24 Q 20 25.5 22 24" stroke="#406950" strokeWidth={1.5} fill="transparent" />
             </Group>
-            <Text x={78} y={22} text={breed} fontSize={30} fontFamily="system-ui, sans-serif" fill="#406950" />
+            <Text 
+              x={78} 
+              y={breedConfig.textY} 
+              text={breed} 
+              fontSize={breedConfig.fontSize} 
+              fontStyle="600"
+              width={breedConfig.maxTextWidth} 
+              ellipsis={true}
+              wrap="none"
+              fontFamily="system-ui, sans-serif" 
+              fill="#406950" 
+            />
           </Group>
 
-          {/* Gender and Age */}
+          {/* Gender and Age - dynamically centered divider line */}
           <Group x={590} y={670}>
             <Path x={0} y={0} data={gender.toLowerCase() === "female" ? SVG_PATHS.female : SVG_PATHS.male} fill="#406950" scaleX={1.2} scaleY={1.2} />
             <Text x={35} y={0} text={gender} fontSize={32} fontFamily="system-ui, sans-serif" fill="#123d2f" />
             
-            <Line points={[140, -10, 140, 36]} stroke="#b8c6a5" strokeWidth={2} />
+            <Line points={[genderAgeLayout.lineX, 0, genderAgeLayout.lineX, 32]} stroke="#b8c6a5" strokeWidth={2} />
             
-            <Path x={180} y={0} data={SVG_PATHS.calendar} fill="#406950" scaleX={1.2} scaleY={1.2} />
-            <Text x={220} y={0} text={ageDisplay} fontSize={32} fontFamily="system-ui, sans-serif" fill="#123d2f" />
+            <Path x={genderAgeLayout.calendarIconX} y={0} data={SVG_PATHS.calendar} fill="#406950" scaleX={1.2} scaleY={1.2} />
+            <Text x={genderAgeLayout.ageTextX} y={0} text={ageDisplay} fontSize={32} fontFamily="system-ui, sans-serif" fill="#123d2f" />
           </Group>
 
           {/* Banner: PETOLIFE HEALTH ID with Lighter Gold Glow */}
