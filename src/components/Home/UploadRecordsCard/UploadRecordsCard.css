@@ -1,107 +1,240 @@
-.upload-records-card-wrapper {
+.upload-records-card {
+  position: relative;
+  width: 100%;
+  border-radius: 22px;
+  padding: 22px 22px 20px 22px;
+  font-family: 'Manrope', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  box-sizing: border-box;
+  background: #ffffff;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 75, 73, 0.06);
+  margin: 2px 0 12px 0;
+  overflow: hidden;
+}
+
+/* SVG filter for Gooey Blob Effect */
+.goo-filter-svg {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.upload-card-sparkle {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  color: #a3d977;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+/* 1. Full Width Upper Heading Section - Shifted slightly down */
+.upload-card-header-full {
+  width: 100%;
+  margin-top: 6px;
+  margin-bottom: 14px;
+  position: relative;
+  z-index: 2;
+  padding-right: 28px;
+}
+
+.upload-card-title-dark {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 800;
+  line-height: 1.3;
+  color: #0b3724;
+}
+
+.upload-card-title-green {
+  color: #438b3e;
+}
+
+.upload-title-divider {
+  width: 42px;
+  height: 3.5px;
+  background-color: #438b3e;
+  border-radius: 2px;
+  margin-top: 8px;
+}
+
+/* 2. Middle Body Row: Description text coupled with image */
+.upload-card-body-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
   width: 100%;
   position: relative;
-  border-radius: 20px;
-  overflow: hidden;
-  margin: 12px 0 16px;
-  cursor: pointer;
-  box-shadow: 0 8px 24px rgba(12, 61, 47, 0.1), 0 2px 6px rgba(0, 0, 0, 0.04);
-  border: 1px solid rgba(0, 75, 73, 0.08);
-  background: #ffffff;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-  box-sizing: border-box;
+  margin-bottom: 12px;
+  z-index: 2;
 }
 
-.upload-records-card-wrapper:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 30px rgba(12, 61, 47, 0.16);
+.upload-card-subtitle {
+  flex: 1;
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  font-weight: 500;
+  color: #4a5568;
 }
 
-.upload-records-card-wrapper:active {
-  transform: translateY(0);
+.upload-card-img-container {
+  flex-shrink: 0;
+  width: 165px;
+  margin-right: -14px;
+  margin-left: -20px;
+  margin-top: -12px;
+  margin-bottom: -12px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 }
 
-.upload-records-main-img {
+.upload-card-folder-img {
   width: 100%;
   height: auto;
-  display: block;
-  object-fit: cover;
-  border-radius: 20px;
+  max-height: 175px;
+  object-fit: contain;
+  object-position: right center;
 }
 
-/* CTA & Tagline Overlay Container */
-.upload-records-overlay-container {
-  position: absolute;
-  bottom: 4%;
-  right: 2%;
+/* 3. Bottom CTA Button Section */
+.upload-card-bottom-bar {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 10px;
-  z-index: 5;
+  z-index: 2;
+  position: relative;
 }
 
-.upload-my-records-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  background: linear-gradient(135deg, #004b49 0%, #00695c 100%);
+/* Gooey Blob Button replicating exact SCSS animation */
+.upload-blob-btn {
+  z-index: 1;
+  position: relative;
+  padding: 12px 24px;
+  text-align: center;
   color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  background-color: transparent;
+  outline: none;
   border: none;
-  padding: 17px 14px;
-  border-radius: 32px;
-  font-size: 0.84rem;
-  font-weight: 800;
+  transition: color 0.5s ease, transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(0, 75, 73, 0.32);
-  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
-  letter-spacing: -0.01em;
-  white-space: nowrap;
-}
-
-.upload-my-records-btn:hover {
-  background: linear-gradient(135deg, #003634 0%, #004b49 100%);
-  box-shadow: 0 8px 24px rgba(0, 75, 73, 0.4);
-  transform: scale(1.02);
-}
-
-.upload-records-trust-tagline {
+  border-radius: 30px;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: #004b49;
-  letter-spacing: -0.01em;
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(6px);
-  padding: 3px 10px;
-  border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  gap: 8px;
+  box-shadow: 0 4px 16px rgba(62, 136, 56, 0.35);
+  user-select: none;
 }
 
-.trust-lock-icon {
-  color: #004b49;
+.upload-blob-btn:hover {
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(62, 136, 56, 0.45);
 }
 
-/* Mobile Responsiveness */
-@media (max-width: 500px) {
-  .upload-records-overlay-container {
-    bottom: 3%;
-    right: 2%;
-    gap: 4px;
+.upload-blob-btn__inner {
+  z-index: -1;
+  overflow: hidden;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 30px;
+  background: linear-gradient(135deg, #78bc38 0%, #3e8838 100%);
+}
+
+.upload-blob-btn__blobs {
+  position: relative;
+  display: block;
+  height: 100%;
+  filter: url('#goo');
+}
+
+.upload-blob-btn__blob {
+  position: absolute;
+  top: 2px;
+  width: 32%;
+  height: 100%;
+  background: #063825; /* Dark forest green liquid blob */
+  border-radius: 100%;
+  transform: translate3d(0, 150%, 0) scale(1.4);
+  transition: transform 0.45s ease;
+}
+
+@supports (filter: url('#goo')) {
+  .upload-blob-btn__blob {
+    transform: translate3d(0, 150%, 0) scale(1.4);
+  }
+}
+
+.upload-blob-btn__blob:nth-child(1) {
+  left: 0%;
+  transition-delay: 0s;
+}
+
+.upload-blob-btn__blob:nth-child(2) {
+  left: 30%;
+  transition-delay: 0.08s;
+}
+
+.upload-blob-btn__blob:nth-child(3) {
+  left: 60%;
+  transition-delay: 0.16s;
+}
+
+.upload-blob-btn__blob:nth-child(4) {
+  left: 90%;
+  transition-delay: 0.24s;
+}
+
+.upload-blob-btn:hover .upload-blob-btn__blob {
+  transform: translateZ(0) scale(1.7);
+}
+
+@supports (filter: url('#goo')) {
+  .upload-blob-btn:hover .upload-blob-btn__blob {
+    transform: translateZ(0) scale(1.4);
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 520px) {
+  .upload-records-card {
+    padding: 18px 16px 16px 16px;
+    border-radius: 18px;
   }
 
-  .upload-my-records-btn {
-    padding: 13px 10px;
-    font-size: 0.76rem;
-    border-radius: 26px;
-    gap: 4px;
+  .upload-card-header-full {
+    margin-top: 4px;
   }
 
-  .upload-records-trust-tagline {
-    font-size: 0.62rem;
-    padding: 2px 7px;
+  .upload-card-title-dark {
+    font-size: 18px;
+  }
+
+  .upload-card-body-row {
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .upload-card-subtitle {
+    font-size: 11.5px;
+  }
+
+  .upload-card-img-container {
+    width: 130px;
+  }
+
+  .upload-blob-btn {
+    padding: 9px 18px;
+    font-size: 12.5px;
+    width: auto;
+    border-radius: 30px;
   }
 }

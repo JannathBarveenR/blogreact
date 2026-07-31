@@ -99,6 +99,21 @@ export default function RemindersPage() {
   const [customSnoozeDate, setCustomSnoozeDate] = useState("");
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
+    if (snoozeModal) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [snoozeModal]);
+
+  useEffect(() => {
     if (!pets.length || !user?.id) return;
     const saved = localStorage.getItem(`active_pet_id_${user.id}`);
     if (saved && pets.some((p) => p.id === saved)) {

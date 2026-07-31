@@ -13,7 +13,6 @@ import ProfileCard from "./ProfileCard/ProfileCard";
 import polLogo from "../../assets/logo.webp";
 import ppacBannerImg from "../../assets/ppac.png";
 import fetchWithAuth from "../../utils/fetchWithAuth";
-import PetLifestyleSurveyCard from "./PetLifestyleSurveyCard";
 
 // -----------------------------------------------------------------------------
 // Pet Dashboard Component
@@ -139,6 +138,7 @@ export default function PetHome({
       <div className="pet-dashboard-scrollable">
         <HeroSection 
           pets={pets} 
+          selectedPet={selectedPet}
           surveyCompleted={surveyCompleted}
           checkingSurvey={checkingSurvey}
         />

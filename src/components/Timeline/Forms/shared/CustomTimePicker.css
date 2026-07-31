@@ -195,11 +195,11 @@
 .ctp-scroll-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  max-height: 140px;
+  gap: 8px;
+  max-height: 165px;
   overflow-y: auto;
   width: 100%;
-  padding-right: 2px;
+  padding: 2px 4px 2px 0;
 }
 
 /* Custom scrollbar */
@@ -213,15 +213,16 @@
 
 .ctp-num-btn {
   width: 100%;
-  height: 32px;
-  border-radius: 8px;
+  height: 36px;
+  border-radius: 10px;
   border: 1px solid transparent;
   background: #ffffff;
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 700;
   color: #334155;
   cursor: pointer;
   transition: all 0.15s ease;
+  flex-shrink: 0;
 }
 
 .ctp-num-btn:hover {
@@ -229,8 +230,9 @@
 }
 
 .ctp-num-btn--selected {
-  background: #004b23;
-  color: #ffffff;
+  background: #eaf5e5;
+  border: 1.5px solid #004b23;
+  color: #004b23;
   font-weight: 800;
 }
 
@@ -256,9 +258,10 @@
 }
 
 .ctp-period-btn--selected {
-  background: #004b23;
-  border-color: #004b23;
-  color: #ffffff;
+  background: #eaf5e5;
+  border: 2px solid #004b23;
+  color: #004b23;
+  font-weight: 800;
 }
 
 /* Footer */
@@ -292,3 +295,163 @@
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(0, 75, 35, 0.15);
 }
+
+/* ── Primary CTA Button (Select Dose Time Optional) ── */
+.med-dose-time-cta {
+  width: 100%;
+  min-height: 48px;
+  background: #ffffff;
+  border: 1.5px solid #84b662;
+  border-radius: 14px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: #000000;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 75, 35, 0.04);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+.med-dose-time-cta:hover {
+  border-color: #004b23;
+  background: #f8faf7;
+  box-shadow: 0 4px 12px rgba(0, 75, 35, 0.08);
+}
+
+.med-dose-time-cta:active {
+  transform: translateY(0);
+}
+
+.med-dose-time-cta__left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ctp-cta-icon {
+  font-size: 20px;
+  color: #004b23;
+}
+
+.med-dose-time-cta__title {
+  font-weight: 700;
+  font-size: 14px;
+  color: #000000;
+  letter-spacing: 0.2px;
+}
+
+.med-dose-time-cta__badge {
+  background: #f4fbf7;
+  border: 1px solid #84b662;
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #000000;
+  white-space: nowrap;
+}
+
+/* ── Dose Time Bottom Sheet & Pill Toggles (Matching Reference Image) ── */
+.dt-toggles-container {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
+  padding: 6px 8px 10px 8px;
+  margin-top: -4px;
+  scroll-behavior: smooth;
+}
+
+.dt-toggles-container::-webkit-scrollbar {
+  height: 4px;
+}
+.dt-toggles-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.dt-toggle-card {
+  flex: 1;
+  min-width: 95px;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  box-sizing: border-box;
+}
+
+.dt-toggle-card:hover {
+  border-color: #84b662;
+  background: #f8faf7;
+}
+
+.dt-toggle-card--active {
+  background: #ffffff;
+  border: 2px solid #004b23;
+  box-shadow: 0 4px 12px rgba(0, 75, 35, 0.12);
+  transform: translateY(-1px);
+}
+
+.dt-toggle-label {
+  font-size: 12px;
+  font-weight: 800;
+  color: #334155;
+  transition: color 0.15s ease;
+}
+
+.dt-toggle-card--active .dt-toggle-label {
+  color: #004b23;
+}
+
+.dt-toggle-time {
+  width: 100%;
+  height: 28px;
+  border-radius: 10px;
+  background: #f8faf7;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #64748b;
+  transition: all 0.15s ease;
+}
+
+.dt-toggle-time--set {
+  background: #f4fbf7;
+  border: 1px solid #84b662;
+  color: #000000;
+  font-weight: 800;
+}
+
+.dt-toggle-card--active .dt-toggle-time {
+  background: #ffffff;
+  border: 1.5px solid #004b23;
+  color: #000000;
+  font-weight: 800;
+  box-shadow: 0 2px 6px rgba(0, 75, 35, 0.08);
+}
+
+.dt-toggle-card--active .dt-toggle-time--set {
+  background: #f4fbf7;
+  border: 1.5px solid #004b23;
+  color: #000000;
+  font-weight: 800;
+}
+
+

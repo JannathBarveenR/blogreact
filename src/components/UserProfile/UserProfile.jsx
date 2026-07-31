@@ -241,8 +241,8 @@ const getPetIcon = (pet) => {
   const settingsRows = [
     {
       icon: FiBell,
-      title: "Notifications",
-      subtitle: "Manage notification preferences",
+      title: "All Reminders",
+      subtitle: "Manage pet reminders & notifications",
       path: "/settings/notifications",
     },
     {
@@ -346,6 +346,7 @@ const getPetIcon = (pet) => {
   }`}
   onClick={() => {
     switch (row.title) {
+      case "All Reminders":
       case "Notifications":
         navigate("/reminders");
         break;

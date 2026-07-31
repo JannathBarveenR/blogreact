@@ -31,7 +31,7 @@ import {
   FileQuestion,
   Sparkles,
 } from "lucide-react";
-import heroImage from "../../assets/medical-banner.webp";
+import heroImage from "../../assets/rcrdcard.jpeg";
 import emptyDog from "../../assets/empty-dog.webp";
 
 const FIXED_CATEGORIES = ["All", "Favorites"];
@@ -66,9 +66,7 @@ export default function MedicalRecords({
   const pdfInputRef = useRef(null);
   const cameraInputRef = useRef(null);
 
-  // The pet object matching the currently active pet, so ProfileCard
-  // shows real data instead of its placeholder fallback, and so its
-  // dropdown actually lists your pets.
+  // The pet object matching the currently active pet
   const selectedPet =
     pets.find((p) => p.id === activePetId) || (pets.length > 0 ? pets[0] : null);
 
@@ -158,6 +156,7 @@ export default function MedicalRecords({
 
       if (res.ok) {
         setShowMetaForm(false);
+        setActiveCategory(category);
         setFormData({
           recordName: "",
           category: "Prescription",
@@ -280,6 +279,40 @@ export default function MedicalRecords({
       <section className="hero-banner">
         <img src={heroImage} alt="Medical Banner" />
       </section>
+
+      {/* CATEGORY FILTER BAR */}
+      <div className="mr-category-tabs-container">
+        <div className="mr-category-tabs">
+          {displayedCategories.map((cat) => {
+            const isActive = activeCategory === cat;
+            const Icon =
+              cat === "All"
+                ? FolderOpen
+                : cat === "Favorites"
+                  ? Heart
+                  : CATEGORY_ICONS[cat] || FileQuestion;
+            const count =
+              cat === "All"
+                ? allRecords.length
+                : cat === "Favorites"
+                  ? allRecords.filter((r) => r.is_favorite).length
+                  : categoryCounts[cat] || 0;
+
+            return (
+              <button
+                key={cat}
+                className={`mr-category-chip ${isActive ? "active" : ""}`}
+                onClick={() => setActiveCategory(cat)}
+                type="button"
+              >
+                <Icon size={15} />
+                <span>{cat}</span>
+                {count > 0 && <span className="category-chip-count">{count}</span>}
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       {/* RECORDS SECTION */}
       <section className="records-section">

@@ -102,18 +102,21 @@ class MedicalRecordService:
         )
 
         log = 1 if event_id else 0
+        resolved_title = title or label or filename or "Medical Record"
 
         row: dict = {
             "pet_profile_id": pet_id,
             "log": log,
-            "category": category,
+            "title": resolved_title,
+            "category": category or "Other",
             "file_url": presigned_url,
             "storage_path": storage_path,
+            "file_name": filename,
+            "file_type": content_type or "application/octet-stream",
+            "file_size": len(file_bytes),
         }
         if user_id:
             row["user_id"] = user_id
-        if title:
-            row["title"] = title
         if notes:
             row["notes"] = notes
         if event_id:

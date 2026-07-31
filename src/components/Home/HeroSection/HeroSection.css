@@ -1,129 +1,365 @@
-.dashboard-hero {
+.welcome-card {
   position: relative;
   width: 100%;
-  border-radius: 20px;
-  padding: 24px 30px;
-  font-family: 'Manrope', sans-serif;
+  border-radius: 22px;
+  padding: 16px 18px 12px 18px;
+  font-family: 'Manrope', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   box-sizing: border-box;
   background: #ffffff;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-  margin-bottom: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 75, 73, 0.06);
+  margin-bottom: 4px;
+  overflow: hidden;
 }
 
-.dashboard-hero-title {
+/* Top Banner Section */
+.welcome-hero-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  position: relative;
+  min-height: 165px;
+}
+
+.welcome-text-content {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  max-width: 62%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.welcome-greeting {
   margin: 0;
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 800;
-  line-height: 1.25;
-  color: #004b49; /* Dark green greeting */
+  line-height: 1.2;
+  color: #0b3724;
 }
 
-.dashboard-hero-username {
-  color: #86c540; /* Light green username */
-}
-
-.dashboard-hero-subtitle {
+.welcome-username {
   margin: 0;
-  font-size: 12px;
-  line-height: 1.6;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: #3b843d;
+}
+
+.welcome-green-divider {
+  width: 38px;
+  height: 3px;
+  background-color: #3b843d;
+  border-radius: 2px;
+  margin: 6px 0 10px 0;
+}
+
+.welcome-subtitle {
+  margin: 0 0 14px 0;
+  font-size: 12.5px;
+  line-height: 1.5;
   font-weight: 500;
-  text-align: left;
-  color: #4a5568; /* Soft grey text */
-  white-space: normal;
-  word-wrap: break-word;
+  color: #4a5568;
+  max-width: 210px;
 }
 
-.quote-style {
-  font-style: italic;
-  opacity: 0.9;
-}
-
-/* Checklist inside the Good morning card */
-.hero-checklist {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 4px;
-}
-
-.hero-checklist-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  background: #f7fafc;
-  border-radius: 10px;
+.welcome-take-survey-btn {
+  background-color: #063825;
+  color: #ffffff;
+  border: none;
+  padding: 9px 17px;
+  border-radius: 11px;
+  font-weight: 700;
+  font-size: 13.5px;
   cursor: pointer;
-  transition: background 0.18s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  box-shadow: 0 3px 12px rgba(6, 56, 37, 0.25);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
 }
 
-.hero-checklist-item:hover {
-  background: #edf2f7;
+.welcome-take-survey-btn:hover {
+  background-color: #042719;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 15px rgba(6, 56, 37, 0.32);
 }
 
-.hero-checklist-item.checked {
-  background: rgba(134, 197, 64, 0.09);
+.welcome-take-survey-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(6, 56, 37, 0.2);
 }
 
-.hero-checklist-checkbox {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  border: 2px solid #cbd5e0;
+.btn-survey-icon {
   flex-shrink: 0;
+}
+
+.btn-chevron-icon {
+  flex-shrink: 0;
+  margin-left: 2px;
+}
+
+.welcome-image-wrapper {
+  position: absolute;
+  right: -12px;
+  bottom: -16px;
+  top: -10px;
+  width: 44%;
+  max-width: 220px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.welcome-bg-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom right;
+}
+
+/* Features Carousel Section (Two-slide container) */
+.welcome-features-wrapper {
+  background-color: #f7faf8;
+  border-radius: 16px;
+  padding: 8px 4px;
+  margin-top: 10px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  border: 1px solid rgba(0, 75, 73, 0.04);
+}
+
+.welcome-features-track {
+  display: flex;
+  width: 100%;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.welcome-features-track::-webkit-scrollbar {
+  display: none;
+}
+
+.feature-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  align-items: stretch;
+  scroll-snap-align: start;
+  gap: 8px;
+  padding: 2px 4px;
+  box-sizing: border-box;
+}
+
+.feature-item {
+  flex: 1;
+  max-width: 48%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 5px;
+  padding: 4px 2px;
+  box-sizing: border-box;
+}
+
+/* Icon Badge with Compact Overlay Chip */
+.feature-icon-badge {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.18s ease;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
 }
 
-.hero-checklist-item.checked .hero-checklist-checkbox {
-  background: #86c540;
-  border-color: #86c540;
+.feature-item:hover .feature-icon-badge {
+  transform: scale(1.05);
 }
 
-.hero-check-mark {
-  font-size: 10px;
-  font-weight: 700;
+.badge-clock {
+  background: #e4f4e7;
+  color: #1b4d3e;
+}
+
+.badge-records {
+  background: #fdf3d6;
+  color: #9c6c10;
+}
+
+.badge-insights {
+  background: #e2f0e7;
+  color: #154536;
+}
+
+.badge-ai {
+  background: #e5f5ed;
+  color: #226346;
+}
+
+/* Compact Overlay Coming Soon Chip - Zero extra layout height */
+.coming-soon-chip {
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #063825;
   color: #ffffff;
+  font-size: 7.5px;
+  font-weight: 800;
+  padding: 1.5px 6px;
+  border-radius: 8px;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  box-shadow: 0 2px 5px rgba(6, 56, 37, 0.25);
+  text-transform: uppercase;
+  z-index: 2;
+  line-height: 1;
 }
 
-.hero-checklist-text {
-  font-size: 13px;
-  font-weight: 500;
-  color: #4a5568;
-  transition: all 0.18s ease;
-}
-
-.hero-survey-cta {
+.feature-text {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-top: 4px;
+  align-items: center;
+  gap: 2px;
 }
 
-.hero-survey-btn {
-  background-color: #004b23;
-  color: #ffffff;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 10px;
-  font-weight: 600;
-  font-size: 13px;
+.feature-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.feature-desc {
+  font-size: 9.5px;
+  font-weight: 500;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* Carousel Navigation Arrows */
+.carousel-arrow {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  align-self: flex-start;
-  transition: background-color 0.2s ease;
+  flex-shrink: 0;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+  z-index: 3;
 }
 
-.hero-survey-btn:hover {
-  background-color: #003619;
+.carousel-arrow-left {
+  margin-right: -4px;
+  margin-left: 2px;
 }
 
-.hero-checklist-item.checked .hero-checklist-text {
-  color: #a0aec0;
-  text-decoration: line-through;
+.carousel-arrow-right {
+  margin-left: -4px;
+  margin-right: 2px;
+}
+
+.carousel-arrow:hover {
+  background: #f8fafc;
+  color: #0f172a;
+  box-shadow: 0 3px 7px rgba(0, 0, 0, 0.12);
+}
+
+/* Pagination Dots */
+.carousel-dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  margin-top: 6px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+
+.dot.active {
+  width: 14px;
+  border-radius: 4px;
+  background: #86c540;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .welcome-card {
+    padding: 14px 14px 10px 14px;
+    border-radius: 18px;
+  }
+
+  .welcome-greeting,
+  .welcome-username {
+    font-size: 19px;
+  }
+
+  .welcome-subtitle {
+    font-size: 11.5px;
+    margin-bottom: 12px;
+    max-width: 175px;
+  }
+
+  .welcome-text-content {
+    max-width: 65%;
+  }
+
+  .welcome-take-survey-btn {
+    padding: 8px 14px;
+    font-size: 12.5px;
+    border-radius: 9px;
+  }
+
+  .welcome-image-wrapper {
+    width: 40%;
+    right: -10px;
+    bottom: -12px;
+  }
+
+  .feature-icon-badge {
+    width: 38px;
+    height: 38px;
+  }
+
+  .feature-title {
+    font-size: 10.5px;
+  }
+
+  .feature-desc {
+    font-size: 9px;
+  }
+
+  .coming-soon-chip {
+    font-size: 7px;
+    padding: 1px 5px;
+    top: -4px;
+  }
 }
