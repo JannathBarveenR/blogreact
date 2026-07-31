@@ -1,8 +1,11 @@
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { FiEdit2, FiCamera } from "react-icons/fi";
+import { FiEdit2, FiCamera, FiCheck, FiX } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
+import Cropper from "react-easy-crop";
 import fetchWithAuth from "../../utils/fetchWithAuth";
+import getCroppedImg from "../../utils/cropImage";
 import DEFAULT_AVATAR from "../../assets/owner-avatar.svg";
 import "./EditableUserCard.css";
 
@@ -27,6 +30,17 @@ const EditableUserCard = ({
 
   const [avatarOverride, setAvatarOverride] = useState(null);
 
+  // Cropper states
+  const [isCropping, setIsCropping] = useState(false);
+  const [tempImage, setTempImage] = useState(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+
+  const onCropComplete = (croppedArea, pixels) => {
+    setCroppedAreaPixels(pixels);
+  };
+
   useEffect(() => {
     if (serverProfile) {
       onProfileLoaded?.(serverProfile);
@@ -43,18 +57,35 @@ const EditableUserCard = ({
     avatar_url: avatarOverride || serverProfile?.avatar_url || "",
   };
 
-  const handleAvatarChange = async (e) => {
+  const handleAvatarChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Max size for photo upload is 5MB");
+      return;
+    }
+    const preview = URL.createObjectURL(file);
+    setTempImage(preview);
+    setIsCropping(true);
+    e.target.value = "";
+  };
 
-    const prevUrl = profile.avatar_url;
-    const objectUrl = URL.createObjectURL(file);
-    setAvatarOverride(objectUrl);
-
-    const formData = new FormData();
-    formData.append("file", file);
-
+  const handleCropSave = async () => {
     try {
+      const croppedBlob = await getCroppedImg(tempImage, croppedAreaPixels);
+      if (!croppedBlob) {
+        alert("Failed to crop image.");
+        setIsCropping(false);
+        return;
+      }
+      const croppedFile = new File([croppedBlob], "avatar.jpg", { type: "image/jpeg" });
+      const preview = URL.createObjectURL(croppedBlob);
+      setAvatarOverride(preview);
+      setIsCropping(false);
+
+      const formData = new FormData();
+      formData.append("file", croppedFile);
+
       const res = await fetchWithAuth(`/api/user-profile/${user.id}/avatar`, {
         method: "POST",
         body: formData,
@@ -65,19 +96,21 @@ const EditableUserCard = ({
         queryClient.invalidateQueries({ queryKey: ["userProfile", user?.id] });
         onProfileLoaded?.({ ...profile, avatar_url: data.avatar_url });
       } else {
-        setAvatarOverride(prevUrl);
+        alert("Failed to upload cropped photo.");
       }
     } catch (err) {
       console.error("Error uploading avatar:", err);
-      setAvatarOverride(prevUrl);
+      alert("An error occurred while cropping photo.");
+      setIsCropping(false);
     }
   };
 
+  const handleCropCancel = () => {
+    setIsCropping(false);
+    setTempImage(null);
+  };
+
   const handleCardClick = (e) => {
-    // If they click the avatar uploader or the file input, do not navigate
-    if (e.target.closest(".avatar-wrapper") || e.target.closest("input")) {
-      return;
-    }
     navigate("/parent-profile");
   };
 
@@ -110,18 +143,14 @@ const EditableUserCard = ({
           <button
             className="edit-avatar-btn"
             type="button"
-            title="Change photo"
-            onClick={() => fileInputRef.current?.click()}
+            title="Edit Profile & Photo"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate("/parent-profile");
+            }}
           >
             <FiCamera size={14} />
           </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden-input"
-            onChange={handleAvatarChange}
-          />
         </div>
 
         {/* Right Side */}
@@ -160,8 +189,59 @@ const EditableUserCard = ({
           )}
         </div>
       </div>
+
+      {/* Photo Crop Modal */}
+      {isCropping && createPortal(
+        <div className="crop-modal-overlay" onClick={(e) => e.stopPropagation()}>
+          <div className="crop-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="crop-modal-header">
+              <h3>Crop Photo</h3>
+              <button type="button" className="crop-close-btn" onClick={handleCropCancel}>
+                <FiX size={24} />
+              </button>
+            </div>
+            
+            <div className="crop-container">
+              <Cropper
+                image={tempImage}
+                crop={crop}
+                zoom={zoom}
+                aspect={1}
+                cropShape="round"
+                showGrid={false}
+                onCropChange={setCrop}
+                onCropComplete={onCropComplete}
+                onZoomChange={setZoom}
+              />
+            </div>
+            
+            <div className="crop-controls">
+              <input
+                type="range"
+                value={zoom}
+                min={1}
+                max={3}
+                step={0.1}
+                aria-labelledby="Zoom"
+                onChange={(e) => setZoom(parseFloat(e.target.value))}
+                className="zoom-slider"
+              />
+            </div>
+            
+            <div className="crop-actions">
+              <button type="button" className="crop-cancel-btn" onClick={handleCropCancel}>
+                Cancel
+              </button>
+              <button type="button" className="crop-save-btn" onClick={handleCropSave}>
+                <FiCheck size={18} /> Apply & Save Photo
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };
 
-export default EditableUserCard;
+export default EditableUserCard;
