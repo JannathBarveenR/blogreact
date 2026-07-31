@@ -167,8 +167,8 @@ export default function HeroSection({
                 <span className="coming-soon-chip">Coming Soon</span>
               </div>
               <div className="feature-text">
-                <h4 className="feature-title">Personalized Health Insights</h4>
-                <p className="feature-desc">Get tailored insights for your pet</p>
+                <h4 className="feature-title">Family Access</h4>
+                <p className="feature-desc">Shared pet care together</p>
               </div>
             </div>
 
@@ -178,8 +178,8 @@ export default function HeroSection({
                 <span className="coming-soon-chip">Coming Soon</span>
               </div>
               <div className="feature-text">
-                <h4 className="feature-title">AI Timeliness Feature</h4>
-                <p className="feature-desc">Smart alerts for better, proactive care</p>
+                <h4 className="feature-title">AI Timeline</h4>
+                <p className="feature-desc">Personalised health insights for your pet</p>
               </div>
             </div>
           </div>
