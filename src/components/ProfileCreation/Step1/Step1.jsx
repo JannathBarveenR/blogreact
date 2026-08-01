@@ -106,24 +106,29 @@ function Step1({ goNext, onNavigateBack, petData }) {
         <img src={PAW_IMG} alt="" className="paw-img paw-left" />
         <img src={PAW_IMG} alt="" className="paw-img paw-right" />
 
-        <div className="pet-photo-wrap">
+        <label className="pet-photo-wrap" style={{ cursor: "pointer" }}>
+          <input
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={handleImageUpload}
+            onClick={(e) => { e.target.value = null; }}
+          />
+
           <div className={`pet-photo-ring${!photoUploaded ? " pet-photo-ring--pulse" : ""}`}>
             <div className="pet-photo-ring-inner">
-              <PetAvatar src={image} petType={petData?.petType} alt="pet" size={56} className="step1-avatar-fallback" />
+              {image ? (
+                <img src={image} alt="Pet photo preview" className="step1-photo-img-preview" />
+              ) : (
+                <PetAvatar src={null} petType={petData?.petType} alt="pet" size={64} className="step1-avatar-fallback" />
+              )}
             </div>
           </div>
 
-          <label className="pet-camera-badge">
+          <div className="pet-camera-badge">
             <FiCamera />
-            <input
-              type="file"
-              accept="image/*"
-              hidden
-              onChange={handleImageUpload}
-              onClick={(e) => { e.target.value = null; }} // Allow re-selecting same file
-            />
-          </label>
-        </div>
+          </div>
+        </label>
 
         <h1>Add Your Pet's Photo</h1>
         <p className="subtitle">

@@ -199,7 +199,7 @@
 /* ─── FAB ────────────────────────────────────────────────────── */
 .tl-page__fab {
   position: fixed;
-  bottom: 82px;
+  bottom: calc(90px + env(safe-area-inset-bottom, 0px));
   right: calc(50% - 190px);
   display: flex;
   align-items: center;
@@ -215,12 +215,13 @@
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 6px 24px rgba(0, 75, 73, 0.35);
-  z-index: 30;
+  z-index: 50;
 }
 
-@media (max-width: 420px) {
+@media (max-width: 480px) {
   .tl-page__fab {
     right: 20px;
+    bottom: calc(90px + env(safe-area-inset-bottom, 0px));
   }
 }
 

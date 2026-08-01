@@ -69,7 +69,7 @@ const MainLayout = () => {
   const renderContent = () => {
     if (activeTab === "timeline") {
       return (
-        <div style={{ paddingBottom: "90px", height: "100dvh", overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+        <div style={{ height: "100vh", overflowY: "auto", WebkitOverflowScrolling: "touch", paddingBottom: "calc(140px + env(safe-area-inset-bottom, 0px))" }}>
           <TopNav />
           <TimelinePage
             pets={pets}
@@ -83,7 +83,7 @@ const MainLayout = () => {
 
     if (activeTab === "medicalrecords") {
       return (
-        <div style={{ paddingBottom: "90px", height: "100dvh", overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+        <div style={{ height: "100vh", overflowY: "auto", WebkitOverflowScrolling: "touch", paddingBottom: "calc(140px + env(safe-area-inset-bottom, 0px))" }}>
           <TopNav />
           <MedicalRecords
             pets={pets}
@@ -97,7 +97,7 @@ const MainLayout = () => {
 
     if (activeTab === "profile") {
       return (
-        <div style={{ paddingBottom: "90px", height: "100dvh", overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+        <div style={{ height: "100vh", overflowY: "auto", WebkitOverflowScrolling: "touch", paddingBottom: "calc(140px + env(safe-area-inset-bottom, 0px))" }}>
           <UserProfile
             pets={pets}
             activePetId={activePetId}
@@ -111,7 +111,7 @@ const MainLayout = () => {
 
     // HOME TAB
     return (
-      <div style={{ paddingBottom: "90px", height: "100dvh", overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+      <div style={{ height: "100vh", overflowY: "auto", WebkitOverflowScrolling: "touch", paddingBottom: "calc(140px + env(safe-area-inset-bottom, 0px))" }}>
         <TopNav />
         <Home
           pets={pets}

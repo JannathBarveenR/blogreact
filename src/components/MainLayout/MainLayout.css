@@ -4,7 +4,7 @@
 .homescreen {
   display: flex;
   flex-direction: column;
-  min-height: 100dvh;
+  min-height: 100vh;
   background: #ffffff;
   position: relative;
 
@@ -14,12 +14,9 @@
   box-shadow: 0 0 40px rgba(0, 0, 0, 0.1);
 }
 
-/* Scrollable content area */
+/* Content area */
 .homescreen__body {
   flex: 1;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
 }
 
 /* Uniform section spacing */

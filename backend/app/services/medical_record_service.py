@@ -111,9 +111,6 @@ class MedicalRecordService:
             "category": category or "Other",
             "file_url": presigned_url,
             "storage_path": storage_path,
-            "file_name": filename,
-            "file_type": content_type or "application/octet-stream",
-            "file_size": len(file_bytes),
         }
         if user_id:
             row["user_id"] = user_id

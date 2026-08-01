@@ -4,12 +4,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 76px;
-  padding: max(16px, env(safe-area-inset-top, 16px)) 20px 10px 20px;
+  min-height: 80px;
+  padding: calc(18px + env(safe-area-inset-top, 0px)) 20px 12px 20px;
   background: #ffffff;
   position: sticky;
   top: 0;
   z-index: 200;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
 }
 
 
