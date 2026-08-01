@@ -192,7 +192,11 @@ export default function VaccinationForm({ petId, petName, onClose, onSaved, edit
         categoryLabel="Vaccination"
         summary={savedData}
         onViewTimeline={onSaved}
-        onAddAnother={() => setSavedData(null)}
+        onAddAnother={() => {
+          setSavedData(null);
+          if (onClose) onClose();
+          else navigate("/timeline/home", { state: { openAddNote: true } });
+        }}
       />
     );
   }

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import "./Login.css";
 import brandLogo from "../../assets/logo-with-tagline.webp";
 import heroPets from "../../assets/hero-pets-desk.webp";
@@ -689,14 +689,14 @@ function ForgotPasswordForm({ onBack }) {
   );
 }
 
-export function LoginModal({ isOpen, onClose, initialScreen = "register" }) {
+export function LoginModal({ isOpen, onClose, initialScreen = "login" }) {
   const navigate = useNavigate();
   const [screen, setScreen] = useState(initialScreen);
   const [successData, setSuccessData] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
-      setScreen(initialScreen || "register");
+      setScreen(initialScreen || "login");
     }
   }, [initialScreen, isOpen]);
 
@@ -744,10 +744,24 @@ export function LoginModal({ isOpen, onClose, initialScreen = "register" }) {
   );
 }
 
-export default function Login() {
+export default function Login({ initialScreen }) {
   const navigate = useNavigate();
-  const [screen, setScreen] = useState("register");
+  const location = useLocation();
+
+  const getInitialScreen = () => {
+    if (initialScreen) return initialScreen;
+    if (location?.state?.mode) return location.state.mode;
+    const params = new URLSearchParams(location?.search || "");
+    if (params.get("mode") === "register" || params.get("screen") === "register") return "register";
+    return "login";
+  };
+
+  const [screen, setScreen] = useState(getInitialScreen);
   const [successData, setSuccessData] = useState(null);
+
+  useEffect(() => {
+    setScreen(getInitialScreen());
+  }, [location?.state, location?.search, initialScreen]);
 
   const handleSuccess = (data) => {
     setSuccessData(data);

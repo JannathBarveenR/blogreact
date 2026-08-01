@@ -7,6 +7,7 @@ import CustomSelect from "./shared/CustomSelect";
 import CustomDatePicker from "./shared/CustomDatePicker";
 import CustomStepper from "./shared/CustomStepper";
 import CustomTimePicker from "./shared/CustomTimePicker";
+import DoseTimeBottomSheet from "./shared/DoseTimeBottomSheet";
 import { useQueryClient } from "@tanstack/react-query";
 import { timelineKeys } from "../../../hooks/useTimelineQueries";
 import { createMedicalEvent, updateMedicalEvent, searchMedicines, uploadEventRecord, createReminder } from "../../../api/timelineApi";
@@ -118,6 +119,18 @@ function get1HourPriorTime(timeStr) {
   return `${String(h12).padStart(2, "0")}:${String(mm).padStart(2, "0")} ${period}`;
 }
 
+function format24to12(time24) {
+  if (!time24) return "";
+  const [hhStr, mmStr] = time24.split(":");
+  let hh = parseInt(hhStr, 10);
+  let mm = parseInt(mmStr || "0", 10);
+  if (isNaN(hh)) return "";
+  const period = hh >= 12 ? "PM" : "AM";
+  let h12 = hh % 12;
+  if (h12 === 0) h12 = 12;
+  return `${String(h12).padStart(2, "0")}:${String(mm).padStart(2, "0")} ${period}`;
+}
+
 export default function MedicationForm({ petId, petName, onClose, onSaved, editData }) {
   const queryClient = useQueryClient();
   // Prescription documents (AT THE TOP)
@@ -137,10 +150,9 @@ export default function MedicationForm({ petId, petName, onClose, onSaved, editD
   const [foodRelation, setFoodRelation] = useState("after_food");
   const [specialInstructions, setSpecialInstructions] = useState("");
 
-  // Optional Dose Times (up to 3 boxes based on frequency)
-  const [time1, setTime1] = useState("");
-  const [time2, setTime2] = useState("");
-  const [time3, setTime3] = useState("");
+  // Optional Dose Times
+  const [doseTimes, setDoseTimes] = useState([]);
+  const [isDoseSheetOpen, setIsDoseSheetOpen] = useState(false);
   const [customHours, setCustomHours] = useState("8");
 
   // Search suggestions
@@ -245,7 +257,7 @@ export default function MedicationForm({ petId, petName, onClose, onSaved, editD
     if (!medName.trim()) return;
 
     const finalFreq = frequency === "Custom Hours" ? `Every ${customHours} Hours` : frequency;
-    const doseTimes = [time1, time2, time3].filter(Boolean);
+    const doseTimesList = (doseTimes || []).filter(Boolean);
 
     const newItem = {
       id: Date.now().toString(),
@@ -256,7 +268,7 @@ export default function MedicationForm({ petId, petName, onClose, onSaved, editD
       durationDays: Number(durationDays) || 5,
       frequency: finalFreq,
       foodRelation: foodRelation,
-      doseTimes: doseTimes,
+      doseTimes: doseTimesList,
       specialInstructions: specialInstructions.trim(),
     };
 
@@ -266,9 +278,7 @@ export default function MedicationForm({ petId, petName, onClose, onSaved, editD
     // Clear item form inputs
     setMedName("");
     setSpecialInstructions("");
-    setTime1("");
-    setTime2("");
-    setTime3("");
+    setDoseTimes([]);
     setShowMeds(false);
 
     // Show temporary clear acknowledgment toast
@@ -287,7 +297,7 @@ export default function MedicationForm({ petId, petName, onClose, onSaved, editD
     // If user filled in a medicine name but didn't click "+ Add Medicine", auto-add it
     let finalMedicines = [...addedMedicines];
     if (medName.trim()) {
-      const doseTimes = [time1, time2, time3].filter(Boolean);
+      const doseTimesList = (doseTimes || []).filter(Boolean);
       const finalFreq = frequency === "Custom Hours" ? `Every ${customHours} Hours` : frequency;
       finalMedicines.push({
         id: Date.now().toString(),
@@ -298,7 +308,7 @@ export default function MedicationForm({ petId, petName, onClose, onSaved, editD
         durationDays: Number(durationDays) || 5,
         frequency: finalFreq,
         foodRelation: foodRelation,
-        doseTimes: doseTimes,
+        doseTimes: doseTimesList,
         specialInstructions: specialInstructions.trim(),
       });
     }
@@ -521,6 +531,8 @@ export default function MedicationForm({ petId, petName, onClose, onSaved, editD
           setAddedMedicines([]);
           setMedName("");
           setFiles([]);
+          if (onClose) onClose();
+          else navigate("/timeline/home", { state: { openAddNote: true } });
         }}
       />
     );
@@ -758,7 +770,7 @@ export default function MedicationForm({ petId, petName, onClose, onSaved, editD
             </div>
           </div>
 
-          {/* Line 5: Interval (Custom Hours) OR Time (Optional) */}
+          {/* Line 5: Interval (Custom Hours) OR Select Dose Time (Optional) CTA */}
           {frequency === "Custom Hours" ? (
             <div className="pn-field">
               <label className="pn-field__label">Interval (Every X Hours)</label>
@@ -771,68 +783,29 @@ export default function MedicationForm({ petId, petName, onClose, onSaved, editD
           ) : (
             <div className="pn-field">
               <label className="pn-field__label">Time (Optional)</label>
-              {frequency === "Twice Daily" ? (
-                <div style={{ display: "flex", gap: 8, width: "100%", minWidth: 0 }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <CustomTimePicker
-                      value={time1}
-                      onChange={setTime1}
-                      placeholder="Dose 1 Time"
-                      label="Select 1st Dose Time"
-                      sublabel="1st Dose"
-                    />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <CustomTimePicker
-                      value={time2}
-                      onChange={setTime2}
-                      placeholder="Dose 2 Time"
-                      label="Select 2nd Dose Time"
-                      sublabel="2nd Dose"
-                    />
-                  </div>
+              <button
+                type="button"
+                className="med-dose-time-cta"
+                onClick={() => setIsDoseSheetOpen(true)}
+              >
+                <div className="med-dose-time-cta__left">
+                  <span className="material-symbols-outlined ctp-cta-icon">schedule</span>
+                  <span className="med-dose-time-cta__title">Select Dose Time (Optional)</span>
                 </div>
-              ) : frequency === "Thrice Daily" ? (
-                <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", minWidth: 0 }}>
-                  <div style={{ width: "100%", minWidth: 0 }}>
-                    <CustomTimePicker
-                      value={time1}
-                      onChange={setTime1}
-                      placeholder="1st Dose Time"
-                      label="Select 1st Dose Time"
-                      sublabel="1st Dose"
-                    />
+                {doseTimes.filter(Boolean).length > 0 && (
+                  <div className="med-dose-time-cta__badge">
+                    {doseTimes.filter(Boolean).map(format24to12).join(", ")}
                   </div>
-                  <div style={{ width: "100%", minWidth: 0 }}>
-                    <CustomTimePicker
-                      value={time2}
-                      onChange={setTime2}
-                      placeholder="2nd Dose Time"
-                      label="Select 2nd Dose Time"
-                      sublabel="2nd Dose"
-                    />
-                  </div>
-                  <div style={{ width: "100%", minWidth: 0 }}>
-                    <CustomTimePicker
-                      value={time3}
-                      onChange={setTime3}
-                      placeholder="3rd Dose Time"
-                      label="Select 3rd Dose Time"
-                      sublabel="3rd Dose"
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div style={{ width: "100%", minWidth: 0 }}>
-                  <CustomTimePicker
-                    value={time1}
-                    onChange={setTime1}
-                    placeholder="Select Dose Time (Optional)"
-                    label="Select Dose Time"
-                    sublabel="Optional Time"
-                  />
-                </div>
-              )}
+                )}
+              </button>
+
+              <DoseTimeBottomSheet
+                isOpen={isDoseSheetOpen}
+                onClose={() => setIsDoseSheetOpen(false)}
+                frequency={frequency}
+                doseTimes={doseTimes}
+                onSave={(updatedTimes) => setDoseTimes(updatedTimes)}
+              />
             </div>
           )}
 

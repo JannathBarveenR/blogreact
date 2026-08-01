@@ -1,8 +1,10 @@
 import React, { useState, useRef } from "react";
 import { FiEdit2, FiArrowLeft, FiPlus, FiCheck, FiX, FiChevronDown, FiSearch } from "react-icons/fi";
 import { Dog, Cat, Rabbit, Bird, PawPrint } from "lucide-react";
+import Cropper from "react-easy-crop";
 import fetchWithAuth from "../../utils/fetchWithAuth";
 import queryClient from "../../utils/queryClient";
+import getCroppedImg from "../../utils/cropImage";
 import { breedData } from "../ProfileCreation/constants";
 import "./EditPetsList.css";
 
@@ -11,7 +13,6 @@ const EMPTY_FORM = {
   breed: "",
   age: "",
   pet_photo_url: "",
-  pet_type: "Dog",
 };
 
 const getPetId = (pet) => pet?.id ?? pet?._id ?? pet?.pet_id;
@@ -33,17 +34,26 @@ const EditPetsList = ({
   const [breedSearch, setBreedSearch] = useState("");
   const fileInputRef = useRef(null);
 
+  // Cropper states
+  const [isCropping, setIsCropping] = useState(false);
+  const [tempImage, setTempImage] = useState(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+
+  const onCropComplete = (croppedArea, pixels) => {
+    setCroppedAreaPixels(pixels);
+  };
+
   const startEdit = (pet) => {
     setEditingPetId(getPetId(pet));
     setPhotoFile(null);
     const existingBreed = pet.breed || "";
-    const pType = pet.species || pet.pet_type || pet.type || "Dog";
     setForm({
       pet_name: pet.pet_name || pet.name || "",
       breed: existingBreed,
-      age: pet.approx_age || pet.age || pet.birth_date || "",
+      age: pet.approx_age || pet.age || "",
       pet_photo_url: pet.pet_photo_url || pet.image || "",
-      pet_type: pType,
     });
   };
 
@@ -53,6 +63,7 @@ const EditPetsList = ({
     setPhotoFile(null);
     setShowBreedModal(false);
     setBreedSearch("");
+    setIsCropping(false);
   };
 
   const handleChange = (field) => (e) => {
@@ -62,8 +73,38 @@ const EditPetsList = ({
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    setPhotoFile(file);
-    setForm((prev) => ({ ...prev, pet_photo_url: URL.createObjectURL(file) }));
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Max size to photo upload is 5MB");
+      return;
+    }
+    const preview = URL.createObjectURL(file);
+    setTempImage(preview);
+    setIsCropping(true);
+    e.target.value = "";
+  };
+
+  const handleCropSave = async () => {
+    try {
+      const croppedBlob = await getCroppedImg(tempImage, croppedAreaPixels);
+      if (!croppedBlob) {
+        alert("Failed to crop image.");
+        setIsCropping(false);
+        return;
+      }
+      const croppedFile = new File([croppedBlob], "profile.jpg", { type: "image/jpeg" });
+      const preview = URL.createObjectURL(croppedBlob);
+      setPhotoFile(croppedFile);
+      setForm((prev) => ({ ...prev, pet_photo_url: preview }));
+      setIsCropping(false);
+    } catch (err) {
+      console.error("Crop save error:", err);
+      setIsCropping(false);
+    }
+  };
+
+  const handleCropCancel = () => {
+    setIsCropping(false);
+    setTempImage(null);
   };
 
   const handleSave = async (pet) => {
@@ -73,12 +114,8 @@ const EditPetsList = ({
       const updatePayload = {
         pet_name: form.pet_name,
         breed: form.breed,
-        approx_age: form.age, // Persist age text into approx_age database column!
+        approx_age: form.age,
       };
-
-      if (/^\d{4}-\d{2}-\d{2}$/.test((form.age || "").trim())) {
-        updatePayload.birth_date = form.age.trim();
-      }
 
       const res = await fetchWithAuth(`/api/pet-profile/${petId}`, {
         method: "PATCH",
@@ -98,7 +135,6 @@ const EditPetsList = ({
         });
       }
 
-      // Force UI refresh instantly
       queryClient.invalidateQueries({ queryKey: ["pets"] });
 
       if (onUpdatePet) {
@@ -292,7 +328,7 @@ const EditPetsList = ({
 
                     {/* NAME FIELD */}
                     <label className="edit-pet-field">
-                      <span>Name</span>
+                      <span>Pet Name</span>
                       <input
                         type="text"
                         value={form.pet_name}
@@ -300,6 +336,8 @@ const EditPetsList = ({
                         placeholder="Pet name"
                       />
                     </label>
+
+
 
                     {/* BREED FIELD - Custom In-App Picker */}
                     <label className="edit-pet-field">
@@ -315,16 +353,28 @@ const EditPetsList = ({
                       </div>
                     </label>
 
-                    {/* AGE FIELD (NORMAL TEXT) */}
+
+
+
+
+                    {/* APPROX AGE FIELD */}
                     <label className="edit-pet-field">
-                      <span>Age</span>
+                      <span>Approx Age</span>
                       <input
                         type="text"
                         value={form.age}
                         onChange={handleChange("age")}
-                        placeholder="e.g. 3 Years 2 Months or 2 Years"
+                        placeholder="e.g. 2 Years 3 Months"
                       />
                     </label>
+
+
+
+
+
+
+
+
 
                     <div className="edit-pet-form-actions">
                       <button
@@ -452,6 +502,56 @@ const EditPetsList = ({
                 disabled={deleting}
               >
                 {deleting ? "Removing..." : "Remove"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Photo Crop Modal */}
+      {isCropping && (
+        <div className="crop-modal-overlay">
+          <div className="crop-modal-content">
+            <div className="crop-modal-header">
+              <h3>Crop Photo</h3>
+              <button type="button" className="crop-close-btn" onClick={handleCropCancel}>
+                <FiX size={24} />
+              </button>
+            </div>
+            
+            <div className="crop-container">
+              <Cropper
+                image={tempImage}
+                crop={crop}
+                zoom={zoom}
+                aspect={1}
+                cropShape="round"
+                showGrid={false}
+                onCropChange={setCrop}
+                onCropComplete={onCropComplete}
+                onZoomChange={setZoom}
+              />
+            </div>
+            
+            <div className="crop-controls">
+              <input
+                type="range"
+                value={zoom}
+                min={1}
+                max={3}
+                step={0.1}
+                aria-labelledby="Zoom"
+                onChange={(e) => setZoom(parseFloat(e.target.value))}
+                className="zoom-slider"
+              />
+            </div>
+            
+            <div className="crop-actions">
+              <button type="button" className="crop-cancel-btn" onClick={handleCropCancel}>
+                Cancel
+              </button>
+              <button type="button" className="crop-save-btn" onClick={handleCropSave}>
+                <FiCheck size={18} /> Apply
               </button>
             </div>
           </div>

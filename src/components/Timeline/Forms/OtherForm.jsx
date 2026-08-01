@@ -126,7 +126,11 @@ export default function OtherForm({ petId, petName, onClose, onSaved, editData }
         categoryLabel="Other Note"
         summary={savedData}
         onViewTimeline={onSaved}
-        onAddAnother={() => setSavedData(null)}
+        onAddAnother={() => {
+          setSavedData(null);
+          if (onClose) onClose();
+          else navigate("/timeline/home", { state: { openAddNote: true } });
+        }}
       />
     );
   }

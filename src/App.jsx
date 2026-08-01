@@ -15,6 +15,7 @@ const ParentProfile = lazy(() => import("./components/ParentProfile/ParentProfil
 const RemindersPage = lazy(() => import("./components/Reminders/RemindersPage"));
 const EventDetailPage = lazy(() => import("./components/Timeline/EventDetailPage/EventDetailPage"));
 const PetLifestyleSurveyPage = lazy(() => import("./components/Home/PetLifestyleSurveyPage"));
+const NotFoundPage = lazy(() => import("./components/NotFound/NotFoundPage"));
 const Blog = lazy(() => import("./components/Blog/Blog"));
 
 function LoadingFallback() {
@@ -27,19 +28,14 @@ function LoadingFallback() {
 
 function App() {
   useEffect(() => {
-    // Parse OAuth hash fragment globally to catch redirects to / or /landing
+    const search = window.location.search;
     const hash = window.location.hash;
-    if (hash && hash.includes("access_token=")) {
-      const params = new URLSearchParams(hash.replace("#", "?"));
-      const accessToken = params.get("access_token");
-      const refreshToken = params.get("refresh_token");
-      if (accessToken) {
-        localStorage.setItem("access_token", accessToken);
-        if (refreshToken) localStorage.setItem("refresh_token", refreshToken);
-        // Clean up URL and redirect to home
-        window.history.replaceState(null, "", "/home");
-        window.location.href = "/home"; // Force navigation so ProtectedRoute picks it up
-      }
+    const pathname = window.location.pathname;
+
+    // If an OAuth callback (?code= or #access_token=) lands on any page other than /auth/callback,
+    // forward it to /auth/callback so AuthCallback can exchange the PKCE code or tokens.
+    if (pathname !== "/auth/callback" && (search.includes("code=") || hash.includes("access_token="))) {
+      window.location.href = `/auth/callback${search}${hash}`;
     }
   }, []);
 
@@ -72,8 +68,12 @@ function App() {
             <Route path="/survey/:petId" element={<PetLifestyleSurveyPage />} />
           </Route>
 
+          {/* Blog – public, opens in new tab from Home */}
+          <Route path="/pet-parent-academy" element={<Blog />} />
+          <Route path="/pet-parent-academy/blogs/:id" element={<Blog />} />
+
           {/* Fallback */}
-          <Route path="*" element={<Navigate to="/landing" replace />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
     </Router>

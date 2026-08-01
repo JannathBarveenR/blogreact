@@ -347,6 +347,25 @@ Resources:
               - Effect: Allow
                 Action: cloudfront:CreateInvalidation
                 Resource: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
+        - PolicyName: S3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:DeleteObject
+                  - s3:ListBucket
+                Resource:
+                  - "arn:aws:s3:::petolife-avatars-*"
+                  - "arn:aws:s3:::petolife-avatars-*/*"
+                  - "arn:aws:s3:::petolife-pet-photos-*"
+                  - "arn:aws:s3:::petolife-pet-photos-*/*"
+                  - "arn:aws:s3:::petolife-medical-docs-*"
+                  - "arn:aws:s3:::petolife-medical-docs-*/*"
+                  - "arn:aws:s3:::petolife-blog-images-*"
+                  - "arn:aws:s3:::petolife-blog-images-*/*"
 
   EC2InstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -392,6 +411,16 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub "${EnvironmentName}-bastion"
+
+  BastionEIP:
+    Type: AWS::EC2::EIP
+    DependsOn: VPCGatewayAttachment
+    Properties:
+      Domain: vpc
+      InstanceId: !Ref BastionHost
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-bastion-eip"
 
   # ═══════════════════════════════════════════════════════════════════════
   # APPLICATION LOAD BALANCER — HTTP only (CloudFront handles HTTPS)
@@ -460,6 +489,10 @@ Resources:
               VolumeType: gp3
               Encrypted: true
               DeleteOnTermination: true
+        MetadataOptions:
+          HttpEndpoint: enabled
+          HttpTokens: required
+          HttpPutResponseHopLimit: 2
         TagSpecifications:
           - ResourceType: instance
             Tags:
@@ -505,6 +538,9 @@ Resources:
             chown -R ubuntu:ubuntu $REPO
             docker compose up -d --build
 
+            # Invalidate CloudFront CDN cache automatically on boot (instant update for users)
+            aws cloudfront create-invalidation --distribution-id "${CloudFrontDistribution}" --paths "/*" --region us-east-1 || true
+
             echo "=== PetOLife Bootstrap COMPLETE $(date) ==="
 
   # ASG: 1 instance normally, scales to 2 under load, scales back to 1
@@ -529,11 +565,6 @@ Resources:
         - Key: Name
           Value: !Sub "${EnvironmentName}-petolife-app"
           PropagateAtLaunch: true
-    UpdatePolicy:
-      AutoScalingRollingUpdate:
-        MinInstancesInService: 1
-        MaxBatchSize: 1
-        PauseTime: PT10M
 
   # Scale out at 60% CPU, scale in aggressively when load drops
   ScalingPolicy:
@@ -696,7 +727,7 @@ Outputs:
 
   BastionPublicIP:
     Description: "SSH: ssh -i key.pem ubuntu@<this-ip>"
-    Value: !GetAtt BastionHost.PublicIp
+    Value: !Ref BastionEIP
 
   ALBDNSName:
     Description: "ALB internal DNS (CloudFront origin — not for public DNS)"
@@ -712,4 +743,4 @@ Outputs:
 
   SSHViaBastion:
     Description: "SSH to app server through Bastion"
-    Value: !Sub "ssh -J ubuntu@${BastionHost.PublicIp} -i key.pem ubuntu@<app-private-ip>"
+    Value: !Sub "ssh -J ubuntu@${BastionEIP} -i key.pem ubuntu@<app-private-ip>"

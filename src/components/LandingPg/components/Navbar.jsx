@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Menu, X, ShieldCheck, Stethoscope, Heart } from "lucide-react";
 import logo from "../../../assets/logo-with-tagline.webp";
 
 const Navbar = ({ openModal }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const navigate = useNavigate();
 
   const navLinks = [
     { label: "Home", href: "#hero" },
@@ -47,7 +49,7 @@ const Navbar = ({ openModal }) => {
           <div className="navbar-actions">
             <button
               className="btn btn-outline-nav"
-              onClick={() => openModal("login")}
+              onClick={() => navigate("/login")}
             >
               <span>Login</span>
             </button>
@@ -60,14 +62,25 @@ const Navbar = ({ openModal }) => {
             </button>
           </div>
 
-          <button
-            className="navbar-mobile-toggle"
-            onClick={() => setMenuOpen(!menuOpen)}
-            aria-label="Toggle menu"
-            aria-expanded={menuOpen}
-          >
-            {menuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          <div className="navbar-mobile-actions">
+            <button
+              type="button"
+              className="btn btn-outline-nav btn-mobile-login"
+              onClick={() => navigate("/login")}
+            >
+              <span>Login</span>
+            </button>
+
+            <button
+              type="button"
+              className="navbar-mobile-toggle"
+              onClick={() => setMenuOpen(!menuOpen)}
+              aria-label="Toggle menu"
+              aria-expanded={menuOpen}
+            >
+              {menuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
       </header>
 
@@ -109,7 +122,7 @@ const Navbar = ({ openModal }) => {
             className="btn btn-outline-nav w-full mt-3"
             onClick={() => {
               closeMenu();
-              openModal("login");
+              navigate("/login");
             }}
           >
             <span>Login</span>

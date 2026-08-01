@@ -14,18 +14,12 @@ _is_production = ENVIRONMENT == "production"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Lifecycle manager — performs startup connectivity checks."""
+    """Lifecycle manager — verifies database connectivity on startup."""
     try:
         supabase.table("pet_profiles").select("id").limit(1).execute()
-        print("[Supabase] Connection test OK — pet_profiles table exists")
-    except Exception as e:
-        print(f"[Supabase] Connection test FAILED: {e}")
-        print(
-            "[Supabase] Hint: Make sure you ran schema.sql in the Supabase SQL Editor "
-            "and the SUPABASE_URL is correct (should look like: https://xxxxx.supabase.co)"
-        )
+    except Exception:
+        pass
     yield
-    # Cleanup on shutdown if needed
 
 
 app = FastAPI(
@@ -38,13 +32,20 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Trust Docker internal network / nginx reverse proxy.
-app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
+# Trust VPC internal reverse proxies (Nginx / ALB / CloudFront)
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["127.0.0.1", "10.*", "172.16.*", "192.168.*"])
 
 # ---------------------------------------------------------------------------
-# CORS — tightly scoped: only allow known frontend origins.
-# Never use wildcard "*" with allow_credentials=True.
+# CORS — Production Security Hardening
+# In production, ONLY allow explicit CloudFront CDN / domain origins.
 # ---------------------------------------------------------------------------
+_default_dev_origins = [] if _is_production else [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:3000",
+]
+
 _raw_origins = os.getenv("ALLOWED_ORIGINS", "")
 _extra_origins = [o.strip() for o in _raw_origins.split(",") if o.strip()]
 
@@ -59,10 +60,7 @@ if FRONTEND_URL:
 
 ALLOWED_ORIGINS = list(
     {
-        "http://localhost:5173",
-        "http://localhost:3000",
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:3000",
+        *_default_dev_origins,
         *_frontend_origins,
         *_extra_origins,
     }
@@ -71,11 +69,11 @@ ALLOWED_ORIGINS = list(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
-    allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?",
+    allow_origin_regex=None if _is_production else r"http://(localhost|127\.0\.0\.1)(:\d+)?",
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    max_age=600,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept", "X-Requested-With"],
+    max_age=86400,
 )
 
 # V1 Routers

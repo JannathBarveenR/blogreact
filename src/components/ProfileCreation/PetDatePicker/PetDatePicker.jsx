@@ -11,9 +11,9 @@ function toMondayIndex(jsDay) {
 
 function PetDatePicker({ value, onChange, maxDate }) {
   const [view, setView] = useState("days"); // "days" | "months" | "years"
-  const [viewDate, setViewDate] = useState(() => (value ? new Date(value) : new Date()));
+  const [viewDate, setViewDate] = useState(() => (value ? new Date(value.replace(/-/g, "/")) : new Date()));
 
-  const max = maxDate ? new Date(maxDate) : new Date();
+  const max = maxDate ? new Date(maxDate.replace(/-/g, "/")) : new Date();
   const maxYear = max.getFullYear();
   const minYear = maxYear - 40;
 
@@ -27,7 +27,7 @@ function PetDatePicker({ value, onChange, maxDate }) {
   for (let i = 0; i < firstDayOfMonth; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
-  const selectedDate = value ? new Date(value) : null;
+  const selectedDate = value ? new Date(value.replace(/-/g, "/")) : null;
   const today = new Date();
 
   const isDayDisabled = (d) => {
@@ -49,8 +49,10 @@ function PetDatePicker({ value, onChange, maxDate }) {
 
   const pickDay = (d) => {
     if (!d || isDayDisabled(d)) return;
-    const chosen = new Date(year, month, d);
-    onChange(chosen.toISOString().split("T")[0]);
+    const yyyy = year;
+    const mm = String(month + 1).padStart(2, "0");
+    const dd = String(d).padStart(2, "0");
+    onChange(`${yyyy}-${mm}-${dd}`);
   };
 
   const pickMonth = (m) => {
@@ -151,7 +153,7 @@ function PetDatePicker({ value, onChange, maxDate }) {
 
       {value && (
         <div className="pet-cal-footer">
-          <span>Selected: <strong>{new Date(value).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</strong></span>
+          <span>Selected: <strong>{new Date(value.replace(/-/g, "/")).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</strong></span>
           <button type="button" className="pet-cal-clear" onClick={() => onChange("")}>Clear</button>
         </div>
       )}

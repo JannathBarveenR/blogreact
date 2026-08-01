@@ -1,10 +1,17 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import Cropper from "react-easy-crop";
 import useAuth from "../../hooks/useAuth";
+import fetchWithAuth from "../../utils/fetchWithAuth";
+import getCroppedImg from "../../utils/cropImage";
+import queryClient from "../../utils/queryClient";
 import "../Login/Login.css";
 import "./ParentProfile.css";
 import logoImg from "../../assets/logo-with-tagline.webp";
-import { FiArrowLeft } from "react-icons/fi";
+import DEFAULT_AVATAR from "../../assets/owner-avatar.svg";
+import { FiArrowLeft, FiCamera, FiCheck, FiX } from "react-icons/fi";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 
@@ -16,12 +23,25 @@ export default function ParentProfile() {
   const { user, token, validateSession } = useAuth();
   const navigate = useNavigate();
 
+  // Use TanStack Query with key ["userProfile", user?.id] for 0ms cached data pre-filling
+  const { data: cachedProfile } = useQuery({
+    queryKey: ["userProfile", user?.id],
+    queryFn: async () => {
+      const res = await fetchWithAuth(`/api/user-profile/${user?.id}`);
+      if (!res.ok) throw new Error("Failed to fetch user profile");
+      return res.json();
+    },
+    enabled: !!user?.id,
+    staleTime: 10 * 60 * 1000,
+  });
+
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
   const [pincode, setPincode] = useState("");
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
   
   const [isAlreadyCompleted, setIsAlreadyCompleted] = useState(false);
 
@@ -30,52 +50,114 @@ export default function ParentProfile() {
   const [pincodeLoading, setPincodeLoading] = useState(false);
   const [pincodeError, setPincodeError] = useState("");
 
-  // Load existing profile details on mount
-  useEffect(() => {
-    async function loadCurrentProfile() {
-      if (!user?.id || !token) return;
-      try {
-        const res = await fetch(`${API_BASE}/api/user-profile/${user.id}`, {
-          headers: { Authorization: `Bearer ${token}` },
+  // Avatar & Crop state
+  const avatarInputRef = useRef(null);
+  const [isCropping, setIsCropping] = useState(false);
+  const [tempImage, setTempImage] = useState(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+
+  const onCropComplete = (croppedArea, pixels) => {
+    setCroppedAreaPixels(pixels);
+  };
+
+  const handleAvatarSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Max size to photo upload is 5MB");
+      return;
+    }
+    const preview = URL.createObjectURL(file);
+    setTempImage(preview);
+    setIsCropping(true);
+    e.target.value = "";
+  };
+
+  const handleCropSave = async () => {
+    try {
+      const croppedBlob = await getCroppedImg(tempImage, croppedAreaPixels);
+      if (!croppedBlob) {
+        alert("Failed to crop image.");
+        setIsCropping(false);
+        return;
+      }
+      const croppedFile = new File([croppedBlob], "avatar.jpg", { type: "image/jpeg" });
+      const preview = URL.createObjectURL(croppedBlob);
+      setAvatarUrl(preview);
+      setIsCropping(false);
+
+      if (user?.id) {
+        const formData = new FormData();
+        formData.append("file", croppedFile);
+
+        const res = await fetchWithAuth(`/api/user-profile/${user.id}/avatar`, {
+          method: "POST",
+          body: formData,
         });
+
         if (res.ok) {
           const data = await res.json();
-          const rawName = data.full_name || "";
-          const rawPhone = data.phone || "";
-          const rawPincode = data.pincode || "";
-          const rawAddress = data.address || "";
-          const rawCity = data.city || "";
-          const rawState = data.state || "";
-
-          if (rawName) setName(rawName);
-          if (rawPhone) {
-            const rawPhoneClean = rawPhone.replace("+91", "");
-            setMobile(rawPhoneClean);
-          }
-          if (rawPincode) setPincode(rawPincode);
-          if (rawAddress) setAddress(rawAddress);
-          if (rawCity) setCity(rawCity);
-          if (rawState) setState(rawState);
-
-          if (rawName && rawPhone && rawPincode && rawAddress && rawCity && rawState) {
-            setIsAlreadyCompleted(true);
-          }
+          setAvatarUrl(data.avatar_url);
+          // Invalidate & refresh TanStack Query cache for user profile
+          await queryClient.invalidateQueries({ queryKey: ["userProfile", user?.id] });
         } else {
-          // pre-populate name from email
-          if (user?.email) {
-            const emailLocalPart = user.email.split("@")[0];
-            const defaultName = emailLocalPart.split(/[._-]/)[0];
-            const cleanName = defaultName.replace(/\d+/g, "");
-            const capitalized = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
-            setName(capitalized);
-          }
+          alert("Failed to upload cropped photo.");
         }
-      } catch (err) {
-        console.error("Error loading profile:", err);
+      }
+    } catch (err) {
+      console.error("Crop save error:", err);
+      alert("An error occurred while cropping photo.");
+      setIsCropping(false);
+    }
+  };
+
+  const handleCropCancel = () => {
+    setIsCropping(false);
+    setTempImage(null);
+  };
+
+  // Pre-fill form instantaneously from TanStack Query cache
+  useEffect(() => {
+    if (cachedProfile) {
+      const rawName = cachedProfile.full_name || "";
+      const rawPhone = cachedProfile.phone || "";
+      const rawPincode = cachedProfile.pincode || "";
+      const rawAddress = cachedProfile.address || "";
+      const rawCity = cachedProfile.city || "";
+      const rawState = cachedProfile.state || "";
+      const rawAvatar = cachedProfile.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || "";
+
+      if (rawName) setName(rawName);
+      if (rawPhone) {
+        const rawPhoneClean = rawPhone.replace("+91", "");
+        setMobile(rawPhoneClean);
+      }
+      if (rawPincode) setPincode(rawPincode);
+      if (rawAddress) setAddress(rawAddress);
+      if (rawCity) setCity(rawCity);
+      if (rawState) setState(rawState);
+      if (rawAvatar) setAvatarUrl(rawAvatar);
+
+      if (rawName && rawPhone && rawCity) {
+        setIsAlreadyCompleted(true);
+      } else {
+        setIsAlreadyCompleted(false);
+      }
+    } else if (user) {
+      // pre-populate name from email or user metadata if no profile row yet
+      if (user?.user_metadata?.full_name) {
+        setName(user.user_metadata.full_name);
+      } else if (user?.email) {
+        const emailLocalPart = user.email.split("@")[0];
+        const defaultName = emailLocalPart.split(/[._-]/)[0];
+        const cleanName = defaultName.replace(/\d+/g, "");
+        const capitalized = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
+        setName(capitalized);
       }
     }
-    loadCurrentProfile();
-  }, [user, token]);
+  }, [cachedProfile, user]);
 
   const lookupPincode = useCallback(async (pin) => {
     if (pin.length !== 6 || !/^\d{6}$/.test(pin)) return;
@@ -127,10 +209,6 @@ export default function ParentProfile() {
       setError("Could not determine city from pincode.");
       return;
     }
-    if (!address.trim()) {
-      setError("Please enter your address.");
-      return;
-    }
 
     setLoading(true);
     setError("");
@@ -140,11 +218,10 @@ export default function ParentProfile() {
     else if (!phone.startsWith("+")) phone = "+" + phone;
 
     try {
-      const res = await fetch(`${API_BASE}/api/user-profile/${user.id}`, {
+      const res = await fetchWithAuth(`/api/user-profile/${user.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           full_name: name.trim(),
@@ -186,12 +263,16 @@ export default function ParentProfile() {
         state,
         pincode,
         address: address.trim(),
+        avatar_url: avatarUrl,
       }));
+
+      // Invalidate & refresh TanStack Query cache so all components (EditableUserCard, etc.) receive fresh data
+      await queryClient.invalidateQueries({ queryKey: ["userProfile", user?.id] });
 
       // Re-validate session so our useAuth gets updated info
       await validateSession();
 
-      navigate("/home", { replace: true, state: { tab: "home" } });
+      navigate("/profile", { replace: true });
     } catch (err) {
       setError(err.message || "Failed to save profile.");
     } finally {
@@ -200,7 +281,7 @@ export default function ParentProfile() {
   };
 
   const handleBack = () => {
-    navigate("/home", { state: { tab: "home" } });
+    navigate("/profile");
   };
 
   return (
@@ -219,6 +300,32 @@ export default function ParentProfile() {
             <h2 className="title">
               {isAlreadyCompleted ? "Edit Profile" : "Let's complete your profile"}
             </h2>
+          </div>
+
+          {/* Profile Picture with Cropper */}
+          <div className="parent-profile-avatar-wrap">
+            <div className="parent-profile-avatar-container">
+              <img
+                src={avatarUrl || DEFAULT_AVATAR}
+                alt="Profile Avatar"
+                className="parent-profile-avatar-img"
+              />
+              <button
+                type="button"
+                className="parent-profile-avatar-edit-btn"
+                onClick={() => avatarInputRef.current?.click()}
+                title="Change photo"
+              >
+                <FiCamera size={14} />
+              </button>
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: "none" }}
+                onChange={handleAvatarSelect}
+              />
+            </div>
           </div>
 
           {error && <p className="field-error parent-profile-error">{error}</p>}
@@ -284,13 +391,12 @@ export default function ParentProfile() {
             </div>
 
             <div className="form-group">
-              <label>Address</label>
+              <label>Address <span style={{ fontSize: "12px", color: "#6b7280", fontWeight: 400 }}>(Optional)</span></label>
               <input
                 type="text"
-                placeholder="Flat / House no. / Street / Area"
+                placeholder="Flat / House no. / Street / Area (Optional)"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                required
               />
             </div>
 
@@ -318,11 +424,63 @@ export default function ParentProfile() {
             </div>
 
             <button type="submit" className="btn-primary parent-profile-submit-btn" disabled={loading}>
-              {loading ? "Saving Profile…" : (isAlreadyCompleted ? "Save Profile" : "Complete Profile")}
+              {loading ? "Submitting…" : (isAlreadyCompleted ? "Save Profile" : "Submit")}
             </button>
           </form>
         </div>
       </div>
+
+      {/* Photo Crop Modal */}
+      {isCropping && createPortal(
+        <div className="crop-modal-overlay">
+          <div className="crop-modal-content">
+            <div className="crop-modal-header">
+              <h3>Crop Photo</h3>
+              <button type="button" className="crop-close-btn" onClick={handleCropCancel}>
+                <FiX size={24} />
+              </button>
+            </div>
+            
+            <div className="crop-container">
+              <Cropper
+                image={tempImage}
+                crop={crop}
+                zoom={zoom}
+                aspect={1}
+                cropShape="round"
+                showGrid={false}
+                onCropChange={setCrop}
+                onCropComplete={onCropComplete}
+                onZoomChange={setZoom}
+              />
+            </div>
+            
+            <div className="crop-controls">
+              <input
+                type="range"
+                value={zoom}
+                min={1}
+                max={3}
+                step={0.1}
+                aria-labelledby="Zoom"
+                onChange={(e) => setZoom(parseFloat(e.target.value))}
+                className="zoom-slider"
+              />
+            </div>
+            
+            <div className="crop-actions">
+              <button type="button" className="crop-cancel-btn" onClick={handleCropCancel}>
+                Cancel
+              </button>
+              <button type="button" className="crop-save-btn" onClick={handleCropSave}>
+                <FiCheck size={18} /> Apply & Save Photo
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
+
