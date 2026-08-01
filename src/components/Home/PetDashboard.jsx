@@ -35,6 +35,7 @@ export default function PetHome({
   };
 
   const [showPetDropdown, setShowPetDropdown] = useState(false);
+  const [isSurveyActive, setIsSurveyActive] = useState(false);
   const dropdownRef = useRef(null);
 
   // Survey State
@@ -133,14 +134,16 @@ export default function PetHome({
         selectedPet={selectedPet}
         onPetSelect={handlePetSelect}
         onAddPet={onAddPet}
+        isSurveyActive={isSurveyActive}
       />
 
       <div className="pet-dashboard-scrollable">
         <HeroSection 
           pets={pets} 
           selectedPet={selectedPet}
-          surveyCompleted={surveyCompleted}
-          checkingSurvey={checkingSurvey}
+          onPetSelect={handlePetSelect}
+          onNavigateTab={onNavigateTab}
+          onSurveyActiveChange={setIsSurveyActive}
         />
       </div>
 

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiUpload, FiFileText, FiCreditCard, FiShield } from "react-icons/fi";
+import { FiUpload, FiFileText, FiCreditCard, FiShield, FiLock } from "react-icons/fi";
 import { PetAvatar } from "../../common/PetAvatar";
 import PetIdCardModal from "../../UserProfile/PetIdCardModal";
 import useAuth from "../../../hooks/useAuth";
@@ -38,6 +38,7 @@ export default function ProfileCard({
   onUploadRecords,
   onAddPetNote,
   isStatic = false,
+  isSurveyActive = false,
 }) {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -48,6 +49,10 @@ export default function ProfileCard({
   const isDropdownOpen = propShowPetDropdown !== undefined ? propShowPetDropdown : internalShowDropdown;
   const toggleDropdown = (e) => {
     e?.stopPropagation();
+    if (isSurveyActive) {
+      alert(`Please finish or pause ${rawSelectedPet?.pet_name || rawSelectedPet?.name || "your pet"}’s active survey before switching pets.`);
+      return;
+    }
     if (propSetShowPetDropdown) {
       propSetShowPetDropdown((prev) => !prev);
     } else {
@@ -130,8 +135,21 @@ export default function ProfileCard({
     setViewingIdCard(true);
   };
 
+  const handleAddPetClick = (e) => {
+    e?.stopPropagation();
+    if (onAddPet) {
+      onAddPet();
+    } else {
+      navigate("/onboarding/pet");
+    }
+  };
+
   const handleUploadRecordsClick = (e) => {
     e.stopPropagation();
+    if (!pets || pets.length === 0) {
+      handleAddPetClick(e);
+      return;
+    }
     if (onUploadRecords) {
       onUploadRecords();
     } else {
@@ -141,12 +159,42 @@ export default function ProfileCard({
 
   const handleUploadNoteClick = (e) => {
     e.stopPropagation();
+    if (!pets || pets.length === 0) {
+      handleAddPetClick(e);
+      return;
+    }
     if (onAddPetNote) {
       onAddPetNote();
     } else {
       navigate("/timeline/home", { state: { openAddNote: true } });
     }
   };
+
+  if (!pets || pets.length === 0) {
+    return (
+      <div className="profile-wrapper empty-profile-wrapper">
+        <h2 className="empty-profile-section-title">Add your first pet</h2>
+        <div className="empty-profile-card" onClick={handleAddPetClick}>
+          <div className="empty-profile-left">
+            <div className="empty-profile-paw-icon-wrap">
+              <img src={pawIcon} alt="Paw Icon" className="empty-profile-paw-img" />
+            </div>
+            <div className="empty-profile-text">
+              <h3 className="empty-profile-title">Add your First Pet</h3>
+              <p className="empty-profile-sub">Save it's health Records</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="empty-profile-add-btn"
+            onClick={handleAddPetClick}
+          >
+            + Add Pet
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="profile-wrapper" ref={activeRef}>
@@ -169,23 +217,31 @@ export default function ProfileCard({
 
         {/* Middle Section: Pet Name v, Breed, Age */}
         <div className="profile-info">
-          <div className="profile-name-row" onClick={isStatic ? undefined : toggleDropdown}>
+          <div
+            className={`profile-name-row${isSurveyActive ? " disabled" : ""}`}
+            onClick={isStatic ? undefined : toggleDropdown}
+            title={isSurveyActive ? "Complete or pause active survey to switch pets" : "Switch Pet"}
+          >
             <h2 className="profile-name">{selectedPet.name}</h2>
             {!isStatic && (
-              <span className="profile-triangle-icon" title="Switch Pet">
-                <svg
-                  width="10"
-                  height="8"
-                  viewBox="0 0 10 8"
-                  fill="#004b23"
-                  style={{
-                    transform: isDropdownOpen ? "rotate(180deg)" : "rotate(0deg)",
-                    transition: "transform 0.2s ease",
-                    display: "block",
-                  }}
-                >
-                  <path d="M5 8L0 0H10L5 8Z" />
-                </svg>
+              <span className="profile-triangle-icon">
+                {isSurveyActive ? (
+                  <FiLock size={12} style={{ color: "#004b23", opacity: 0.7, marginLeft: "4px" }} title="Survey in progress" />
+                ) : (
+                  <svg
+                    width="10"
+                    height="8"
+                    viewBox="0 0 10 8"
+                    fill="#004b23"
+                    style={{
+                      transform: isDropdownOpen ? "rotate(180deg)" : "rotate(0deg)",
+                      transition: "transform 0.2s ease",
+                      display: "block",
+                    }}
+                  >
+                    <path d="M5 8L0 0H10L5 8Z" />
+                  </svg>
+                )}
               </span>
             )}
           </div>
