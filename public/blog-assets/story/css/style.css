@@ -161,17 +161,17 @@ body{ display:flex; align-items:center; justify-content:center; min-height:100vh
   font-weight:800;
 }
 h1.slide-title{
-  font-family:'Fraunces', serif; font-weight:700; font-size:22px; line-height:1.2;
+  font-family:'Fraunces', serif; font-weight:700; font-size:24px; line-height:1.2;
   margin:0 0 12px 0; color:#fff; text-shadow:0 2px 10px rgba(0,0,0,0.25);
 }
 .underline{
   width:44px; height:2px; border-radius:3px; background:rgba(255,255,255,0.75);
   margin:0 0 14px 0;
 }
-p.body-text{ font-size:14.5px; line-height:1.6; color:rgba(255,255,255,0.92); margin:0 0 12px 0; max-width:280px; }
+p.body-text{ font-size:16px; line-height:1.6; color:rgba(255,255,255,0.92); margin:0 0 12px 0; max-width:280px; }
 
 ul.check-list, ul.bullet-list{ list-style:none; margin: 4px 0px 12px 0; padding:0; display:flex; flex-direction:column; gap:8px; width:100%; text-align:left; }
-ul.check-list li{ font-size:14px; line-height:1.4; color:#fff; display:flex; align-items:flex-start; gap:9px; font-weight:500; }
+ul.check-list li{ font-size:15px; line-height:1.4; color:#fff; display:flex; align-items:flex-start; gap:9px; font-weight:500; }
 ul.check-list li svg{ width:16px; height:16px; flex-shrink:0; margin-top:1px; stroke:#B9F0BE; }
 
 /* Bullet items align neatly with the text block and keep the marker
@@ -206,13 +206,13 @@ ul.bullet-list li svg{
 .author-name b{ color:#fff; font-weight:800; }
 
 /* ---------- SURVEY / POLL (no percentages, no analytics shown) ---------- */
-.poll-q{ font-family:'Fraunces', serif; font-weight:700; font-size:19px; line-height:1.3; margin:0 0 16px 0; color:#fff; text-shadow:0 2px 10px rgba(0,0,0,0.25); }
+.poll-q{ font-family:'Fraunces', serif; font-weight:700; font-size:21px; line-height:1.3; margin:0 0 16px 0; color:#fff; text-shadow:0 2px 10px rgba(0,0,0,0.25); }
 .opts-wrap{ width:100%; display:flex; flex-direction:column; align-items:center; }
 .opt{
   width:80%; text-align:left; background:rgba(255,255,255,0.14);
   backdrop-filter:blur(6px);
   border:1.5px solid rgba(255,255,255,0.38); border-radius:13px; padding:12px 14px;
-  font-weight:700; font-size:14px; color:#fff; margin-bottom:8px; cursor:pointer;
+  font-weight:700; font-size:15px; color:#fff; margin-bottom:8px; cursor:pointer;
   position:relative; display:flex; align-items:center; justify-content:space-between; gap:8px;
   min-height:52px; box-sizing:border-box;
 }
@@ -228,7 +228,7 @@ ul.bullet-list li svg{
   width:100%; align-items:flex-start; gap:9px; text-align:left;
   background:rgba(255,255,255,0.16); backdrop-filter:blur(6px);
   border:1px solid rgba(255,255,255,0.35); border-radius:13px; padding:11px 13px;
-  font-size:13px; line-height:1.45; color:#fff; font-weight:600; margin:2px 0 10px 0;
+  font-size:14px; line-height:1.45; color:#fff; font-weight:600; margin:2px 0 10px 0;
 }
 .response-box svg{ width:16px; height:16px; flex-shrink:0; margin-top:1px; stroke:#B9F0BE; }
 

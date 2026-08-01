@@ -15,6 +15,7 @@ const ParentProfile = lazy(() => import("./components/ParentProfile/ParentProfil
 const RemindersPage = lazy(() => import("./components/Reminders/RemindersPage"));
 const EventDetailPage = lazy(() => import("./components/Timeline/EventDetailPage/EventDetailPage"));
 const PetLifestyleSurveyPage = lazy(() => import("./components/Home/PetLifestyleSurveyPage"));
+const Blog = lazy(() => import("./components/Blog/Blog"));
 
 function LoadingFallback() {
   return (
@@ -53,6 +54,8 @@ function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/pet/:id" element={<PublicPetProfile />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/pet-parent-academy" element={<Blog />} />
+          <Route path="/pet-parent-academy/blogs/:id" element={<Blog />} />
 
           {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>
