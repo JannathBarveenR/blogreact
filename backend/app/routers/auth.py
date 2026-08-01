@@ -10,6 +10,8 @@ POST /api/auth/forgot-password     — Send password reset email
 POST /api/auth/reset-password      — Reset password with token
 """
 
+import uuid
+import datetime
 from typing import Optional, Literal
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
@@ -212,16 +214,18 @@ async def register_interest(body: RegisterInterestRequest):
     try:
         display_name = body.doctorName if body.type == "veterinarian" else body.name
         record = {
+            "id": str(uuid.uuid4()),
             "type": body.type,
             "name": display_name,
-            "clinic_name": body.clinicName,
+            "clinic_name": body.clinicName if body.type == "veterinarian" else None,
             "mobile": body.mobile,
             "email": body.email,
             "city": body.city,
-            "pet_type": body.petType,
             "early_access": body.earlyAccess if body.earlyAccess is not None else True,
+            "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         }
-        supabase.table("early_access_registrations").insert(record).execute()
+        res = supabase_admin.table("early_access_registrations").insert(record).execute()
+        print(f"[register-interest] Saved early access registration: {res.data}")
         return {"message": "Thanks! You're on the early access list. We'll reach out soon."}
     except Exception as e:
         print(f"[register-interest] Error saving record: {e}")

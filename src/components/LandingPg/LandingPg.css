@@ -168,7 +168,8 @@ a { text-decoration: none; }
   position: fixed;
   inset: 0 0 auto 0;
   z-index: 100;
-  padding: 18px 0;
+  padding-top: max(16px, env(safe-area-inset-top, 16px));
+  padding-bottom: 16px;
   background: rgba(255, 255, 255, 0);
   transition: background var(--dur-base) ease, box-shadow var(--dur-base) ease, padding var(--dur-base) ease;
 }
@@ -177,7 +178,8 @@ a { text-decoration: none; }
   background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-  padding: 12px 0;
+  padding-top: max(14px, env(safe-area-inset-top, 14px));
+  padding-bottom: 12px;
   box-shadow: 0 1px 0 rgba(0, 75, 73, 0.07);
 }
 

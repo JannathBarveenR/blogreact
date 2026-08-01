@@ -714,11 +714,13 @@ export function LoginModal({ isOpen, onClose, initialScreen = "login" }) {
   };
 
   return (
-    <div className="login-modal-overlay" onClick={onClose}>
+    <div className="login-modal-overlay" onClick={screen === "success" ? undefined : onClose}>
       <div className="login-modal-container" onClick={(e) => e.stopPropagation()}>
-        <button className="login-modal-close-btn" onClick={onClose} aria-label="Close modal">
-          <X size={18} />
-        </button>
+        {screen !== "success" && (
+          <button className="login-modal-close-btn" onClick={onClose} aria-label="Close modal">
+            <X size={18} />
+          </button>
+        )}
 
         {screen === "register" && (
           <RegistrationScreen

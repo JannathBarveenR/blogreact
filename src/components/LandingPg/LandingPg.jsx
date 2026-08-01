@@ -6,6 +6,7 @@ import ProductSection from "./components/ProductSection";
 import FounderBeliefSection from "./components/FounderBeliefSection";
 import FinalCTASection from "./components/FinalCTASection";
 import { LoginModal } from "../Login/Login";
+import VetInterestModal from "./components/VetInterestModal";
 import Footer from "./components/Footer";
 import "./LandingPg.css";
 
@@ -49,8 +50,14 @@ const LandingPg = () => {
 
       {/* 8. Auth / Signup / Login Popup */}
       <LoginModal
-        isOpen={modalOpen}
+        isOpen={modalOpen && modalType !== "vet"}
         initialScreen={modalType === "login" ? "login" : "register"}
+        onClose={closeModal}
+      />
+
+      {/* 9. Veterinarian Interest Modal */}
+      <VetInterestModal
+        isOpen={modalOpen && modalType === "vet"}
         onClose={closeModal}
       />
     </div>
