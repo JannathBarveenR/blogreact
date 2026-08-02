@@ -50,6 +50,8 @@ function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/pet/:id" element={<PublicPetProfile />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/pet-parent-academy" element={<Blog />} />
+          <Route path="/pet-parent-academy/blogs/:id" element={<Blog />} />
 
           {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>

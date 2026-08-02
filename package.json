@@ -29,7 +29,8 @@
     "react-router-dom": "^7.11.0",
     "react-select": "^5.10.2",
     "tailwindcss": "^4.3.2",
-    "use-image": "^1.1.4"
+    "use-image": "^1.1.4",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
