@@ -173,15 +173,14 @@ export default function ProfileCard({
   if (!pets || pets.length === 0) {
     return (
       <div className="profile-wrapper empty-profile-wrapper">
-        <h2 className="empty-profile-section-title">Add your first pet</h2>
         <div className="empty-profile-card" onClick={handleAddPetClick}>
           <div className="empty-profile-left">
             <div className="empty-profile-paw-icon-wrap">
               <img src={pawIcon} alt="Paw Icon" className="empty-profile-paw-img" />
             </div>
             <div className="empty-profile-text">
-              <h3 className="empty-profile-title">Add your First Pet</h3>
-              <p className="empty-profile-sub">Save it's health Records</p>
+              <h3 className="empty-profile-title">Add your pet's profile</h3>
+              <p className="empty-profile-sub">Keep vaccine & health records safe</p>
             </div>
           </div>
           <button

@@ -98,7 +98,7 @@ export default function PetHome({
           />
         </div>
 
-        <HeroSection pets={pets} />
+        <HeroSection pets={pets} onAddPet={onAddPet} />
 
         <UploadRecordsCard onNavigateTab={onNavigateTab} />
 
@@ -144,6 +144,7 @@ export default function PetHome({
           onPetSelect={handlePetSelect}
           onNavigateTab={onNavigateTab}
           onSurveyActiveChange={setIsSurveyActive}
+          onAddPet={onAddPet}
         />
       </div>
 

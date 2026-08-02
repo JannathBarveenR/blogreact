@@ -7,6 +7,7 @@ import {
   FileText,
   PawPrint,
   Sparkles,
+  Plus,
 } from "lucide-react";
 import useAuth from "../../../hooks/useAuth";
 import PetLifestyleSurveyCard from "../PetLifestyleSurveyCard";
@@ -19,6 +20,7 @@ export default function HeroSection({
   onPetSelect,
   onNavigateTab,
   onSurveyActiveChange,
+  onAddPet,
 }) {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -53,6 +55,15 @@ export default function HeroSection({
       navigate(`/survey/${pets[0].id}`, { state: { pet: pets[0] } });
     } else {
       navigate("/survey/new");
+    }
+  };
+
+  const handleAddPetClick = (e) => {
+    e?.stopPropagation();
+    if (onAddPet) {
+      onAddPet();
+    } else {
+      navigate("/onboarding/pet");
     }
   };
 
@@ -116,8 +127,20 @@ export default function HeroSection({
             <div className="welcome-green-divider" />
 
             <p className="welcome-subtitle">
-              Your all-in-one personalized pet health dashboard is ready.
+              Give your pet the care they deserve. Add your pet to track health records & smart reminders.
             </p>
+
+            {(!pets || pets.length === 0) && (
+              <button
+                className="welcome-take-survey-btn"
+                onClick={handleAddPetClick}
+                type="button"
+              >
+                <Plus className="btn-survey-icon" size={17} strokeWidth={2.5} />
+                <span>Add Your Pet</span>
+                <ChevronRight className="btn-chevron-icon" size={17} strokeWidth={2.5} />
+              </button>
+            )}
           </div>
 
           <div className="welcome-image-wrapper">
