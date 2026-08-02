@@ -257,12 +257,23 @@ export default function PetLifestyleSurveyCard({
     setCurrentQIndex(nextIdx);
   };
 
-  const handleUploadRecordsClick = () => {
+  const handleUploadRecordsClick = (e) => {
+    e?.stopPropagation();
     setCurrentQIndex(0);
-    if (onNavigateTab) {
-      onNavigateTab("records");
+    if (typeof onNavigateTab === "function") {
+      onNavigateTab("medicalrecords", { openUpload: true });
     } else {
       navigate("/records", { state: { openUpload: true } });
+    }
+  };
+
+  const handleAddPetNoteClick = (e) => {
+    e?.stopPropagation();
+    setCurrentQIndex(0);
+    if (typeof onNavigateTab === "function") {
+      onNavigateTab("timeline");
+    } else {
+      navigate("/timeline/home", { state: { openAddNote: true } });
     }
   };
 
@@ -283,7 +294,7 @@ export default function PetLifestyleSurveyCard({
                 {petName}’s Care Profile is complete. {petName} is a known pet of PetOlife!
               </p>
               <div className="completed-hero-chip">
-                <Check size={13} strokeWidth={3} /> Care Profile Completed
+                <Check size={12} strokeWidth={3} /> {petName}’s Profile Complete
               </div>
             </>
           ) : (
@@ -305,8 +316,8 @@ export default function PetLifestyleSurveyCard({
 
           {incompleteOtherPet && (
             <div className="other-pet-prompt-bar" onClick={() => handleSwitchToOtherPet(incompleteOtherPet)}>
-              <span>Next: Complete {incompleteOtherPet.pet_name || incompleteOtherPet.name}’s profile</span>
-              <ChevronRight size={14} />
+              <span>Complete {incompleteOtherPet.pet_name || incompleteOtherPet.name}’s Profile</span>
+              <ChevronRight size={13} strokeWidth={2.5} />
             </div>
           )}
         </div>
@@ -331,14 +342,16 @@ export default function PetLifestyleSurveyCard({
     return (
       <div className="care-profile-card care-profile-card--fixed care-profile-card--completion">
         <div className="completion-content">
-          <div className="completion-badge-row">
-            <span className="completion-sparkle">🎉</span>
-            <h3 className="completion-title">{petName}’s Care Profile is Ready</h3>
-          </div>
+          <div className="completion-header-wrap">
+            <div className="completion-badge-row">
+              <span className="completion-sparkle">🎉</span>
+              <h3 className="completion-title">{petName}’s Care Profile is Ready</h3>
+            </div>
 
-          <p className="completion-subtitle">
-            We now understand {petName}’s daily routine and care needs better to personalise their PetOlife experience.
-          </p>
+            <p className="completion-subtitle">
+              We now understand {petName}’s daily routine and care needs better to personalise their PetOlife experience.
+            </p>
+          </div>
 
           {otherPet ? (
             <div className="other-pet-cta-box" onClick={() => handleSwitchToOtherPet(otherPet)}>
@@ -346,19 +359,27 @@ export default function PetLifestyleSurveyCard({
               <p className="other-pet-sub">Complete {otherPet.pet_name || otherPet.name}’s Care Profile now →</p>
             </div>
           ) : (
-            <div className="completion-next-card">
+            <div className="completion-next-card" onClick={handleUploadRecordsClick} style={{ cursor: "pointer" }}>
               <span className="next-card-badge"><ShieldCheck size={12} /> Next Step</span>
               <p className="next-card-title">Upload medical records for {petName}</p>
             </div>
           )}
 
-          <div className="completion-btn-row">
+          <div className="completion-btn-group">
             <button
               type="button"
-              className="care-profile-card__btn care-profile-card__btn--primary completion-upload-btn"
+              className="care-profile-card__btn care-profile-card__btn--primary completion-btn"
               onClick={handleUploadRecordsClick}
             >
               <Upload size={15} /> Upload Medical Records
+            </button>
+
+            <button
+              type="button"
+              className="care-profile-card__btn care-profile-card__btn--outline completion-btn"
+              onClick={handleAddPetNoteClick}
+            >
+              <FileText size={15} /> Add a Pet Note
             </button>
           </div>
         </div>
