@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 import TopNav from "../common/TopNav/TopNav";
 import BottomNav from "../common/BottomNav/BottomNav";
+import AppFooterSpacer from "../common/AppFooterSpacer/AppFooterSpacer";
 import MedicalRecords from "../medical/MedicalRecords";
 import Home from "../Home/Home";
 import TimelinePage from "../Timeline/TimelinePage";
@@ -69,7 +70,7 @@ const MainLayout = () => {
   const renderContent = () => {
     if (activeTab === "timeline") {
       return (
-        <div style={{ height: "100vh", overflowY: "auto", WebkitOverflowScrolling: "touch", paddingBottom: "calc(140px + env(safe-area-inset-bottom, 0px))" }}>
+        <>
           <TopNav />
           <TimelinePage
             pets={pets}
@@ -77,13 +78,14 @@ const MainLayout = () => {
             onPetSelect={handlePetSelect}
             onAddPet={handleAddPet}
           />
-        </div>
+          <AppFooterSpacer />
+        </>
       );
     }
 
     if (activeTab === "medicalrecords") {
       return (
-        <div style={{ height: "100vh", overflowY: "auto", WebkitOverflowScrolling: "touch", paddingBottom: "calc(140px + env(safe-area-inset-bottom, 0px))" }}>
+        <>
           <TopNav />
           <MedicalRecords
             pets={pets}
@@ -91,13 +93,14 @@ const MainLayout = () => {
             onPetSelect={handlePetSelect}
             onAddPet={handleAddPet}
           />
-        </div>
+          <AppFooterSpacer />
+        </>
       );
     }
 
     if (activeTab === "profile") {
       return (
-        <div style={{ height: "100vh", overflowY: "auto", WebkitOverflowScrolling: "touch", paddingBottom: "calc(140px + env(safe-area-inset-bottom, 0px))" }}>
+        <>
           <UserProfile
             pets={pets}
             activePetId={activePetId}
@@ -105,13 +108,14 @@ const MainLayout = () => {
             onAddPet={handleAddPet}
             refreshPets={() => invalidatePets(user?.id)}
           />
-        </div>
+          <AppFooterSpacer />
+        </>
       );
     }
 
     // HOME TAB
     return (
-      <div style={{ height: "100vh", overflowY: "auto", WebkitOverflowScrolling: "touch", paddingBottom: "calc(140px + env(safe-area-inset-bottom, 0px))" }}>
+      <>
         <TopNav />
         <Home
           pets={pets}
@@ -120,7 +124,8 @@ const MainLayout = () => {
           onAddPet={handleAddPet}
           onNavigate={(target, state) => handleNavigateTab(target, state)}
         />
-      </div>
+        <AppFooterSpacer />
+      </>
     );
   };
 

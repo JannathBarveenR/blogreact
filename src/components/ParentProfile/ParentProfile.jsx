@@ -8,6 +8,8 @@ import fetchWithAuth from "../../utils/fetchWithAuth";
 import getCroppedImg from "../../utils/cropImage";
 import queryClient from "../../utils/queryClient";
 import "../Login/Login.css";
+import AppFooterSpacer from "../common/AppFooterSpacer/AppFooterSpacer";
+
 import "./ParentProfile.css";
 import logoImg from "../../assets/logo-with-tagline.webp";
 import DEFAULT_AVATAR from "../../assets/owner-avatar.svg";
@@ -427,6 +429,7 @@ export default function ParentProfile() {
               {loading ? "Submitting…" : (isAlreadyCompleted ? "Save Profile" : "Submit")}
             </button>
           </form>
+          <AppFooterSpacer />
         </div>
       </div>
 

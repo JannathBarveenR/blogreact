@@ -291,7 +291,7 @@ export default function PetLifestyleSurveyCard({
           {isCompleted ? (
             <>
               <p className="welcome-subtitle">
-                {petName}’s Care Profile is complete. {petName} is a known pet of PetOlife!
+                PetOlife now knows {petName} better!
               </p>
               <div className="completed-hero-chip">
                 <Check size={12} strokeWidth={3} /> {petName}’s Profile Complete
