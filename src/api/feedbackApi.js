@@ -37,11 +37,21 @@ export async function fetchFeedbacks() {
   }
 }
 
-export async function createFeedback(content) {
-  const res = await fetchWithAuth("/api/feedback", {
-    method: "POST",
-    body: JSON.stringify({ content }),
-  });
+export async function createFeedback(content, imageFiles = []) {
+  const options = { method: "POST" };
+
+  if (imageFiles && imageFiles.length > 0) {
+    const formData = new FormData();
+    formData.append("content", content);
+    imageFiles.forEach((file) => {
+      formData.append("images", file);
+    });
+    options.body = formData;
+  } else {
+    options.body = JSON.stringify({ content });
+  }
+
+  const res = await fetchWithAuth("/api/feedback", options);
   if (!res.ok) {
     const errData = await res.json().catch(() => ({}));
     throw new Error(errData.detail || "Failed to submit feedback");
@@ -53,11 +63,22 @@ export async function createFeedback(content) {
   return newFeedback;
 }
 
-export async function updateFeedback(id, content) {
-  const res = await fetchWithAuth(`/api/feedback/${id}`, {
-    method: "PUT",
-    body: JSON.stringify({ content }),
-  });
+export async function updateFeedback(id, content, newImageFiles = [], existingImageUrls = {}) {
+  const options = { method: "PUT" };
+
+  if (newImageFiles && newImageFiles.length > 0) {
+    const formData = new FormData();
+    formData.append("content", content);
+    formData.append("existing_image_urls", JSON.stringify(existingImageUrls || {}));
+    newImageFiles.forEach((file) => {
+      formData.append("images", file);
+    });
+    options.body = formData;
+  } else {
+    options.body = JSON.stringify({ content, image_urls: existingImageUrls || {} });
+  }
+
+  const res = await fetchWithAuth(`/api/feedback/${id}`, options);
   if (!res.ok) {
     const errData = await res.json().catch(() => ({}));
     throw new Error(errData.detail || "Failed to update feedback");

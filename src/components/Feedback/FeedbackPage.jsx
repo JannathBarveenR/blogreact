@@ -1,4 +1,4 @@
-  import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiArrowLeft,
@@ -7,7 +7,9 @@ import {
   FiMessageSquare,
   FiX,
   FiCheckCircle,
-  FiEdit3
+  FiEdit3,
+  FiCamera,
+  FiImage
 } from "react-icons/fi";
 import {
   fetchFeedbacks,
@@ -62,6 +64,22 @@ export function formatFeedbackDateTime(dateString) {
   }
 }
 
+export function extractImageUrls(raw) {
+  if (!raw) return [];
+  let parsed = raw;
+  if (typeof raw === "string") {
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      return [];
+    }
+  }
+  if (parsed && typeof parsed === "object") {
+    return Object.values(parsed).filter((url) => typeof url === "string" && url.length > 0);
+  }
+  return [];
+}
+
 export default function FeedbackPage() {
   const navigate = useNavigate();
 
@@ -75,6 +93,15 @@ export default function FeedbackPage() {
   const [editingId, setEditingId] = useState(null);
   const [modalText, setModalText] = useState("");
   const [initialModalText, setInitialModalText] = useState("");
+
+  // Image Upload State
+  const [selectedImageFiles, setSelectedImageFiles] = useState([]);
+  const [existingImageUrls, setExistingImageUrls] = useState({});
+  const [initialExistingImageUrls, setInitialExistingImageUrls] = useState({});
+
+  // Full Screen Lightbox Preview State
+  const [activePreviewImage, setActivePreviewImage] = useState(null);
+
   const [submitting, setSubmitting] = useState(false);
 
   // Toast Notification (Top Right Corner)
@@ -116,6 +143,9 @@ export default function FeedbackPage() {
     setEditingId(null);
     setModalText("");
     setInitialModalText("");
+    setSelectedImageFiles([]);
+    setExistingImageUrls({});
+    setInitialExistingImageUrls({});
     setShowModal(true);
   };
 
@@ -125,6 +155,18 @@ export default function FeedbackPage() {
     setEditingId(item.id);
     setModalText(item.content || "");
     setInitialModalText(item.content || "");
+    setSelectedImageFiles([]);
+
+    let existing = item.image_urls || {};
+    if (typeof existing === "string") {
+      try {
+        existing = JSON.parse(existing);
+      } catch {
+        existing = {};
+      }
+    }
+    setExistingImageUrls(existing);
+    setInitialExistingImageUrls(existing);
     setShowModal(true);
   };
 
@@ -134,12 +176,42 @@ export default function FeedbackPage() {
     setModalText("");
     setInitialModalText("");
     setEditingId(null);
+    setSelectedImageFiles([]);
+    setExistingImageUrls({});
+    setInitialExistingImageUrls({});
   };
+
+  const handleImageSelect = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      setSelectedImageFiles((prev) => [...prev, ...files]);
+    }
+  };
+
+  const removeSelectedFile = (index) => {
+    setSelectedImageFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const removeExistingImageUrl = (key) => {
+    setExistingImageUrls((prev) => {
+      const copy = { ...prev };
+      delete copy[key];
+      return copy;
+    });
+  };
+
+  const hasNewImages = selectedImageFiles.length > 0;
+  const hasAnyImages = Object.keys(existingImageUrls).length > 0 || selectedImageFiles.length > 0;
+  const existingChanged =
+    JSON.stringify(existingImageUrls) !== JSON.stringify(initialExistingImageUrls);
 
   const isSubmitDisabled =
     submitting ||
     !modalText.trim() ||
-    (modalMode === "edit" && modalText.trim() === initialModalText.trim());
+    (modalMode === "edit" &&
+      modalText.trim() === initialModalText.trim() &&
+      !hasNewImages &&
+      !existingChanged);
 
   const handleModalSubmit = async (e) => {
     e.preventDefault();
@@ -149,19 +221,22 @@ export default function FeedbackPage() {
     try {
       setSubmitting(true);
       if (modalMode === "edit" && editingId) {
-        const updated = await updateFeedback(editingId, text);
+        const updated = await updateFeedback(
+          editingId,
+          text,
+          selectedImageFiles,
+          existingImageUrls
+        );
         setFeedbacks((prev) =>
           sortFeedbacksDesc(prev.map((item) => (item.id === editingId ? updated : item)))
         );
         showToast("Feedback updated successfully!");
       } else {
-        const created = await createFeedback(text);
+        const created = await createFeedback(text, selectedImageFiles);
         setFeedbacks((prev) => sortFeedbacksDesc([created, ...prev]));
         showToast("Feedback submitted successfully!");
       }
-      setShowModal(false);
-      setModalText("");
-      setEditingId(null);
+      handleCloseModal();
     } catch (err) {
       alert(err.message || "Failed to save feedback. Please try again.");
     } finally {
@@ -242,6 +317,7 @@ export default function FeedbackPage() {
           <div className="feedback-list">
             {feedbacks.map((item) => {
               const isExpanded = expandedCardId === item.id;
+              const imageValues = extractImageUrls(item.image_urls);
 
               return (
                 <div
@@ -276,6 +352,24 @@ export default function FeedbackPage() {
                     >
                       {item.content}
                     </p>
+
+                    {/* Screenshots Strip if attached */}
+                    {imageValues.length > 0 && (
+                      <div
+                        className="feedback-card__images-strip"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {imageValues.map((imgUrl, idx) => (
+                          <img
+                            key={idx}
+                            src={imgUrl}
+                            alt={`Screenshot ${idx + 1}`}
+                            className="feedback-card__img-thumb"
+                            onClick={() => setActivePreviewImage(imgUrl)}
+                          />
+                        ))}
+                      </div>
+                    )}
 
                     {isExpanded && (
                       <div className="feedback-card__expanded-actions">
@@ -330,6 +424,78 @@ export default function FeedbackPage() {
                   autoFocus
                   required
                 />
+
+                {/* Screenshot Upload Section (Matching Wireframe) */}
+                <div className="feedback-attach-section">
+                  <span className="feedback-attach-label">Attach Images</span>
+
+                  <div className="feedback-attach-container">
+                    {hasAnyImages ? (
+                      <div className="feedback-attach-grid">
+                        {/* Existing Uploaded Images */}
+                        {Object.entries(existingImageUrls).map(([key, url]) => (
+                          <div key={key} className="feedback-attach-tile">
+                            <img src={url} alt="Attached screenshot" className="feedback-attach-img" />
+                            <button
+                              type="button"
+                              className="feedback-attach-remove-btn"
+                              onClick={() => removeExistingImageUrl(key)}
+                              title="Remove image"
+                            >
+                              <FiX size={11} />
+                            </button>
+                          </div>
+                        ))}
+
+                        {/* New Selected Files */}
+                        {selectedImageFiles.map((file, idx) => (
+                          <div key={idx} className="feedback-attach-tile">
+                            <img
+                              src={URL.createObjectURL(file)}
+                              alt="Selected screenshot"
+                              className="feedback-attach-img"
+                            />
+                            <button
+                              type="button"
+                              className="feedback-attach-remove-btn"
+                              onClick={() => removeSelectedFile(idx)}
+                              title="Remove image"
+                            >
+                              <FiX size={11} />
+                            </button>
+                          </div>
+                        ))}
+
+                        {/* Small '+' Tile button to add more screenshots */}
+                        <label className="feedback-attach-add-tile" title="Add more screenshots">
+                          <FiPlus size={22} />
+                          <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            onChange={handleImageSelect}
+                            hidden
+                          />
+                        </label>
+                      </div>
+                    ) : (
+                      /* Empty state: Centered 'Add Screenshot' Button inside container */
+                      <div className="feedback-attach-empty">
+                        <label className="feedback-add-screenshot-btn">
+                          <FiPlus size={16} />
+                          <span>Add Image</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            onChange={handleImageSelect}
+                            hidden
+                          />
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <div className="feedback-modal-actions">
@@ -356,6 +522,32 @@ export default function FeedbackPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Lightbox / High-Res Image Preview Modal */}
+      {activePreviewImage && (
+        <div
+          className="feedback-lightbox-overlay"
+          onClick={() => setActivePreviewImage(null)}
+        >
+          <div
+            className="feedback-lightbox-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="feedback-lightbox-close"
+              onClick={() => setActivePreviewImage(null)}
+            >
+              <FiX size={24} />
+            </button>
+            <img
+              src={activePreviewImage}
+              alt="Screenshot Preview"
+              className="feedback-lightbox-img"
+            />
           </div>
         </div>
       )}

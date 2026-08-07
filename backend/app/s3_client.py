@@ -13,16 +13,25 @@ AWS_REGION = (os.getenv("AWS_REGION") or "ap-south-1").strip()
 AWS_AVATARS_BUCKET = (os.getenv("AWS_AVATARS_BUCKET") or "petolife-avatars-141927126120-ap-south-1-an").strip()
 AWS_PET_PHOTOS_BUCKET = (os.getenv("AWS_PET_PHOTOS_BUCKET") or "petolife-pet-photos-141927126120-ap-south-1-an").strip()
 AWS_MEDICAL_DOCS_BUCKET = (os.getenv("AWS_MEDICAL_DOCS_BUCKET") or "petolife-medical-docs-141927126120-ap-south-1-an").strip()
+def get_feedback_bucket() -> str:
+    """Returns the validated S3 bucket name for feedback screenshots."""
+    env_val = (os.getenv("AWS_FEEDBACKS_BUCKET") or "").strip()
+    if env_val and env_val != "feedbacks" and "petolife-feedbacks" not in env_val:
+        return env_val
+    return "feed-back-petolife"
+
+AWS_FEEDBACKS_BUCKET = get_feedback_bucket()
 
 
 def get_s3_client():
     """
-    Initializes and returns a boto3 S3 client.
+    Initializes and returns a boto3 S3 client configured for ap-south-1.
     Configured with strict timeouts so EC2 metadata / network issues fail quickly
     instead of hanging, and dynamically refreshes IAM role credentials.
     """
+    region = AWS_REGION or "ap-south-1"
     config = Config(
-        region_name=AWS_REGION,
+        region_name=region,
         signature_version="s3v4",
         s3={"addressing_style": "virtual"},
         connect_timeout=5,
@@ -30,7 +39,7 @@ def get_s3_client():
         retries={"max_attempts": 2, "mode": "standard"}
     )
     kwargs = {
-        "region_name": AWS_REGION,
+        "region_name": region,
         "config": config
     }
     if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY:
@@ -98,4 +107,78 @@ def get_presigned_url(bucket: str, filename: str, expiration: int = 3600) -> str
     except Exception as e:
         print(f"[S3 Error] Presigned URL generation unexpected error for {filename}: {e}")
         return ""
+
+
+def process_upload_image_bytes(file_bytes: bytes, filename: str, content_type: str = "") -> tuple[bytes, str, str]:
+    """
+    Processes uploaded image bytes. Automatically converts HEIC/HEIF images (from iOS/Mac)
+    into standard web-compatible JPEGs using pillow-heif and Pillow.
+    Returns (processed_bytes, formatted_filename, content_type).
+    """
+    ext = (filename.split(".")[-1] if "." in filename else "").lower()
+    ct = (content_type or "").lower()
+
+    is_heic = ext in ["heic", "heif"] or "heic" in ct or "heif" in ct
+
+    if is_heic:
+        try:
+            import pillow_heif
+            from PIL import Image
+            import io
+
+            pillow_heif.register_heif_opener()
+            image = Image.open(io.BytesIO(file_bytes))
+
+            if image.mode != "RGB":
+                image = image.convert("RGB")
+
+            output_io = io.BytesIO()
+            image.save(output_io, format="JPEG", quality=88)
+
+            base_name = filename.rsplit(".", 1)[0] if "." in filename else filename
+            new_filename = f"{base_name}.jpg"
+            print(f"[Image Processor] Converted HEIC image '{filename}' to JPEG '{new_filename}'")
+            return output_io.getvalue(), new_filename, "image/jpeg"
+        except Exception as e:
+            print(f"[Image Processor] HEIC conversion warning for '{filename}': {e}")
+
+    return file_bytes, filename, content_type or "image/jpeg"
+
+
+def resolve_feedback_image_urls(image_urls) -> dict:
+    """
+    Resolves image URLs or object keys stored in database into valid presigned S3 URLs
+    so browsers can display them without HTTP 403 Forbidden errors.
+    """
+    if not image_urls:
+        return {}
+
+    import json
+    parsed_dict = {}
+    if isinstance(image_urls, str):
+        try:
+            parsed_dict = json.loads(image_urls)
+        except Exception:
+            return {}
+    elif isinstance(image_urls, dict):
+        parsed_dict = image_urls
+
+    resolved = {}
+    bucket = get_feedback_bucket()
+
+    for key, val in parsed_dict.items():
+        if not val or not isinstance(val, str):
+            continue
+        
+        # Extract filename / key if full URL was stored
+        if "amazonaws.com/" in val:
+            file_key = val.split("amazonaws.com/")[-1].split("?")[0]
+        else:
+            file_key = val
+
+        # Generate 7-day presigned URL
+        presigned = get_presigned_url(bucket, file_key, expiration=604800)
+        resolved[key] = presigned if presigned else val
+
+    return resolved
 
