@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import {
   FiEdit2,
   FiBell,
+  FiMessageSquare,
   FiLock,
   FiTrash2,
   FiChevronRight
@@ -246,6 +247,12 @@ const getPetIcon = (pet) => {
       path: "/settings/notifications",
     },
     {
+      icon: FiMessageSquare,
+      title: "Feedback",
+      subtitle: "Share your thoughts & feature requests",
+      path: "/feedback",
+    },
+    {
       icon: ShieldCheck,
       title: "Privacy",
       subtitle: "Manage your privacy settings",
@@ -349,6 +356,10 @@ const getPetIcon = (pet) => {
       case "All Reminders":
       case "Notifications":
         navigate("/reminders");
+        break;
+
+      case "Feedback":
+        navigate("/feedback");
         break;
 
       case "Privacy":

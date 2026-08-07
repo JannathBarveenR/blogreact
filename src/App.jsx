@@ -15,6 +15,8 @@ const ParentProfile = lazy(() => import("./components/ParentProfile/ParentProfil
 const RemindersPage = lazy(() => import("./components/Reminders/RemindersPage"));
 const EventDetailPage = lazy(() => import("./components/Timeline/EventDetailPage/EventDetailPage"));
 const PetLifestyleSurveyPage = lazy(() => import("./components/Home/PetLifestyleSurveyPage"));
+const FeedbackPage = lazy(() => import("./components/Feedback/FeedbackPage"));
+const FeedbackDetailPage = lazy(() => import("./components/Feedback/FeedbackDetailPage"));
 const NotFoundPage = lazy(() => import("./components/NotFound/NotFoundPage"));
 const Blog = lazy(() => import("./components/Blog/Blog"));
 
@@ -63,6 +65,8 @@ function App() {
             <Route path="/create-pet-profile" element={<ProfileCreate />} />
             <Route path="/parent-profile" element={<ParentProfile />} />
             <Route path="/reminders" element={<RemindersPage />} />
+            <Route path="/feedback" element={<FeedbackPage />} />
+            <Route path="/feedback/:id" element={<Navigate to="/feedback" replace />} />
             <Route path="/timeline/event/:eventId" element={<EventDetailPage />} />
             <Route path="/records/event/:eventId" element={<EventDetailPage />} />
             <Route path="/survey/:petId" element={<PetLifestyleSurveyPage />} />
