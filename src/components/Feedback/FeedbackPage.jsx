@@ -64,6 +64,8 @@ export function formatFeedbackDateTime(dateString) {
   }
 }
 
+export const formatFeedbackDate = formatFeedbackDateTime;
+
 export function extractImageUrls(raw) {
   if (!raw) return [];
   let parsed = raw;

@@ -89,3 +89,23 @@ export async function updateFeedback(id, content, newImageFiles = [], existingIm
   setCachedFeedbacks(updatedList);
   return updated;
 }
+
+export async function fetchFeedbackById(id) {
+  const res = await fetchWithAuth(`/api/feedback/${id}`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch feedback (status ${res.status})`);
+  }
+  return await res.json();
+}
+
+export async function deleteFeedback(id) {
+  const res = await fetchWithAuth(`/api/feedback/${id}`, { method: "DELETE" });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.detail || "Failed to delete feedback");
+  }
+  const current = getCachedFeedbacks();
+  const updatedList = current.filter((item) => item.id !== id);
+  setCachedFeedbacks(updatedList);
+  return true;
+}

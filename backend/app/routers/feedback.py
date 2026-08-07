@@ -230,3 +230,23 @@ async def update_feedback(
     except Exception as e:
         print(f"Error updating feedback: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/{feedback_id}")
+async def delete_feedback(
+    feedback_id: str,
+    auth_user_id: str = Depends(get_current_user_id),
+    supabase: Client = Depends(get_user_supabase)
+):
+    """Delete a feedback entry owned by the user."""
+    try:
+        res = (
+            supabase.table("feedbacks")
+            .delete()
+            .eq("id", feedback_id)
+            .eq("user_id", auth_user_id)
+            .execute()
+        )
+        return {"status": "success", "message": "Feedback deleted successfully"}
+    except Exception as e:
+        print(f"Error deleting feedback: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
