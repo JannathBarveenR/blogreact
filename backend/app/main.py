@@ -5,13 +5,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from app.config import PORT, FRONTEND_URL, ENVIRONMENT
-from app.routers import auth, location, pet_profile, pet_health_id, checklist, user_profile
+from app.routers import auth, location, pet_profile, pet_health_id, checklist, user_profile, feedback
 from app.routers.v2 import medical_events, reference_data, timeline, reminders, records, export
 from app.supabase_client import supabase
 
 _is_production = ENVIRONMENT == "production"
-
-
+ 
+ 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifecycle manager — verifies database connectivity on startup."""
@@ -83,6 +83,7 @@ app.include_router(location.router,        prefix="/api/location",        tags=[
 app.include_router(pet_health_id.router,   prefix="/api/pet-health-id",   tags=["Pet Health ID"])
 app.include_router(checklist.router,       prefix="/api/checklist",       tags=["Checklist"])
 app.include_router(user_profile.router,    prefix="/api/user-profile",    tags=["User Profile"])
+app.include_router(feedback.router,        prefix="/api/feedback",        tags=["Feedback"])
 
 # V2 AI Timeline Routers
 app.include_router(reference_data.router)
