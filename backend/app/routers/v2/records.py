@@ -21,7 +21,7 @@ Read / Management:
   PATCH  /api/v2/pets/{pet_id}/records/{record_id}/favorite — toggle is_favorite (log=0 use)
 """
 
-from typing import Optional
+from typing import Optional, List
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
@@ -40,6 +40,38 @@ def _guard(pet_id: str, user: dict) -> None:
     if not PetService.verify_ownership(pet_id, user["id"]):
         raise HTTPException(status_code=404, detail="Pet not found")
 
+async def _process_files(file: Optional[UploadFile], files: Optional[List[UploadFile]], base_name: str) -> tuple[bytes, str, str]:
+    """Helper to process file(s) into final bytes, safe_name, and content_type."""
+    if not files and not file:
+        raise HTTPException(status_code=400, detail="No files provided")
+    
+    upload_list = files if files else [file]
+    if len(upload_list) == 1:
+        f = upload_list[0]
+        data = await f.read()
+        if len(data) > _MAX_BYTES:
+            raise HTTPException(status_code=400, detail="File exceeds 10 MB limit")
+        safe_name = (f.filename or "document").replace(" ", "_")
+        return data, safe_name, f.content_type
+    else:
+        # Multiple files: Read all, check limit, convert to PDF
+        total_size = 0
+        image_bytes_list = []
+        for f in upload_list:
+            data = await f.read()
+            total_size += len(data)
+            if total_size > _MAX_BYTES:
+                raise HTTPException(status_code=400, detail="Total size exceeds 10 MB limit")
+            image_bytes_list.append(data)
+            
+        try:
+            pdf_bytes = MedicalRecordService.convert_images_to_pdf(image_bytes_list)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Failed to convert images to PDF: {str(e)}")
+            
+        final_name = base_name.strip() if base_name and base_name.strip() else "document"
+        safe_name = f"{final_name.replace(' ', '_')}.pdf"
+        return pdf_bytes, safe_name, "application/pdf"
 
 # =============================================================================
 # UPLOAD ENDPOINT 1 — Raw standalone record (log=0)
@@ -50,7 +82,8 @@ async def upload_raw_record(
     title: str = Form(...),
     category: str = Form("Other"),
     notes: Optional[str] = Form(None),
-    file: UploadFile = File(...),
+    file: Optional[UploadFile] = File(None),
+    files: Optional[List[UploadFile]] = File(None),
     user=Depends(get_current_user),
 ):
     """
@@ -60,24 +93,21 @@ async def upload_raw_record(
     Form fields:
       title     — record name (required)
       category  — one of: Prescription, Lab Reports, Vaccination, Deworming,
-                           Deticking, Anti-rabies, Treatment, Other  (default: Other)
+                           Deticking, Anti-rabies, Treatment, Pet Diary, Other  (default: Other)
       notes     — optional free-text notes
-      file      — the document (PDF / image, max 10 MB)
+      file      — single document (PDF / image, max 10 MB)
+      files     — multiple images (compiled to PDF, max 10 MB combined)
     """
     _guard(pet_id, user)
 
-    data = await file.read()
-    if len(data) > _MAX_BYTES:
-        raise HTTPException(status_code=400, detail="File exceeds 10 MB limit")
-
-    safe_name = (file.filename or "document").replace(" ", "_")
+    data, safe_name, content_type = await _process_files(file, files, base_name=title)
 
     record = MedicalRecordService.save_record(
         pet_id,
         user["id"],
         data,
         safe_name,
-        file.content_type,
+        content_type,
         title=title,
         category=category,
         notes=notes,
@@ -94,7 +124,8 @@ async def upload_event_record(
     event_id: str,
     label: str = Form(...),
     category: str = Form("Other"),
-    file: UploadFile = File(...),
+    file: Optional[UploadFile] = File(None),
+    files: Optional[List[UploadFile]] = File(None),
     user=Depends(get_current_user),
 ):
     """
@@ -115,27 +146,22 @@ async def upload_event_record(
         .select("id, document_ids")
         .eq("id", event_id)
         .eq("pet_id", pet_id)
-        .eq("is_deleted", False)
         .execute()
     )
     if not ev_res.data:
         raise HTTPException(
-            status_code=404,
-            detail="Event not found or does not belong to this pet",
+            status_code=404, detail="Medical event not found for this pet"
         )
+    event_data = ev_res.data[0]
 
-    data = await file.read()
-    if len(data) > _MAX_BYTES:
-        raise HTTPException(status_code=400, detail="File exceeds 10 MB limit")
-
-    safe_name = (file.filename or "document").replace(" ", "_")
+    data, safe_name, content_type = await _process_files(file, files, base_name=label)
 
     record = MedicalRecordService.save_record(
         pet_id,
         user["id"],
         data,
         safe_name,
-        file.content_type,
+        content_type,
         event_id=event_id,
         label=label,
         category=category,

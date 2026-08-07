@@ -159,11 +159,21 @@ export async function generateDoseSchedule(petId, payload) {
  * @param {string} label    — e.g. "Vet Prescription / Report"
  * @param {string} [category="Other"]
  */
-export async function uploadEventRecord(petId, eventId, file, label, category = "Other") {
+export async function uploadEventRecord(petId, eventId, files, label, category = "Other") {
   const formData = new FormData();
-  formData.append("file", file);
   formData.append("label", label);
   formData.append("category", category);
+
+  const fileArray = Array.isArray(files) ? files : [files];
+  fileArray.forEach(file => {
+    formData.append("files", file);
+  });
+  
+  // Fallback for older backend
+  if (fileArray.length === 1) {
+    formData.append("file", fileArray[0]);
+  }
+
   const res = await fetchWithAuth(
     `/api/v2/pets/${petId}/medical-events/${eventId}/records`,
     { method: "POST", body: formData }

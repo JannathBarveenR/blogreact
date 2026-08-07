@@ -9,6 +9,9 @@ Used by both upload paths:
 
 import uuid
 import mimetypes
+import io
+from PIL import Image
+from typing import List
 from app.supabase_client import supabase_admin as db
 from app.s3_client import (
     upload_private_file,
@@ -19,6 +22,38 @@ from app.s3_client import (
 
 
 class MedicalRecordService:
+
+    # ── PDF Conversion Helper ─────────────────────────────────────
+
+    @staticmethod
+    def convert_images_to_pdf(image_bytes_list: List[bytes]) -> bytes:
+        """
+        Convert a list of image bytes into a single PDF byte stream.
+        """
+        if not image_bytes_list:
+            raise ValueError("No images provided for PDF conversion.")
+        
+        images = []
+        for img_bytes in image_bytes_list:
+            img = Image.open(io.BytesIO(img_bytes))
+            # Convert to RGB to ensure PDF compatibility (e.g., stripping alpha channel from PNGs)
+            if img.mode != "RGB":
+                img = img.convert("RGB")
+            images.append(img)
+            
+        pdf_bytes_io = io.BytesIO()
+        if len(images) == 1:
+            images[0].save(pdf_bytes_io, format="PDF", resolution=100.0)
+        else:
+            images[0].save(
+                pdf_bytes_io, 
+                format="PDF", 
+                resolution=100.0, 
+                save_all=True, 
+                append_images=images[1:]
+            )
+            
+        return pdf_bytes_io.getvalue()
 
     # ── S3 Helpers ────────────────────────────────────────────────
 

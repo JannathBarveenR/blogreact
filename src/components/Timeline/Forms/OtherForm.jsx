@@ -88,12 +88,10 @@ export default function OtherForm({ petId, petName, onClose, onSaved, editData }
       const createdEvent = res.event || res;
 
       if (files.length > 0 && createdEvent.id) {
-        for (const f of files) {
-          try {
-            await uploadEventRecord(petId, createdEvent.id, f, "Document / Photo");
-          } catch (docErr) {
-            console.error("Doc upload error:", docErr);
-          }
+        try {
+          await uploadEventRecord(petId, createdEvent.id, files, "Document / Photo");
+        } catch (docErr) {
+          console.error("Doc upload error:", docErr);
         }
       }
 

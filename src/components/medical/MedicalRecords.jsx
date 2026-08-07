@@ -30,6 +30,7 @@ import {
   HelpCircle,
   FileQuestion,
   Sparkles,
+  BookOpen,
 } from "lucide-react";
 import heroImage from "../../assets/rcrdcard.jpeg";
 import emptyDog from "../../assets/empty-dog.webp";
@@ -43,6 +44,7 @@ const DYNAMIC_CATEGORIES = [
   "Deticking",
   "Anti-rabies",
   "Treatment",
+  "Pet Diary",
   "Other",
 ];
 
@@ -80,7 +82,7 @@ export default function MedicalRecords({
     cameraInputRef.current?.click();
   };
 
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedFiles, setSelectedFiles] = useState([]);
   const [showUploadProgress, setShowUploadProgress] = useState(false);
   const [uploadType, setUploadType] = useState("");
   const [progress, setProgress] = useState(0);
@@ -127,7 +129,7 @@ export default function MedicalRecords({
 
   // Handle detailed category upload
   const saveCategoryRecord = async () => {
-    if (!selectedFile) return;
+    if (selectedFiles.length === 0) return;
     if (!activePetId) {
       alert("Please select a pet first.");
       return;
@@ -136,8 +138,9 @@ export default function MedicalRecords({
     const category = formData.category || "Other";
     const title =
       formData.recordName ||
-      selectedFile.name.substring(0, selectedFile.name.lastIndexOf(".")) ||
-      selectedFile.name;
+      (selectedFiles.length === 1
+        ? selectedFiles[0].name.substring(0, selectedFiles[0].name.lastIndexOf(".")) || selectedFiles[0].name
+        : "Multiple Files");
 
     setIsSaving(true);
 
@@ -147,7 +150,14 @@ export default function MedicalRecords({
       formDataPayload.append("category", category);
 
       if (formData.notes) formDataPayload.append("notes", formData.notes);
-      formDataPayload.append("file", selectedFile);
+      
+      selectedFiles.forEach((file) => {
+        formDataPayload.append("files", file);
+      });
+      // Fallback for single file backward compatibility
+      if (selectedFiles.length === 1) {
+        formDataPayload.append("file", selectedFiles[0]);
+      }
 
       const res = await fetchWithAuth(`/api/v2/pets/${activePetId}/records`, {
         method: "POST",
@@ -163,7 +173,7 @@ export default function MedicalRecords({
           date: "",
           notes: "",
         });
-        setSelectedFile(null);
+        setSelectedFiles([]);
         setProgress(0);
         await fetchRecords();
         queryClient.invalidateQueries({ queryKey: ["records", activePetId] });
@@ -258,6 +268,7 @@ export default function MedicalRecords({
     Deticking: ShieldCheck,
     "Anti-rabies": Syringe,
     Treatment: Stethoscope,
+    "Pet Diary": BookOpen,
     Other: FileQuestion,
   };
 
@@ -457,27 +468,29 @@ export default function MedicalRecords({
               <h3>Uploading Record</h3>
             </div>
 
-            <div className="upload-illustration">
-              <div className="upload-cloud-circle">
-                <Upload size={30} />
+            <div className="upload-file-info">
+              <div className="upload-file-icon">
+                <FileText size={24} color="#614BFF" />
+              </div>
+              <div className="upload-file-details">
+                <div className="upload-file-name">
+                  {selectedFiles.length === 1 ? selectedFiles[0].name : `${selectedFiles.length} files selected`}
+                </div>
+                <div className="upload-file-size">
+                  {selectedFiles.length === 1
+                    ? `${(selectedFiles[0].size / (1024 * 1024)).toFixed(1)} MB`
+                    : `${(selectedFiles.reduce((acc, curr) => acc + curr.size, 0) / (1024 * 1024)).toFixed(1)} MB`}
+                </div>
               </div>
             </div>
 
-            <div className="upload-file-card">
-              <div className="upload-file-name">{selectedFile?.name}</div>
-              <div className="upload-file-size">
-                {selectedFile
-                  ? `${(selectedFile.size / (1024 * 1024)).toFixed(1)} MB`
-                  : ""}
-              </div>
-              <div className="progress-bar">
+            <div className="progress-bar">
                 <div
                   className="progress-fill"
                   style={{ width: `${progress}%` }}
                 />
-              </div>
-              <span className="progress-percent">{Math.round(progress)}%</span>
             </div>
+            <span className="progress-percent">{Math.round(progress)}%</span>
 
             <div className="secure-row">
               <ShieldCheck size={20} />
@@ -526,17 +539,17 @@ export default function MedicalRecords({
               </span>
               <ChevronRight size={20} className="option-chevron" />
             </button>
-            {/* Camera */}
             <input
               ref={cameraInputRef}
               type="file"
               accept="image/*"
               capture="environment"
+              multiple
               hidden
               onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-                setSelectedFile(file);
+                const files = Array.from(e.target.files || []);
+                if (files.length === 0) return;
+                setSelectedFiles(files);
                 setShowUploadSheet(false);
                 setProgress(0);
                 setShowUploadProgress(true);
@@ -555,16 +568,16 @@ export default function MedicalRecords({
               </span>
               <ChevronRight size={20} className="option-chevron" />
             </button>
-            {/* Gallery */}
             <input
               ref={imageInputRef}
               type="file"
               accept="image/*"
+              multiple
               hidden
               onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-                setSelectedFile(file);
+                const files = Array.from(e.target.files || []);
+                if (files.length === 0) return;
+                setSelectedFiles(files);
                 setShowUploadSheet(false);
                 setProgress(0);
                 setShowUploadProgress(true);
@@ -583,16 +596,16 @@ export default function MedicalRecords({
               </span>
               <ChevronRight size={20} className="option-chevron" />
             </button>
-            {/* PDF */}
             <input
               ref={pdfInputRef}
               type="file"
               accept=".pdf,application/pdf"
+              multiple
               hidden
               onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-                setSelectedFile(file);
+                const files = Array.from(e.target.files || []);
+                if (files.length === 0) return;
+                setSelectedFiles(files);
                 setShowUploadSheet(false);
                 setProgress(0);
                 setShowUploadProgress(true);
@@ -602,32 +615,45 @@ export default function MedicalRecords({
         </div>
       )}
 
-      {/*preview image*/}
-      {showPreview && selectedFile && (
-        <div className="preview-overlay">
-          <div className="preview-card">
-            <button
-              className="back-btn"
-              onClick={() => {
-                setShowPreview(false);
-              }}
-            >
-              <ArrowLeft size={22} />
+      {/* PREVIEW SCREEN */}
+      {showPreview && selectedFiles.length > 0 && (
+        <div className="preview-overlay" onClick={() => setShowPreview(false)}>
+          <div className="preview-content" onClick={(e) => e.stopPropagation()}>
+            <button className="preview-close-btn" onClick={() => setShowPreview(false)}>
+              <X size={24} />
             </button>
-
-            {selectedFile.type.startsWith("image") ? (
-              <img
-                src={URL.createObjectURL(selectedFile)}
-                alt=""
-                className="preview-image"
-              />
-            ) : (
-              <iframe
-                title="pdf"
-                src={`${URL.createObjectURL(selectedFile)}#toolbar=0&navpanes=0&scrollbar=0`}
-                className="preview-pdf"
-              />
-            )}
+            <div className="preview-file-wrapper">
+              {selectedFiles.length > 1 ? (
+                <div className="multiple-preview">
+                   <p>{selectedFiles.length} files selected. Preview is shown for the first file.</p>
+                   {selectedFiles[0].type.startsWith("image") ? (
+                      <img
+                        src={URL.createObjectURL(selectedFiles[0])}
+                        alt="Preview"
+                        className="preview-image"
+                      />
+                    ) : (
+                      <iframe
+                        src={`${URL.createObjectURL(selectedFiles[0])}#toolbar=0&navpanes=0&scrollbar=0`}
+                        className="preview-pdf"
+                        title="PDF Preview"
+                      />
+                    )}
+                </div>
+              ) : selectedFiles[0].type.startsWith("image") ? (
+                <img
+                  src={URL.createObjectURL(selectedFiles[0])}
+                  alt="Preview"
+                  className="preview-image"
+                />
+              ) : (
+                <iframe
+                  src={`${URL.createObjectURL(selectedFiles[0])}#toolbar=0&navpanes=0&scrollbar=0`}
+                  className="preview-pdf"
+                  title="PDF Preview"
+                />
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -686,7 +712,7 @@ export default function MedicalRecords({
       )}
 
       {/* UPLOAD SUCCESSFUL / ASSIGN CATEGORY SCREEN */}
-      {showMetaForm && selectedFile && (
+      {showMetaForm && selectedFiles.length > 0 && (
         <div className="upload-flow-overlay">
           <div className="upload-flow-card">
             <div className="flow-header">
@@ -694,7 +720,7 @@ export default function MedicalRecords({
                 className="flow-back-btn"
                 onClick={() => {
                   setShowMetaForm(false);
-                  setSelectedFile(null);
+                  setSelectedFiles([]);
                 }}
               >
                 <ArrowLeft size={20} />
@@ -713,9 +739,11 @@ export default function MedicalRecords({
               Now organize it by adding the right category.
             </p>
 
-            <div className="saved-file-card">
+            <div className="saved-file-card" onClick={() => setShowPreview(true)} style={{ cursor: "pointer" }}>
               <div className="saved-file-icon">
-                {selectedFile.type?.includes("pdf") ? (
+                {selectedFiles.length > 1 ? (
+                  <FolderOpen size={22} />
+                ) : selectedFiles[0].type?.includes("pdf") ? (
                   <File size={22} />
                 ) : (
                   <FileImage size={22} />
@@ -723,16 +751,18 @@ export default function MedicalRecords({
               </div>
               <div className="saved-file-info">
                 <h4>
-                  {formData.recordName ||
-                    selectedFile.name.substring(
-                      0,
-                      selectedFile.name.lastIndexOf("."),
-                    ) ||
-                    selectedFile.name}
+                  {selectedFiles.length === 1
+                    ? selectedFiles[0].name.substring(
+                        0,
+                        selectedFiles[0].name.lastIndexOf(".")
+                      ) || selectedFiles[0].name
+                    : `${selectedFiles.length} files compiled into document.pdf`}
                 </h4>
                 <span>
-                  {(selectedFile.size / (1024 * 1024)).toFixed(1)} MB ·{" "}
-                  {new Date().toLocaleDateString()}
+                  {selectedFiles.length === 1
+                    ? (selectedFiles[0].size / (1024 * 1024)).toFixed(1)
+                    : (selectedFiles.reduce((acc, curr) => acc + curr.size, 0) / (1024 * 1024)).toFixed(1)} MB ·{" "}
+                  {selectedFiles.length > 1 ? "multiple items" : selectedFiles[0].type?.includes("pdf") ? "pdf document" : "image"}
                 </span>
               </div>
             </div>
@@ -758,28 +788,34 @@ export default function MedicalRecords({
               })}
             </div>
 
-            <p className="field-label">Record Name</p>
-            <input
-              type="text"
-              name="recordName"
-              placeholder={
-                selectedFile.name.substring(
-                  0,
-                  selectedFile.name.lastIndexOf("."),
-                ) || selectedFile.name
-              }
-              value={formData.recordName}
-              onChange={handleFormChange}
-              className="record-name-input"
-            />
+            <div className="meta-form-fields">
+              <div className="mf-input-group">
+                <label>Document Name (Optional)</label>
+                <input
+                  type="text"
+                  placeholder={
+                    selectedFiles.length === 1 
+                    ? selectedFiles[0].name.substring(
+                        0,
+                        selectedFiles[0].name.lastIndexOf(".")
+                      ) || selectedFiles[0].name
+                    : "Multiple Documents"
+                  }
+                  value={formData.recordName}
+                  onChange={handleFormChange}
+                  className="record-name-input"
+                  name="recordName"
+                />
+              </div>
 
-            <textarea
-              name="notes"
-              placeholder=" Add notes (Optional) Ex. 1st Vaccination"
-              value={formData.notes}
-              onChange={handleFormChange}
-              className="notes-textarea"
-            />
+              <textarea
+                name="notes"
+                placeholder=" Add notes (Optional) Ex. 1st Vaccination"
+                value={formData.notes}
+                onChange={handleFormChange}
+                className="notes-textarea"
+              />
+            </div>
 
             <button
               className="save-record-btn"
