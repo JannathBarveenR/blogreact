@@ -40,12 +40,14 @@ def _guard(pet_id: str, user: dict) -> None:
     if not PetService.verify_ownership(pet_id, user["id"]):
         raise HTTPException(status_code=404, detail="Pet not found")
 
-async def _process_files(file: Optional[UploadFile], files: Optional[List[UploadFile]], base_name: str) -> tuple[bytes, str, str]:
+async def _process_files(file: Optional[UploadFile], files: List[UploadFile], base_name: str) -> tuple[bytes, str, str]:
     """Helper to process file(s) into final bytes, safe_name, and content_type."""
-    if not files and not file:
+    # Build the final upload list: prefer 'files' if non-empty, else fallback to 'file'
+    upload_list = [f for f in files if f and f.filename] if files else []
+    if not upload_list and file and file.filename:
+        upload_list = [file]
+    if not upload_list:
         raise HTTPException(status_code=400, detail="No files provided")
-    
-    upload_list = files if files else [file]
     if len(upload_list) == 1:
         f = upload_list[0]
         data = await f.read()
@@ -83,7 +85,7 @@ async def upload_raw_record(
     category: str = Form("Other"),
     notes: Optional[str] = Form(None),
     file: Optional[UploadFile] = File(None),
-    files: Optional[List[UploadFile]] = File(None),
+    files: List[UploadFile] = File(default=[]),
     user=Depends(get_current_user),
 ):
     """
@@ -125,7 +127,7 @@ async def upload_event_record(
     label: str = Form(...),
     category: str = Form("Other"),
     file: Optional[UploadFile] = File(None),
-    files: Optional[List[UploadFile]] = File(None),
+    files: List[UploadFile] = File(default=[]),
     user=Depends(get_current_user),
 ):
     """
