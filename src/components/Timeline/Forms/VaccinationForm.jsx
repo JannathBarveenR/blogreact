@@ -154,12 +154,10 @@ export default function VaccinationForm({ petId, petName, onClose, onSaved, edit
       const createdEvent = res.event || res;
 
       if (files.length > 0 && createdEvent.id) {
-        for (const f of files) {
-          try {
-            await uploadEventRecord(petId, createdEvent.id, f, "Vaccination Certificate");
-          } catch (docErr) {
-            console.error("Doc upload error:", docErr);
-          }
+        try {
+          await uploadEventRecord(petId, createdEvent.id, files, "Vaccination Certificate");
+        } catch (docErr) {
+          console.error("Doc upload error:", docErr);
         }
       }
 

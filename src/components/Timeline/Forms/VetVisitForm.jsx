@@ -152,12 +152,10 @@ export default function VetVisitForm({ petId, petName, onClose, onSaved, editDat
       const createdEvent = res.event || res;
 
       if (files.length > 0 && createdEvent.id) {
-        for (const f of files) {
-          try {
-            await uploadEventRecord(petId, createdEvent.id, f, "Vet Prescription / Report");
-          } catch (docErr) {
-            console.error("Doc upload error:", docErr);
-          }
+        try {
+          await uploadEventRecord(petId, createdEvent.id, files, "Vet Prescription / Report");
+        } catch (docErr) {
+          console.error("Doc upload error:", docErr);
         }
       }
 
