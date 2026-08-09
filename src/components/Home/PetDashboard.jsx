@@ -10,7 +10,7 @@ import AddPetCard from "./AddPetCard/AddPetCard";
 import UploadRecordsCard from "./UploadRecordsCard/UploadRecordsCard";
 import ProfileCard from "./ProfileCard/ProfileCard";
 
-import polLogo from "../../assets/logo.webp";
+import polLogo from "../../assets/logo_new.png";
 import ppacBannerImg from "../../assets/ppac.png";
 import fetchWithAuth from "../../utils/fetchWithAuth";
 

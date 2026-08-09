@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./TopNav.css";
-import polLogo from "../../../assets/POL_logo_tagline.webp";
+import polLogo from "../../../assets/logo_new.png";
 import useAuth from "../../../hooks/useAuth";
 import { usePets } from "../../../hooks/usePetsQuery";
 import { getReminders } from "../../../api/timelineApi";

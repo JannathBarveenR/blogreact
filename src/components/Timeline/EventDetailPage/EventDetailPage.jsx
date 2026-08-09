@@ -8,7 +8,7 @@ import { timelineKeys } from "../../../hooks/useTimelineQueries";
 import useAuth from "../../../hooks/useAuth";
 import { usePets } from "../../../hooks/usePetsQuery";
 import { PetAvatar } from "../../common/PetAvatar";
-import logoImg from "../../../assets/logo-with-tagline.webp";
+import logoImg from "../../../assets/logo_new.png";
 import MedicationForm from "../Forms/MedicationForm";
 import VetVisitForm from "../Forms/VetVisitForm";
 import VaccinationForm from "../Forms/VaccinationForm";

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./Login.css";
-import brandLogo from "../../assets/logo-with-tagline.webp";
+import brandLogo from "../../assets/logo_new.png";
 import heroPets from "../../assets/hero-pets-desk.webp";
 import { CheckCircle2, ShieldCheck, Heart, Sparkles, X } from "lucide-react";
 import { supabase } from "../../utils/supabaseClient";

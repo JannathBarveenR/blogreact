@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FiShield, FiCalendar, FiUser, FiPhone, FiHeart, FiArrowRight, FiCheckCircle } from "react-icons/fi";
 import { PetAvatar } from "../common/PetAvatar";
-import logoImg from "../../assets/logo-with-tagline.webp";
+import logoImg from "../../assets/logo_new.png";
 import "./PublicPetProfile.css";
 
 export default function PublicPetProfile() {

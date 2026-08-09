@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Login.css";
-import logoImg from "../../assets/logo.webp";
+import logoImg from "../../assets/logo_new.png";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 

@@ -9,7 +9,7 @@ import getCroppedImg from "../../utils/cropImage";
 import queryClient from "../../utils/queryClient";
 import "../Login/Login.css";
 import "./ParentProfile.css";
-import logoImg from "../../assets/logo-with-tagline.webp";
+import logoImg from "../../assets/logo_new.png";
 import DEFAULT_AVATAR from "../../assets/owner-avatar.svg";
 import { FiArrowLeft, FiCamera, FiCheck, FiX } from "react-icons/fi";
 

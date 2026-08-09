@@ -1,6 +1,6 @@
 import React from "react";
 import { ShieldCheck, Heart, Stethoscope, Mail, Globe, ArrowUp } from "lucide-react";
-import logo from "../../../assets/logo-with-tagline.webp";
+import logo from "../../../assets/logo_new.png";
 
 const Footer = ({ openModal }) => {
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });

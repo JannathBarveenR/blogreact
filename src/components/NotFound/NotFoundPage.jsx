@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import logoImg from "../../assets/logo_clean.webp";
+import logoImg from "../../assets/logo_new.png";
 import "./NotFoundPage.css";
 
 export default function NotFoundPage() {

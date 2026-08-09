@@ -1,7 +1,7 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle, useRef } from "react";
 import { Stage, Layer, Rect, Circle, Text, Image as KonvaImage, Group, Line, Path } from "react-konva";
 import QRCode from "qrcode";
-import logoImg from "../../assets/logo_clean.webp";
+import logoImg from "../../assets/logo_new.png";
 import vBadgeImg from "../../assets/VBadge.png";
 
 function useLoadedImage(src) {

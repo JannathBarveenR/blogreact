@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Menu, X, ShieldCheck, Stethoscope, Heart } from "lucide-react";
-import logo from "../../../assets/logo-with-tagline.webp";
+import logo from "../../../assets/logo_new.png";
 
 const Navbar = ({ openModal }) => {
   const [menuOpen, setMenuOpen] = useState(false);
