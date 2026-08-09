@@ -100,6 +100,19 @@ class MedicalRecordService:
         r = dict(record)
         if r.get("storage_path"):
             r["file_url"] = MedicalRecordService.fresh_url(r["storage_path"])
+            
+            # Generate a presigned URL that forces a browser download
+            display_name = r.get("file_name") or r.get("title") or "record"
+            # Keep original extension if present
+            if "." not in display_name and "." in r["storage_path"]:
+                display_name += "." + r["storage_path"].split(".")[-1]
+                
+            from app.s3_client import get_presigned_download_url, AWS_MEDICAL_DOCS_BUCKET
+            r["download_url"] = get_presigned_download_url(
+                AWS_MEDICAL_DOCS_BUCKET, 
+                r["storage_path"], 
+                display_name
+            )
         return r
 
     # ── Unified Save ──────────────────────────────────────────────
@@ -157,4 +170,4 @@ class MedicalRecordService:
             row["label"] = label
 
         result = db.table("medical_records").insert(row).execute()
-        return result.data[0]
+        return MedicalRecordService.refresh_url_in_record(result.data[0])

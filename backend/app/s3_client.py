@@ -108,6 +108,28 @@ def get_presigned_url(bucket: str, filename: str, expiration: int = 3600) -> str
         print(f"[S3 Error] Presigned URL generation unexpected error for {filename}: {e}")
         return ""
 
+def get_presigned_download_url(bucket: str, filename: str, display_name: str, expiration: int = 3600) -> str:
+    """Generates a presigned URL that forces a browser download with a specific filename."""
+    try:
+        client = get_s3_client()
+        safe_name = display_name.replace('"', '')
+        url = client.generate_presigned_url(
+            'get_object',
+            Params={
+                'Bucket': bucket, 
+                'Key': filename,
+                'ResponseContentDisposition': f'attachment; filename="{safe_name}"'
+            },
+            ExpiresIn=expiration
+        )
+        return url
+    except ClientError as e:
+        print(f"[S3 Error] Presigned download URL generation failed for {filename}: {e}")
+        return ""
+    except Exception as e:
+        print(f"[S3 Error] Presigned download URL generation unexpected error for {filename}: {e}")
+        return ""
+
 
 def process_upload_image_bytes(file_bytes: bytes, filename: str, content_type: str = "") -> tuple[bytes, str, str]:
     """

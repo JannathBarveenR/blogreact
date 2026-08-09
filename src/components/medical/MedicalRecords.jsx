@@ -31,7 +31,15 @@ import {
   FileQuestion,
   Sparkles,
   BookOpen,
+  Download,
 } from "lucide-react";
+
+/** Check if a URL or filename points to an image (not a PDF). */
+const isImageFile = (url = "", fileType = "", fileName = "") => {
+  if (fileType && fileType.startsWith("image")) return true;
+  const ext = /\.(png|jpe?g|webp|gif|heic|bmp|svg)(\?|$)/i;
+  return ext.test(url) || ext.test(fileName);
+};
 import heroImage from "../../assets/rcrdcard.jpeg";
 import emptyDog from "../../assets/empty-dog.webp";
 
@@ -658,7 +666,7 @@ export default function MedicalRecords({
         </div>
       )}
 
-      {/*preview after upload*/}
+      {/* View existing record */}
       {viewFile && (
         <div className="file-view-overlay" onClick={() => setViewFile(null)}>
           <div className="file-view-card" onClick={(e) => e.stopPropagation()}>
@@ -667,22 +675,35 @@ export default function MedicalRecords({
             </button>
 
             <div className="file-view-content">
-              {viewFile.file_type?.startsWith("image") ? (
+              {isImageFile(viewFile.file_url, viewFile.file_type, viewFile.file_name || viewFile.title) ? (
                 <img src={viewFile.file_url} alt="Preview" />
               ) : (
                 <iframe
-                  src={`${viewFile.file_url}#toolbar=0&navpanes=0`}
+                  src={`${viewFile.file_url}#toolbar=0&navpanes=0&scrollbar=0&view=Fit`}
                   title="PDF"
                 />
               )}
             </div>
-            <button
-              className="delete-btn"
-              onClick={() => setShowDeleteConfirm(true)}
-            >
-              <Trash2 size={20} />
-              Delete Record
-            </button>
+            <div className="file-view-actions">
+              <a
+                className="download-btn"
+                href={viewFile.download_url || viewFile.file_url}
+                download={viewFile.file_name || viewFile.title || "record"}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Download size={20} />
+                Download
+              </a>
+              <button
+                className="delete-btn"
+                onClick={() => setShowDeleteConfirm(true)}
+              >
+                <Trash2 size={20} />
+                Delete
+              </button>
+            </div>
 
             {showDeleteConfirm && (
               <div className="confirm-dialog">
