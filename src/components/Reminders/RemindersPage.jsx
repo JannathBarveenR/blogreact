@@ -13,6 +13,7 @@ import {
 import { PetAvatar } from "../common/PetAvatar";
 import CustomDatePicker from "../Timeline/Forms/shared/CustomDatePicker";
 import CustomSelect from "../Timeline/Forms/shared/CustomSelect";
+import AppFooterSpacer from "../common/AppFooterSpacer/AppFooterSpacer";
 import "./RemindersPage.css";
 
 const TIME_SLOTS = [
@@ -396,6 +397,7 @@ export default function RemindersPage() {
           )
         )}
       </main>
+      <AppFooterSpacer />
 
       {/* Snooze modal */}
       {snoozeModal && (

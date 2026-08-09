@@ -49,6 +49,14 @@ const Navbar = ({ openModal }) => {
           <div className="navbar-actions">
             <button
               className="btn btn-outline-nav"
+              onClick={() => openModal("vet")}
+              style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+            >
+              <Stethoscope size={15} />
+              <span>Join as Vet</span>
+            </button>
+            <button
+              className="btn btn-outline-nav"
               onClick={() => navigate("/login")}
             >
               <span>Login</span>
@@ -119,7 +127,18 @@ const Navbar = ({ openModal }) => {
             <span>Get My Pet Health ID</span>
           </button>
           <button
-            className="btn btn-outline-nav w-full mt-3"
+            className="btn btn-outline-nav w-full mt-2"
+            onClick={() => {
+              closeMenu();
+              openModal("vet");
+            }}
+            style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px" }}
+          >
+            <Stethoscope size={16} />
+            <span>Join as Vet</span>
+          </button>
+          <button
+            className="btn btn-outline-nav w-full mt-2"
             onClick={() => {
               closeMenu();
               navigate("/login");

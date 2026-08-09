@@ -1,5 +1,14 @@
 import os
+from pathlib import Path
 from dotenv import load_dotenv
+
+# Search for .env in backend dir or parent root dir
+backend_dir = Path(__file__).resolve().parent.parent
+root_dir = backend_dir.parent
+
+for p in [backend_dir / ".env", root_dir / ".env"]:
+    if p.exists():
+        load_dotenv(p)
 
 load_dotenv()
 

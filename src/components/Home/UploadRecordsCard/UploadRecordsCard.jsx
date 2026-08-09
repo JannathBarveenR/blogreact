@@ -40,8 +40,8 @@ export default function UploadRecordsCard({ onNavigateTab }) {
       {/* 1. Full-Width Upper Heading Section */}
       <div className="upload-card-header-full">
         <h3 className="upload-card-title-dark">
-          Your pet’s health journey{" "}
-          <span className="upload-card-title-green">deserves to be complete!</span>
+          Don’t Lose Another{" "}
+          <span className="upload-card-title-green">Medical Record</span>
         </h3>
         <div className="upload-title-divider" />
       </div>
@@ -49,7 +49,7 @@ export default function UploadRecordsCard({ onNavigateTab }) {
       {/* 2. Middle Section: Description Text coupled directly with Image */}
       <div className="upload-card-body-row">
         <p className="upload-card-subtitle">
-          Upload medical records, vaccinations, prescriptions &amp; reports – and let Petolife take care of the rest.
+          Every prescription, vaccination card and report should always be easy to find.
         </p>
 
         <div className="upload-card-img-container">
@@ -69,7 +69,7 @@ export default function UploadRecordsCard({ onNavigateTab }) {
           type="button"
         >
           <Upload size={17} strokeWidth={2.4} />
-          <span>Upload My Records</span>
+          <span>Upload Medical Records</span>
           <ChevronRight size={17} strokeWidth={2.6} />
 
           <span className="upload-blob-btn__inner">

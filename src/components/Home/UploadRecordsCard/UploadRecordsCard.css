@@ -113,28 +113,35 @@
 .upload-blob-btn {
   z-index: 1;
   position: relative;
-  padding: 12px 24px;
+  padding: 18px 28px;
   text-align: center;
   color: #ffffff;
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
   background-color: transparent;
   outline: none;
   border: none;
   transition: color 0.5s ease, transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
-  border-radius: 30px;
+  border-radius: 16px;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  box-shadow: 0 4px 16px rgba(62, 136, 56, 0.35);
+  gap: 10px;
+  box-shadow: 0 6px 24px rgba(0, 75, 35, 0.35), 0 2px 8px rgba(0, 0, 0, 0.08);
   user-select: none;
+  width: 100%;
+  justify-content: center;
 }
 
 .upload-blob-btn:hover {
   color: #ffffff;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 22px rgba(62, 136, 56, 0.45);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 32px rgba(0, 75, 35, 0.45), 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.upload-blob-btn:active {
+  transform: translateY(0px) scale(0.98);
 }
 
 .upload-blob-btn__inner {
@@ -145,8 +152,8 @@
   top: 0;
   width: 100%;
   height: 100%;
-  border-radius: 30px;
-  background: linear-gradient(135deg, #78bc38 0%, #3e8838 100%);
+  border-radius: 16px;
+  background: linear-gradient(135deg, #004b23 0%, #1a6b3c 40%, #0d5c2f 70%, #003d1c 100%);
 }
 
 .upload-blob-btn__blobs {
@@ -161,7 +168,7 @@
   top: 2px;
   width: 32%;
   height: 100%;
-  background: #063825; /* Dark forest green liquid blob */
+  background: #84b662;
   border-radius: 100%;
   transform: translate3d(0, 150%, 0) scale(1.4);
   transition: transform 0.45s ease;
@@ -232,9 +239,9 @@
   }
 
   .upload-blob-btn {
-    padding: 9px 18px;
-    font-size: 12.5px;
-    width: auto;
-    border-radius: 30px;
+    padding: 16px 20px;
+    font-size: 14px;
+    width: 100%;
+    border-radius: 14px;
   }
 }

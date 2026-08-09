@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import petoLogo from '../../assets/PetparentAcademyLogo.png';
+import petoLogo from '../../assets/logo/Petolife Academy Logo.png';
 import gradDogImg from '../../assets/graduation_dog_new.png';
 import './Blog.css';
 
@@ -335,7 +335,7 @@ const Blog = () => {
                             </button>
                             <div className="detail-header-text" style={{ textAlign: 'center' }}>
                                 <div style={{ display: 'flex', justifyContent: 'center' }}>
-                                    <img src={petoLogo} alt="Petolife Logo" style={{height: '68px', objectFit: 'contain'}} />
+                                    <img src={petoLogo} alt="Petolife Logo" style={{height: '110px', objectFit: 'contain'}} />
                                 </div>
                                 <p className="detail-page-subtitle">{subtitle}</p>
                             </div>
@@ -437,7 +437,7 @@ const Blog = () => {
                         <header className="app-header">
                             <div className="header-top" style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                                 <div className="app-logo" onClick={resetHome} style={{display: 'flex', alignItems: 'center', cursor: 'pointer'}}>
-                                    <img src={petoLogo} alt="Petolife Logo" style={{height: '76px', objectFit: 'contain'}} />
+                                    <img src={petoLogo} alt="Petolife Logo" style={{height: '100px', objectFit: 'contain'}} />
                                 </div>
                                 <button className="icon-btn" aria-label="Notifications" onClick={() => setShowAuthPopup(true)} style={{ position: 'absolute', right: '0', fontSize: '1.5rem' }}>
                                     <i className="fa-regular fa-bell"></i>

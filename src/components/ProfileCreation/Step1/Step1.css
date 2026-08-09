@@ -123,12 +123,14 @@
   z-index: 1;
 }
 
-.pet-photo-ring-inner img {
+.pet-photo-ring-inner img,
+.step1-photo-img-preview {
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center;
   border-radius: 50%;
+  display: block;
 }
 
 .pet-photo-ring-inner span {

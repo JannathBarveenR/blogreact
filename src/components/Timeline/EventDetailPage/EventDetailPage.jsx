@@ -14,6 +14,7 @@ import VetVisitForm from "../Forms/VetVisitForm";
 import VaccinationForm from "../Forms/VaccinationForm";
 import DewormingForm from "../Forms/DewormingForm";
 import OtherForm from "../Forms/OtherForm";
+import AppFooterSpacer from "../../common/AppFooterSpacer/AppFooterSpacer";
 import "./EventDetailPage.css";
 
 export default function EventDetailPage() {
@@ -281,6 +282,7 @@ export default function EventDetailPage() {
           <FiTrash2 size={16} /> {deleting ? "Deleting Record..." : "Delete Medical Record"}
         </button>
       </main>
+      <AppFooterSpacer />
 
       {/* In-App Toast Notification */}
       {toastMsg && createPortal(
