@@ -16,7 +16,61 @@ function brandLogoHtml() {
 }
 
 // Author shown subtly at the bottom of the first ("cover") card of every story.
-const AUTHOR = { name: 'Dr. Ram Charan', role: 'Veterinary Consultant' };
+function getAuthor() {
+  let cleanKey = storyKey;
+  let isCat = false;
+  if (storyKey.startsWith('cats_')) {
+    cleanKey = storyKey.replace('cats_', '');
+    isCat = true;
+  }
+  if (storyKey.startsWith('birds_')) {
+    cleanKey = storyKey.replace('birds_', '');
+  }
+
+  let category = 'Health';
+  if (['foods', 'feeding'].includes(cleanKey)) category = 'Nutrition';
+  else if (cleanKey.startsWith('training')) category = 'Training';
+  else if (['drinking', 'exercise'].includes(cleanKey)) category = 'Everyday Care';
+
+  if (category === 'Health') {
+    const healthDocs = [
+      { name: 'Dr Jeyaprakash', role: '' },
+      { name: 'Dr Venkataswami Reddy', role: '' },
+      { name: 'Dr Krishna Mohan', role: '' },
+      { name: 'Dr Chaithanya', role: '' }
+    ];
+    const keys = ['vaccinations', 'deworming', 'signs', 'prevention'];
+    let idx = keys.indexOf(cleanKey);
+    if (idx === -1) idx = 0;
+    return healthDocs[idx % healthDocs.length];
+  } else if (category === 'Everyday Care') {
+    return { name: 'Dr Jayachandran', role: '' };
+  } else if (category === 'Nutrition') {
+    const nutritionDocs = [
+      { name: 'Dr N Ponnusamy', role: '' },
+      { name: 'Dr Sandhya Bhavani', role: '' },
+      { name: 'Dr Sathiya Lakshmi', role: '' },
+      { name: 'Dr Shanu', role: '' },
+      { name: 'Dr Saravanan', role: '' },
+      { name: 'Dr Ashiritha', role: '' },
+      { name: 'Dr Ganesha Moorthy', role: '' },
+      { name: 'Dr Divya P', role: '' },
+      { name: 'Dr A Vijay', role: '' }
+    ];
+    const keys = ['foods', 'feeding'];
+    let idx = keys.indexOf(cleanKey);
+    if (idx === -1) idx = 0;
+    return nutritionDocs[idx % nutritionDocs.length];
+  } else if (category === 'Training') {
+    const trainingNames = ['Akash', 'Charumathy', 'Pavithra', 'Abishek', 'Sania', 'Irfan', 'Barveen'];
+    const keys = ['trainingPotty', 'trainingCome', 'trainingStay', 'trainingSit', 'trainingPositive', 'trainingEarly'];
+    const idx = keys.indexOf(cleanKey) !== -1 ? keys.indexOf(cleanKey) : 6;
+    const parentRole = isCat ? 'Cat Parent' : 'Dog Parent';
+    return { name: trainingNames[idx], role: parentRole };
+  }
+  return { name: 'Dr. Ram Charan', role: '' };
+}
+
 
 const STORIES = {
   trainingPotty: {
@@ -306,7 +360,8 @@ const STORIES = {
       {
         type: 'info', icon: 'paw', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/signs/sign1.webp', eyebrow: 'PETOLIFE PET PARENT ACADEMY',
         title: '10 Early Warning Signs Your Dog May Be Sick',
-        body: 'Dogs cannot tell us when they feel sick.\n\nBut they often show small warning signs.\n\nLearning these signs can help you get veterinary care early.'
+        body: 'Dogs cannot tell us when they feel sick.\n\nBut they often show small warning signs.\n\nLearning these signs can help you get veterinary care early.',
+        author: true
       },
 
       {
@@ -394,7 +449,8 @@ const STORIES = {
       {
         type: 'info', icon: 'paw', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/prevention/pimage1.webp', eyebrow: 'PETOLIFE PET PARENT ACADEMY',
         title: 'Why Is Tick and Flea Prevention Important for Dogs?',
-        body: 'Ticks and fleas are tiny parasites.\n\nBut they can cause big problems if they are ignored.'
+        body: 'Ticks and fleas are tiny parasites.\n\nBut they can cause big problems if they are ignored.',
+        author: true
       },
 
       {
@@ -481,7 +537,8 @@ const STORIES = {
       {
         type: 'info', icon: 'paw', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/nutrition/food/foimage1.webp', eyebrow: 'PETOLIFE PET PARENT ACADEMY',
         title: 'Which Human Foods Can Be Dangerous for Dogs?',
-        body: 'Not everything that\'s safe for us is safe for our dogs.\n\nSome everyday foods can make your dog seriously ill.'
+        body: 'Not everything that\'s safe for us is safe for our dogs.\n\nSome everyday foods can make your dog seriously ill.',
+        author: true
       },
 
       {
@@ -570,7 +627,8 @@ const STORIES = {
       {
         type: 'info', icon: 'paw', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/nutrition/feed/feimage1.webp', eyebrow: 'PETOLIFE PET PARENT ACADEMY',
         title: 'How Often Should You Feed Your Dog?',
-        body: 'A healthy feeding routine is just as important as choosing the right food.\n\nLet\'s learn how often dogs should be fed.'
+        body: 'A healthy feeding routine is just as important as choosing the right food.\n\nLet\'s learn how often dogs should be fed.',
+        author: true
       },
 
       {
@@ -890,8 +948,9 @@ function buildBars() {
 }
 
 function authorHtml() {
-  return `<div class="author-row">
-    <div class="author-name">Story by <b>${AUTHOR.name}</b> \u00B7 ${AUTHOR.role}</div>
+  const author = getAuthor();
+  return `<div class="author-row" style="text-align: center; display: flex; justify-content: center;">
+    <div class="author-name" style="text-align: center;">Author - <b>${author.name}</b>${author.role ? ' - ' + author.role : ''}</div>
   </div>`;
 }
 
