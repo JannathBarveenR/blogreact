@@ -125,6 +125,45 @@ const catsTrendingItems = [
     { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'Keeping Your Cat Hydrated', desc: 'Upcoming lesson on keeping your cat hydrated.', img: 'https://petolife-blog-images-141927126120-ap-south-1-an.s3.ap-south-1.amazonaws.com/health%26prevention/vaccination/cvimage2.webp', upcoming: true },
 ];
 
+
+const birdsTrendingItems = [
+    { cat: 'health', tagLabel: 'HEALTH', title: 'Why Do Pet Birds Need Regular Health Check-ups?', desc: 'Preventive care to keep your bird healthy.', img: '/blog-assets/vacci.jfif', upcoming: true },
+    { cat: 'nutrition', tagLabel: 'NUTRITION', title: 'What Should You Feed Your Pet Bird Every Day?', desc: 'A balanced diet for optimal bird health.', img: '/blog-assets/birds.jfif', upcoming: true },
+    { cat: 'health', tagLabel: 'HEALTH', title: 'Early Signs Your Bird May Be Sick', desc: 'Upcoming lesson on early signs of sickness.', img: '/blog-assets/birds.jfif', upcoming: true },
+    { cat: 'health', tagLabel: 'HEALTH', title: 'Common Bird Diseases Every Owner Should Know', desc: 'Upcoming lesson on common bird diseases.', img: '/blog-assets/smallpets.jfif', upcoming: true },
+    { cat: 'health', tagLabel: 'HEALTH', title: "Understanding Your Bird's Vital Signs", desc: 'Upcoming lesson on vital signs.', img: '/blog-assets/birds.jfif', upcoming: true },
+    { cat: 'health', tagLabel: 'HEALTH', title: 'Basic First Aid for Pet Birds', desc: 'Upcoming lesson on basic first aid.', img: '/blog-assets/smallpets.jfif', upcoming: true },
+
+    // Nutrition
+    { cat: 'nutrition', tagLabel: 'NUTRITION', title: 'Choosing the Right Diet for Your Bird Species', desc: 'Upcoming lesson on choosing the right diet.', img: '/blog-assets/birds.jfif', upcoming: true },
+    { cat: 'nutrition', tagLabel: 'NUTRITION', title: 'Safe and Toxic Foods for Birds', desc: 'Upcoming lesson on safe and toxic foods.', img: '/blog-assets/smallpets.jfif', upcoming: true },
+    { cat: 'nutrition', tagLabel: 'NUTRITION', title: 'Preventing Nutritional Deficiencies', desc: 'Upcoming lesson on preventing nutritional deficiencies.', img: '/blog-assets/birds.jfif', upcoming: true },
+    // Removed duplicate line as per original pattern or just keep them all upcoming
+    { cat: 'nutrition', tagLabel: 'NUTRITION', title: 'Reading Bird Food Labels', desc: 'Upcoming lesson on reading food labels.', img: '/blog-assets/birds.jfif', upcoming: true },
+
+    // Everyday Care
+    { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'Setting Up the Ideal Bird Cage', desc: 'Upcoming lesson on setting up the ideal bird cage.', img: '/blog-assets/smallpets.jfif', upcoming: true },
+    { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'Daily Cage Cleaning and Hygiene', desc: 'Upcoming lesson on cage cleaning.', img: '/blog-assets/birds.jfif', upcoming: true },
+    // Removed duplicate
+    { cat: 'everyday_care', tagLabel: 'EVERYDAY CARE', title: 'Safe Toys and Environmental Enrichment', desc: 'Upcoming lesson on safe toys.', img: '/blog-assets/birds.jfif', upcoming: true },
+
+    // Behaviour
+    // Removed duplicate
+    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Understanding Bird Body Language', desc: 'Upcoming lesson on bird body language.', img: '/blog-assets/birds.jfif', upcoming: true },
+    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Why Birds Bite and How to Prevent It', desc: 'Upcoming lesson on why birds bite.', img: '/blog-assets/smallpets.jfif', upcoming: true },
+    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Managing Excessive Screaming', desc: 'Upcoming lesson on managing excessive screaming.', img: '/blog-assets/birds.jfif', upcoming: true },
+    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Building Trust and Bonding with Your Bird', desc: 'Upcoming lesson on building trust.', img: '/blog-assets/smallpets.jfif', upcoming: true },
+    { cat: 'behaviour', tagLabel: 'BEHAVIOUR', title: 'Understanding Hormonal Behaviour', desc: 'Upcoming lesson on hormonal behaviour.', img: '/blog-assets/birds.jfif', upcoming: true },
+    
+    // Training
+    // Removed duplicate
+    { cat: 'training', tagLabel: 'TRAINING', title: 'How to Tame a New Pet Bird', desc: 'Upcoming lesson on taming.', img: '/blog-assets/birds.jfif', upcoming: true },
+    { cat: 'training', tagLabel: 'TRAINING', title: 'Teaching Your Bird the "Step Up" Command', desc: 'Upcoming lesson on step up.', img: '/blog-assets/smallpets.jfif', upcoming: true },
+    { cat: 'training', tagLabel: 'TRAINING', title: 'How to Train Your Bird Using Positive Reinforcement', desc: 'Upcoming lesson on positive reinforcement.', img: '/blog-assets/birds.jfif', upcoming: true },
+    { cat: 'training', tagLabel: 'TRAINING', title: 'Teaching Your Bird to Come When Called', desc: 'Upcoming lesson on recall.', img: '/blog-assets/smallpets.jfif', upcoming: true },
+    { cat: 'training', tagLabel: 'TRAINING', title: 'How to Build Trust with Your Pet Bird', desc: 'Upcoming lesson on trust.', img: '/blog-assets/birds.jfif', upcoming: true }
+  ];
+
 const reverseStoryIdMap = {
   'DOG-L0001': 'vaccinations',
   'DOG-L0002': 'deworming',
@@ -264,11 +303,15 @@ const Blog = () => {
         } else if (petType === 'cats') {
             title = 'Cats';
             subtitle = 'Everything your cat needs, all in one place.';
+        } else if (petType === 'birds') {
+            title = 'Birds';
+            subtitle = 'Everything your bird needs, all in one place.';
         }
         const trendingHeading = activeDetailCategory ? `${activeDetailCategory.charAt(0).toUpperCase() + activeDetailCategory.slice(1)} Topics` : 'Trending Topics';
         
         let sourceItems = dogsTrendingItems;
         if (petType === 'cats') sourceItems = catsTrendingItems;
+        if (petType === 'birds') sourceItems = birdsTrendingItems;
 
         const filteredItems = sourceItems.filter(item => {
             let matchesCategory = true;
