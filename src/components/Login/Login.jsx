@@ -222,6 +222,7 @@ function RegistrationScreen({ onLogin, onSuccess }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           phone,
+          email: form.email.trim(), // <-- FIX: this line was missing. Email was validated above but never sent.
           password: userPassword,
           full_name: form.name.trim(),
           city: form.city,
