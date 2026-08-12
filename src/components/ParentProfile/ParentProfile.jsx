@@ -17,6 +17,9 @@ import { FiArrowLeft, FiCamera, FiCheck, FiX } from "react-icons/fi";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 
+// FIX: country code is now a constant — ready to become a dropdown for international
+const DEFAULT_COUNTRY_CODE = "+91";
+
 function SmallSpinner() {
   return <span className="onboarding-pincode-spinner" />;
 }
@@ -25,7 +28,6 @@ export default function ParentProfile() {
   const { user, token, validateSession } = useAuth();
   const navigate = useNavigate();
 
-  // Use TanStack Query with key ["userProfile", user?.id] for 0ms cached data pre-filling
   const { data: cachedProfile } = useQuery({
     queryKey: ["userProfile", user?.id],
     queryFn: async () => {
@@ -39,12 +41,12 @@ export default function ParentProfile() {
 
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
+  const [countryCode] = useState(DEFAULT_COUNTRY_CODE); // ready for dropdown later
   const [pincode, setPincode] = useState("");
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
-  
   const [isAlreadyCompleted, setIsAlreadyCompleted] = useState(false);
 
   const [error, setError] = useState("");
@@ -52,7 +54,6 @@ export default function ParentProfile() {
   const [pincodeLoading, setPincodeLoading] = useState(false);
   const [pincodeError, setPincodeError] = useState("");
 
-  // Avatar & Crop state
   const avatarInputRef = useRef(null);
   const [isCropping, setIsCropping] = useState(false);
   const [tempImage, setTempImage] = useState(null);
@@ -93,16 +94,13 @@ export default function ParentProfile() {
       if (user?.id) {
         const formData = new FormData();
         formData.append("file", croppedFile);
-
         const res = await fetchWithAuth(`/api/user-profile/${user.id}/avatar`, {
           method: "POST",
           body: formData,
         });
-
         if (res.ok) {
           const data = await res.json();
           setAvatarUrl(data.avatar_url);
-          // Invalidate & refresh TanStack Query cache for user profile
           await queryClient.invalidateQueries({ queryKey: ["userProfile", user?.id] });
         } else {
           alert("Failed to upload cropped photo.");
@@ -120,46 +118,50 @@ export default function ParentProfile() {
     setTempImage(null);
   };
 
-  // Pre-fill form instantaneously from TanStack Query cache
+  // Pre-fill form from cache
   useEffect(() => {
     if (cachedProfile) {
-      const rawName = cachedProfile.full_name || "";
-      const rawPhone = cachedProfile.phone || "";
+      const rawName    = cachedProfile.full_name || "";
+      const rawPhone   = cachedProfile.phone || "";
       const rawPincode = cachedProfile.pincode || "";
       const rawAddress = cachedProfile.address || "";
-      const rawCity = cachedProfile.city || "";
-      const rawState = cachedProfile.state || "";
-      const rawAvatar = cachedProfile.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || "";
+      const rawCity    = cachedProfile.city || "";
+      const rawState   = cachedProfile.state || "";
+      const rawAvatar  = cachedProfile.avatar_url
+        || user?.user_metadata?.avatar_url
+        || user?.user_metadata?.picture
+        || "";
 
       if (rawName) setName(rawName);
       if (rawPhone) {
-        const rawPhoneClean = rawPhone.replace("+91", "");
-        setMobile(rawPhoneClean);
+        // Strip country code when displaying in the input field
+        let displayPhone = rawPhone;
+        for (const prefix of [countryCode, "+91", "91"]) {
+          if (displayPhone.startsWith(prefix)) {
+            displayPhone = displayPhone.slice(prefix.length);
+            break;
+          }
+        }
+        setMobile(displayPhone.replace(/\D/g, "").slice(0, 10));
       }
       if (rawPincode) setPincode(rawPincode);
       if (rawAddress) setAddress(rawAddress);
-      if (rawCity) setCity(rawCity);
-      if (rawState) setState(rawState);
-      if (rawAvatar) setAvatarUrl(rawAvatar);
+      if (rawCity)    setCity(rawCity);
+      if (rawState)   setState(rawState);
+      if (rawAvatar)  setAvatarUrl(rawAvatar);
 
-      if (rawName && rawPhone && rawCity) {
-        setIsAlreadyCompleted(true);
-      } else {
-        setIsAlreadyCompleted(false);
-      }
+      setIsAlreadyCompleted(!!(rawName && rawPhone && rawCity));
     } else if (user) {
-      // pre-populate name from email or user metadata if no profile row yet
       if (user?.user_metadata?.full_name) {
         setName(user.user_metadata.full_name);
       } else if (user?.email) {
         const emailLocalPart = user.email.split("@")[0];
-        const defaultName = emailLocalPart.split(/[._-]/)[0];
-        const cleanName = defaultName.replace(/\d+/g, "");
-        const capitalized = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
-        setName(capitalized);
+        const defaultName    = emailLocalPart.split(/[._-]/)[0];
+        const cleanName      = defaultName.replace(/\d+/g, "");
+        setName(cleanName.charAt(0).toUpperCase() + cleanName.slice(1));
       }
     }
-  }, [cachedProfile, user]);
+  }, [cachedProfile, user, countryCode]);
 
   const lookupPincode = useCallback(async (pin) => {
     if (pin.length !== 6 || !/^\d{6}$/.test(pin)) return;
@@ -199,7 +201,8 @@ export default function ParentProfile() {
       setError("Please enter your name.");
       return;
     }
-    if (!mobile.trim() || mobile.replace(/\D/g, "").length < 10) {
+    const cleanMobile = mobile.replace(/\D/g, "");
+    if (!cleanMobile || cleanMobile.length !== 10) {
       setError("Please enter a valid 10-digit mobile number.");
       return;
     }
@@ -215,32 +218,32 @@ export default function ParentProfile() {
     setLoading(true);
     setError("");
 
-    let phone = mobile.replace(/\D/g, "");
-    if (phone.length === 10) phone = "+91" + phone;
-    else if (!phone.startsWith("+")) phone = "+" + phone;
+    // FIX: send raw 10-digit number + country code separately
+    // Backend assembles the full phone — no hardcoding here
+    const rawPhone    = cleanMobile.slice(0, 10);
+    const fullPhone   = `${countryCode}${rawPhone}`;
 
     try {
       const res = await fetchWithAuth(`/api/user-profile/${user.id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          full_name: name.trim(),
-          phone,
-          email: user?.email,
+          full_name:    name.trim(),
+          phone:        rawPhone,       // raw 10-digit — backend adds country code
+          country_code: countryCode,    // sent separately
+          email:        user?.email || null,
           city,
           state,
           pincode,
-          address: address.trim(),
+          address:      address.trim() || null,
         }),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || "Profile save failed");
 
-      // Update user details in localStorage
-      const rawUser = localStorage.getItem("user") || JSON.stringify(user || {});
+      // Update localStorage
+      const rawUser    = localStorage.getItem("user") || JSON.stringify(user || {});
       const parsedUser = JSON.parse(rawUser);
       const enrichedUser = {
         ...parsedUser,
@@ -255,23 +258,18 @@ export default function ParentProfile() {
       };
       localStorage.setItem("user", JSON.stringify(enrichedUser));
       localStorage.setItem("user_city", city);
-
-      // Cache the user profile details directly
       localStorage.setItem("user_profile", JSON.stringify({
-        full_name: name.trim(),
-        phone,
-        email: user?.email,
+        full_name:  name.trim(),
+        phone:      fullPhone,          // store assembled phone in cache
+        email:      user?.email || null,
         city,
         state,
         pincode,
-        address: address.trim(),
+        address:    address.trim() || null,
         avatar_url: avatarUrl,
       }));
 
-      // Invalidate & refresh TanStack Query cache so all components (EditableUserCard, etc.) receive fresh data
       await queryClient.invalidateQueries({ queryKey: ["userProfile", user?.id] });
-
-      // Re-validate session so our useAuth gets updated info
       await validateSession();
 
       navigate("/profile", { replace: true });
@@ -347,7 +345,7 @@ export default function ParentProfile() {
             <div className="form-group">
               <label>Mobile Number</label>
               <div className="phone-input-group">
-                <span className="phone-prefix">+91</span>
+                <span className="phone-prefix">{countryCode}</span>
                 <input
                   type="tel"
                   placeholder="Enter 10-digit mobile number"
@@ -389,11 +387,20 @@ export default function ParentProfile() {
                 maxLength={6}
                 required
               />
-              {pincodeError && <span className="field-error" style={{ color: "#d64545", marginTop: 4 }}>{pincodeError}</span>}
+              {pincodeError && (
+                <span className="field-error" style={{ color: "#d64545", marginTop: 4 }}>
+                  {pincodeError}
+                </span>
+              )}
             </div>
 
             <div className="form-group">
-              <label>Address <span style={{ fontSize: "12px", color: "#6b7280", fontWeight: 400 }}>(Optional)</span></label>
+              <label>
+                Address{" "}
+                <span style={{ fontSize: "12px", color: "#6b7280", fontWeight: 400 }}>
+                  (Optional)
+                </span>
+              </label>
               <input
                 type="text"
                 placeholder="Flat / House no. / Street / Area (Optional)"
@@ -425,8 +432,12 @@ export default function ParentProfile() {
               </div>
             </div>
 
-            <button type="submit" className="btn-primary parent-profile-submit-btn" disabled={loading}>
-              {loading ? "Submitting…" : (isAlreadyCompleted ? "Save Profile" : "Submit")}
+            <button
+              type="submit"
+              className="btn-primary parent-profile-submit-btn"
+              disabled={loading}
+            >
+              {loading ? "Submitting…" : isAlreadyCompleted ? "Save Profile" : "Submit"}
             </button>
           </form>
           <AppFooterSpacer />
@@ -434,56 +445,56 @@ export default function ParentProfile() {
       </div>
 
       {/* Photo Crop Modal */}
-      {isCropping && createPortal(
-        <div className="crop-modal-overlay">
-          <div className="crop-modal-content">
-            <div className="crop-modal-header">
-              <h3>Crop Photo</h3>
-              <button type="button" className="crop-close-btn" onClick={handleCropCancel}>
-                <FiX size={24} />
-              </button>
+      {isCropping &&
+        createPortal(
+          <div className="crop-modal-overlay">
+            <div className="crop-modal-content">
+              <div className="crop-modal-header">
+                <h3>Crop Photo</h3>
+                <button type="button" className="crop-close-btn" onClick={handleCropCancel}>
+                  <FiX size={24} />
+                </button>
+              </div>
+
+              <div className="crop-container">
+                <Cropper
+                  image={tempImage}
+                  crop={crop}
+                  zoom={zoom}
+                  aspect={1}
+                  cropShape="round"
+                  showGrid={false}
+                  onCropChange={setCrop}
+                  onCropComplete={onCropComplete}
+                  onZoomChange={setZoom}
+                />
+              </div>
+
+              <div className="crop-controls">
+                <input
+                  type="range"
+                  value={zoom}
+                  min={1}
+                  max={3}
+                  step={0.1}
+                  aria-labelledby="Zoom"
+                  onChange={(e) => setZoom(parseFloat(e.target.value))}
+                  className="zoom-slider"
+                />
+              </div>
+
+              <div className="crop-actions">
+                <button type="button" className="crop-cancel-btn" onClick={handleCropCancel}>
+                  Cancel
+                </button>
+                <button type="button" className="crop-save-btn" onClick={handleCropSave}>
+                  <FiCheck size={18} /> Apply & Save Photo
+                </button>
+              </div>
             </div>
-            
-            <div className="crop-container">
-              <Cropper
-                image={tempImage}
-                crop={crop}
-                zoom={zoom}
-                aspect={1}
-                cropShape="round"
-                showGrid={false}
-                onCropChange={setCrop}
-                onCropComplete={onCropComplete}
-                onZoomChange={setZoom}
-              />
-            </div>
-            
-            <div className="crop-controls">
-              <input
-                type="range"
-                value={zoom}
-                min={1}
-                max={3}
-                step={0.1}
-                aria-labelledby="Zoom"
-                onChange={(e) => setZoom(parseFloat(e.target.value))}
-                className="zoom-slider"
-              />
-            </div>
-            
-            <div className="crop-actions">
-              <button type="button" className="crop-cancel-btn" onClick={handleCropCancel}>
-                Cancel
-              </button>
-              <button type="button" className="crop-save-btn" onClick={handleCropSave}>
-                <FiCheck size={18} /> Apply & Save Photo
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 }
-

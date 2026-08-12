@@ -21,6 +21,7 @@ router = APIRouter()
 class UserProfileUpdate(BaseModel):
     full_name: Optional[str] = None
     phone: Optional[str] = None
+    country_code: Optional[str] = "+91"   # NEW — separate country code
     email: Optional[str] = None
     city: Optional[str] = None
     state: Optional[str] = None
@@ -39,7 +40,7 @@ async def get_user_profile(
         raise HTTPException(status_code=403, detail="You can only view your own profile")
     try:
         response = supabase.table("user_profiles").select(
-            "id, full_name, phone, email, city, state, pincode, address, avatar_url, auth_provider"
+            "id, full_name, phone, email, city, state, pincode, address, avatar_url, auth_provider, country_code"
         ).eq("id", user_id).execute()
 
         if not response.data:
@@ -54,6 +55,7 @@ async def get_user_profile(
                 "address": None,
                 "avatar_url": None,
                 "auth_provider": None,
+                "country_code": "+91",
             }
         return response.data[0]
     except HTTPException:
@@ -77,9 +79,36 @@ async def update_user_profile(
         if not update_data:
             return {"message": "No data to update"}
 
+        # ── FIX 1: Separate country code from raw phone ──────────────
+        raw_phone = update_data.get("phone", "") or ""
+        country_code = update_data.get("country_code", "+91") or "+91"
+
+        if raw_phone:
+            # Strip any country code the frontend may have already prepended
+            cleaned = raw_phone.strip()
+            for prefix in [country_code, "+91", "91"]:
+                if cleaned.startswith(prefix):
+                    cleaned = cleaned[len(prefix):]
+                    break
+            cleaned = cleaned.strip()
+            # Keep only digits, max 10
+            cleaned = re.sub(r"\D", "", cleaned)[-10:]
+            full_phone = f"{country_code}{cleaned}" if cleaned else None
+        else:
+            full_phone = None
+
+        # Store full phone + country code
+        if full_phone:
+            update_data["phone"] = full_phone
+        update_data["country_code"] = country_code
+
+        # Remove raw phone key if it was empty
+        if not full_phone and "phone" in update_data:
+            update_data.pop("phone", None)
+
         update_data["id"] = user_id
 
-        # Determine auth provider from auth.users
+        # ── Determine auth provider ───────────────────────────────────
         try:
             auth_user = supabase_admin.auth.admin.get_user_by_id(user_id)
             if auth_user:
@@ -89,17 +118,18 @@ async def update_user_profile(
         except Exception as auth_provider_err:
             print(f"Failed to fetch auth user provider: {auth_provider_err}")
 
-        # Phone uniqueness check — prevent conflict with another user's row
-        if "phone" in update_data and update_data["phone"]:
+        # ── Phone uniqueness check ────────────────────────────────────
+        if full_phone:
             phone_conflict = supabase_admin.table("user_profiles") \
                 .select("id") \
-                .eq("phone", update_data["phone"]) \
+                .eq("phone", full_phone) \
                 .neq("id", user_id) \
                 .execute()
             if phone_conflict.data:
+                print(f"[UserProfile] Phone conflict — not updating phone for {user_id}")
                 update_data.pop("phone", None)
 
-        # Insert or update
+        # ── Insert or update user_profiles ────────────────────────────
         existing = supabase_admin.table("user_profiles").select("id").eq("id", user_id).execute()
 
         if not existing.data:
@@ -110,25 +140,27 @@ async def update_user_profile(
         if not response.data:
             raise HTTPException(status_code=500, detail="Profile update failed — no data returned")
 
-        # FIXED: Sync full_name + phone + email all to auth.users metadata
+        # ── FIX 2: Sync phone + email + name to auth.users (source of truth) ──
         try:
             meta_update = {}
-            if "full_name" in update_data and update_data["full_name"]:
+            if update_data.get("full_name"):
                 meta_update["full_name"] = update_data["full_name"]
-            if "phone" in update_data and update_data["phone"]:
-                meta_update["phone"] = update_data["phone"]
-            if "email" in update_data and update_data["email"]:
+            if full_phone:
+                meta_update["phone"] = full_phone
+            if update_data.get("email"):
                 meta_update["email"] = update_data["email"]
+
             if meta_update:
                 supabase_admin.auth.admin.update_user_by_id(
                     user_id,
                     {"user_metadata": meta_update}
                 )
-                print(f"[UserProfile] Synced to auth.users metadata: {list(meta_update.keys())}")
+                print(f"[UserProfile] Synced to auth.users: {list(meta_update.keys())}")
         except Exception as auth_sync_err:
-            print(f"[UserProfile] Warning: Could not sync metadata to auth.users: {auth_sync_err}")
+            print(f"[UserProfile] Warning — auth.users sync failed (non-fatal): {auth_sync_err}")
 
         return response.data[0]
+
     except HTTPException:
         raise
     except Exception as e:
