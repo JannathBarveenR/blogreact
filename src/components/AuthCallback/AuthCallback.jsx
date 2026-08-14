@@ -2,13 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../utils/supabaseClient";
 
-/**
- * AuthCallback — Handles the OAuth redirect from Supabase (PKCE flow).
- *
- * When using supabase.auth.signInWithOAuth() from the frontend, supabase-js
- * automatically stores the code_verifier and exchanges the ?code= on this page.
- * We just need to call getSession() after the redirect and save tokens to localStorage.
- */
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 
 export default function AuthCallback() {
@@ -18,8 +11,6 @@ export default function AuthCallback() {
   useEffect(() => {
     async function handleCallback() {
       try {
-        // supabase-js automatically detects the ?code= in the URL and exchanges it
-        // because it stored the code_verifier when signInWithOAuth was called.
         const { data, error } = await supabase.auth.getSession();
 
         if (error) {
@@ -32,7 +23,6 @@ export default function AuthCallback() {
         if (data?.session) {
           const { access_token, refresh_token, user } = data.session;
 
-          // Persist tokens so our custom useAuth hook picks them up
           localStorage.setItem("access_token", access_token);
           if (refresh_token) localStorage.setItem("refresh_token", refresh_token);
           if (user) localStorage.setItem("user", JSON.stringify(user));
@@ -42,17 +32,28 @@ export default function AuthCallback() {
             const profileRes = await fetch(`${API_BASE}/api/user-profile/${user.id}`, {
               headers: { Authorization: `Bearer ${access_token}` },
             });
+
             if (profileRes.ok) {
               const profileData = await profileRes.json();
-              // If a user profile exists (has name, phone, or email), they are already onboarded
-              if (profileData && (profileData.full_name || profileData.phone || profileData.email || profileData.auth_provider)) {
+
+              // FIXED: Both full_name AND phone must exist to consider profile complete.
+              // This ensures Google OAuth users who skipped the form are always
+              // redirected back to complete their phone number.
+              const isComplete =
+                profileData &&
+                profileData.full_name &&
+                profileData.full_name.trim() !== "" &&
+                profileData.phone &&
+                profileData.phone.trim() !== "";
+
+              if (isComplete) {
                 setStatus("Sign in successful! Redirecting…");
                 navigate("/home", { replace: true });
               } else {
                 navigate("/parent-profile", { replace: true });
               }
             } else {
-              // 404 or other errors mean no user_profile exists, so we onboard
+              // No profile row yet — send to onboarding
               navigate("/parent-profile", { replace: true });
             }
           } catch (e) {
