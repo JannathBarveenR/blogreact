@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { lazy, Suspense, useEffect } from "react";
 import Login from "./components/Login/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
+import RoleProtectedRoute from "./components/RoleProtectedRoute";
 import "./App.css";
 
 // Lazy-loaded routes
@@ -19,6 +20,16 @@ const FeedbackPage = lazy(() => import("./components/Feedback/FeedbackPage"));
 const FeedbackDetailPage = lazy(() => import("./components/Feedback/FeedbackDetailPage"));
 const NotFoundPage = lazy(() => import("./components/NotFound/NotFoundPage"));
 const Blog = lazy(() => import("./components/Blog/Blog"));
+
+// Lazy-loaded Vet Routes
+const VetLogin = lazy(() => import("./components/VetPortal/VetLogin"));
+const VetLayout = lazy(() => import("./components/VetPortal/VetLayout"));
+const VetHome = lazy(() => import("./components/VetPortal/VetHome"));
+const PatientHub = lazy(() => import("./components/VetPortal/PatientHub"));
+const PatientDetail = lazy(() => import("./components/VetPortal/PatientDetail"));
+const VisitWizard = lazy(() => import("./components/VetPortal/StartVisit/VisitWizard"));
+const VetProfile = lazy(() => import("./components/VetPortal/VetProfile"));
+const ClaimRecordPage = lazy(() => import("./components/VetPortal/ClaimRecordPage"));
 
 function LoadingFallback() {
   return (
@@ -54,6 +65,22 @@ function App() {
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/pet-parent-academy" element={<Blog />} />
           <Route path="/pet-parent-academy/blogs/:id" element={<Blog />} />
+          <Route path="/claim/:token" element={<ClaimRecordPage />} />
+
+          {/* Vet Portal Public Routes */}
+          <Route path="/vet/login" element={<VetLogin />} />
+          <Route path="/vet" element={<Navigate to="/vet/login" replace />} />
+
+          {/* Vet Portal Protected Routes */}
+          <Route element={<RoleProtectedRoute requires="vet" />}>
+            <Route element={<VetLayout />}>
+              <Route path="/vet/home" element={<VetHome />} />
+              <Route path="/vet/patients" element={<PatientHub />} />
+              <Route path="/vet/patients/:petId" element={<PatientDetail />} />
+              <Route path="/vet/visit/:petId" element={<VisitWizard />} />
+              <Route path="/vet/profile" element={<VetProfile />} />
+            </Route>
+          </Route>
 
           {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>
