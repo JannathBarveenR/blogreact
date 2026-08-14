@@ -201,7 +201,10 @@ async def google_oauth():
 
 @router.get("/me")
 async def me_endpoint(user: dict = Depends(auth_get_current_user)):
-    """Get current user profile from the access token."""
+    """Get current user profile from the access token including assigned roles."""
+    from app.utils.auth import get_user_roles
+    roles = await get_user_roles(user["id"])
+    user["roles"] = roles
     return user
 
 
