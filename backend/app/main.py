@@ -6,7 +6,7 @@ from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from app.config import PORT, FRONTEND_URL, ENVIRONMENT
 from app.routers import auth, location, pet_profile, pet_health_id, checklist, user_profile, feedback
-from app.routers.v2 import medical_events, reference_data, timeline, reminders, records, export, vets, patients, visits, claims
+from app.routers.v2 import medical_events, reference_data, timeline, reminders, records, export
 from app.supabase_client import supabase
 
 _is_production = ENVIRONMENT == "production"
@@ -85,17 +85,13 @@ app.include_router(checklist.router,       prefix="/api/checklist",       tags=[
 app.include_router(user_profile.router,    prefix="/api/user-profile",    tags=["User Profile"])
 app.include_router(feedback.router,        prefix="/api/feedback",        tags=["Feedback"])
 
-# V2 AI Timeline & Vet Platform Routers
+# V2 AI Timeline Routers
 app.include_router(reference_data.router)
 app.include_router(medical_events.router)
 app.include_router(timeline.router)
 app.include_router(reminders.router)
 app.include_router(records.router)
 app.include_router(export.router)
-app.include_router(vets.router)
-app.include_router(patients.router)
-app.include_router(visits.router)
-app.include_router(claims.router)
 
 
 @app.get("/")
