@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from app.config import PORT, FRONTEND_URL, ENVIRONMENT
-from app.routers import auth, location, pet_profile, pet_health_id, checklist, user_profile, feedback, vet_consultation, maternity, admin_supervisor
+from app.routers import auth, location, pet_profile, pet_health_id, checklist, user_profile, feedback
 from app.routers.v2 import medical_events, reference_data, timeline, reminders, records, export
 from app.supabase_client import supabase
 
@@ -24,7 +24,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="PetOLife API",
-    description="Backend API for PetOLife — Pet Health & Vet Maternity Platform",
+    description="Backend API for PetOLife — pet health profile management",
     version="2.0.0",
     docs_url=None if _is_production else "/docs",
     redoc_url=None if _is_production else "/redoc",
@@ -84,11 +84,6 @@ app.include_router(pet_health_id.router,   prefix="/api/pet-health-id",   tags=[
 app.include_router(checklist.router,       prefix="/api/checklist",       tags=["Checklist"])
 app.include_router(user_profile.router,    prefix="/api/user-profile",    tags=["User Profile"])
 app.include_router(feedback.router,        prefix="/api/feedback",        tags=["Feedback"])
-
-# Vet & Maternity Platform Routers (V1/V2 Integrated)
-app.include_router(vet_consultation.router)
-app.include_router(maternity.router)
-app.include_router(admin_supervisor.router)
 
 # V2 AI Timeline Routers
 app.include_router(reference_data.router)
