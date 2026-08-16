@@ -1,9 +1,10 @@
 """
 User Profile routes — secure, user-scoped endpoints.
 
-GET  /api/user-profile/{user_id}        — Get user profile (ownership enforced)
-PUT  /api/user-profile/{user_id}        — Update user profile (ownership enforced)
-POST /api/user-profile/{user_id}/avatar — Upload avatar (ownership enforced)
+GET    /api/user-profile/{user_id}        — Get user profile (ownership enforced)
+PUT    /api/user-profile/{user_id}        — Update user profile (ownership enforced)
+POST   /api/user-profile/{user_id}/avatar — Upload avatar (ownership enforced)
+DELETE /api/user-profile/{user_id}        — Soft-delete (deactivate) account (ownership enforced)
 """
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Depends
@@ -27,6 +28,10 @@ class UserProfileUpdate(BaseModel):
     state: Optional[str] = None
     pincode: Optional[str] = None
     address: Optional[str] = None
+
+
+class DeleteAccountRequest(BaseModel):
+    reason: Optional[str] = None
 
 
 @router.get("/{user_id}")
@@ -216,6 +221,58 @@ async def upload_avatar(
         supabase.table("user_profiles").update({"avatar_url": public_url}).eq("id", user_id).execute()
 
         return {"avatar_url": public_url}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/{user_id}")
+async def delete_account(
+    user_id: str,
+    body: DeleteAccountRequest,
+    auth_user_id: str = Depends(get_current_user_id),
+):
+    """
+    Deactivate (soft-delete) the account — ownership enforced.
+
+    We never hard-delete the auth.users row or the user's records:
+      - user_profiles.is_active is set to False (+ timestamp + optional reason)
+      - the auth user is banned so they can no longer log in
+      - pets, medical events, reminders etc. are left completely intact
+
+    This means account "deletion" is reversible by support/admin, and no
+    pet medical history is ever lost because a user changed their mind
+    or deleted their account by accident.
+    """
+    if user_id != auth_user_id:
+        raise HTTPException(status_code=403, detail="You can only delete your own account")
+
+    try:
+        from datetime import datetime, timezone
+
+        # 1. Mark the profile inactive and record why, without touching
+        #    any other data (pets/medical records/reminders are untouched).
+        supabase_admin.table("user_profiles").update({
+            "is_active": False,
+            "deactivated_at": datetime.now(timezone.utc).isoformat(),
+            "deactivation_reason": (body.reason or None),
+        }).eq("id", user_id).execute()
+
+        # 2. Prevent further logins by banning the auth user (does NOT
+        #    delete the auth.users row, so nothing referencing it — like
+        #    pet_profiles.user_id — is affected).
+        try:
+            supabase_admin.auth.admin.update_user_by_id(
+                user_id, {"ban_duration": "876000h"}  # ~100 years
+            )
+        except Exception as ban_err:
+            # Don't fail the whole request if banning fails — the
+            # is_active flag alone already blocks the app from treating
+            # this as a live account.
+            print(f"[delete_account] Warning: could not ban auth user {user_id}: {ban_err}")
+
+        return {"message": "Account deactivated successfully."}
     except HTTPException:
         raise
     except Exception as e:
