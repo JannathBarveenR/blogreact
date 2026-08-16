@@ -12,6 +12,7 @@ import { ShieldCheck } from "lucide-react";
 
 import useAuth from "../../hooks/useAuth";
 import { supabase } from "../../utils/supabaseClient";
+import fetchWithAuth from "../../utils/fetchWithAuth";
 import EditableUserCard from "./EditableUserCard";
 import EditPetList from "./EditPetsList";
 import PetIdCardModal from "./PetIdCardModal";
@@ -55,6 +56,9 @@ const UserProfile = ({ pets = [], activePetId, onPetSelect, onAddPet, onUpdatePe
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
+  const [deleteReason, setDeleteReason] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
   const showDeletePassword = false;
 
   const confirmLogout = () => {
@@ -73,8 +77,10 @@ const UserProfile = ({ pets = [], activePetId, onPetSelect, onAddPet, onUpdatePe
     onPetSelect?.(petObj);
   };
   const handleDeleteAccount = async () => {
+    setDeleteError("");
+
     if (!isGoogleUser && !deletePassword.trim()) {
-      alert("Please enter your password to confirm account deletion.");
+      setDeleteError("Please enter your password to confirm account deletion.");
       return;
     }
 
@@ -86,10 +92,30 @@ const UserProfile = ({ pets = [], activePetId, onPetSelect, onAddPet, onUpdatePe
           password: deletePassword,
         });
         if (authErr) {
-          alert(authErr.message || "Incorrect password.");
+          setDeleteError(authErr.message || "Incorrect password.");
           return;
         }
       }
+    }
+
+    setIsDeleting(true);
+    try {
+      // Soft-delete: deactivates the account server-side (is_active = false)
+      // and bans further logins, but keeps the profile, pets, and medical
+      // history intact so nothing is lost and support can see why users left.
+      const res = await fetchWithAuth(`/api/user-profile/${user.id}`, {
+        method: "DELETE",
+        body: JSON.stringify({ reason: deleteReason.trim() || null }),
+      });
+
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.detail || "Failed to delete account. Please try again.");
+      }
+    } catch (err) {
+      setIsDeleting(false);
+      setDeleteError(err.message || "Something went wrong. Please try again.");
+      return;
     }
 
     try {
@@ -98,9 +124,11 @@ const UserProfile = ({ pets = [], activePetId, onPetSelect, onAddPet, onUpdatePe
       // Ignore signout error if session is already invalid
     }
 
+    setIsDeleting(false);
     alert("Account deleted successfully.");
     setShowDeleteModal(false);
     setDeletePassword("");
+    setDeleteReason("");
 
     if (logout) {
       logout();
@@ -537,10 +565,10 @@ const getPetIcon = (pet) => {
       <h3>Delete Account</h3>
 
       <p>
-        This action is permanent.
+        Your account will be deactivated and you'll be signed out.
         <br />
-        All your pets, records and reminders
-        will be deleted.
+        Your pets' medical history is kept safe — contact support
+        if you'd like it permanently erased.
       </p>
 
       {!isGoogleUser && (
@@ -555,13 +583,29 @@ const getPetIcon = (pet) => {
         />
       )}
 
+      <textarea
+        placeholder="Tell us why you're leaving (optional)"
+        value={deleteReason}
+        onChange={(e) => setDeleteReason(e.target.value)}
+        className="profile-input"
+        rows={3}
+      />
+
+      {deleteError && (
+        <p style={{ color: "#d33", fontSize: "0.85rem", margin: "4px 0 0" }}>
+          {deleteError}
+        </p>
+      )}
+
       <div className="logout-modal-actions">
 
         <button
           className="btn-cancel"
-          onClick={() =>
-            setShowDeleteModal(false)
-          }
+          onClick={() => {
+            setShowDeleteModal(false);
+            setDeleteError("");
+          }}
+          disabled={isDeleting}
         >
           Cancel
         </button>
@@ -569,8 +613,9 @@ const getPetIcon = (pet) => {
         <button
           className="btn-confirm"
           onClick={handleDeleteAccount}
+          disabled={isDeleting}
         >
-          Delete
+          {isDeleting ? "Deleting..." : "Delete"}
         </button>
 
       </div>
