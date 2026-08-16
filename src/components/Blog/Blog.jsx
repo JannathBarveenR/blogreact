@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import petoLogo from '../../assets/logo/Petolife Academy Logo.png';
 import gradDogImg from '../../assets/graduation_dog_new.png';
+import useAuth from '../../hooks/useAuth';
 import './Blog.css';
 
 const trendingData = {
@@ -193,6 +194,7 @@ const reverseStoryIdMap = {
 const Blog = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { isAuthenticated } = useAuth();
 
     const [activePage, setActivePage] = useState('home'); // home, dogs, cats, story
     const [activeStoryKey, setActiveStoryKey] = useState(null);
@@ -334,7 +336,7 @@ const Blog = () => {
                                 <i className="fa-solid fa-arrow-left"></i>
                             </button>
                             <div className="detail-header-text" style={{ textAlign: 'center' }}>
-                                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '-25px', marginBottom: '-35px' }}>
                                     <img src={petoLogo} alt="Petolife Logo" style={{height: '110px', objectFit: 'contain'}} />
                                 </div>
                                 <p className="detail-page-subtitle">{subtitle}</p>
@@ -436,7 +438,7 @@ const Blog = () => {
                     <div className="app-container">
                         <header className="app-header">
                             <div className="header-top" style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                <div className="app-logo" onClick={resetHome} style={{display: 'flex', alignItems: 'center', cursor: 'pointer'}}>
+                                <div className="app-logo" onClick={resetHome} style={{display: 'flex', alignItems: 'center', cursor: 'pointer', marginTop: '-10px', marginBottom: '-25px'}}>
                                     <img src={petoLogo} alt="Petolife Logo" style={{height: '100px', objectFit: 'contain'}} />
                                 </div>
                                 <button className="icon-btn" aria-label="Notifications" onClick={() => setShowAuthPopup(true)} style={{ position: 'absolute', right: '0', fontSize: '1.5rem' }}>
