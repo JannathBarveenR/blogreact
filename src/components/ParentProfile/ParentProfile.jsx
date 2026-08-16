@@ -288,9 +288,11 @@ export default function ParentProfile() {
     <div className="login-root">
       <div className="login-card parent-profile-card">
         <div className="screen parent-profile-screen">
-          <button className="onboarding-back-btn" onClick={handleBack} type="button" aria-label="Go back">
-            <FiArrowLeft size={16} /> Back
-          </button>
+          {isAlreadyCompleted && (
+            <button className="onboarding-back-btn" onClick={handleBack} type="button" aria-label="Go back">
+              <FiArrowLeft size={16} /> Back
+            </button>
+          )}
 
           <div className="logo-wrap parent-profile-logo-wrap">
             <img src={logoImg} alt="PetOLife" className="logo-img parent-profile-logo-img" />

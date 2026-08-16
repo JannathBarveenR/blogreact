@@ -40,15 +40,20 @@ async def get_user_profile(
         raise HTTPException(status_code=403, detail="You can only view your own profile")
     try:
         response = supabase.table("user_profiles").select(
-            "id, full_name, phone, email, city, state, pincode, address, avatar_url, auth_provider, country_code"
+            "id, full_name, city, state, pincode, address, avatar_url, auth_provider, country_code"
         ).eq("id", user_id).execute()
+
+        # Fetch email and phone from auth.users
+        auth_user = supabase_admin.auth.admin.get_user_by_id(user_id)
+        email = auth_user.user.email if auth_user and auth_user.user else None
+        phone = auth_user.user.phone if auth_user and auth_user.user else None
 
         if not response.data:
             return {
                 "id": user_id,
                 "full_name": None,
-                "phone": None,
-                "email": None,
+                "phone": phone,
+                "email": email,
                 "city": None,
                 "state": None,
                 "pincode": None,
@@ -57,7 +62,11 @@ async def get_user_profile(
                 "auth_provider": None,
                 "country_code": "+91",
             }
-        return response.data[0]
+        
+        profile = response.data[0]
+        profile["email"] = email
+        profile["phone"] = phone
+        return profile
     except HTTPException:
         raise
     except Exception as e:
@@ -120,14 +129,15 @@ async def update_user_profile(
 
         # ── Phone uniqueness check ────────────────────────────────────
         if full_phone:
-            phone_conflict = supabase_admin.table("user_profiles") \
-                .select("id") \
-                .eq("phone", full_phone) \
-                .neq("id", user_id) \
-                .execute()
-            if phone_conflict.data:
-                print(f"[UserProfile] Phone conflict — not updating phone for {user_id}")
-                update_data.pop("phone", None)
+            # Check auth.users instead of user_profiles for phone conflict? 
+            # Or just rely on Supabase returning an error when updating auth.users.
+            pass
+
+        # Pop phone and email so they don't get sent to user_profiles
+        if "phone" in update_data:
+            update_data.pop("phone", None)
+        if "email" in update_data:
+            update_data.pop("email", None)
 
         # ── Insert or update user_profiles ────────────────────────────
         existing = supabase_admin.table("user_profiles").select("id").eq("id", user_id).execute()
@@ -142,24 +152,33 @@ async def update_user_profile(
 
         # ── FIX 2: Sync phone + email + name to auth.users (source of truth) ──
         try:
+            auth_update_data = {}
+            if full_phone:
+                auth_update_data["phone"] = full_phone
+            if profile.email:
+                auth_update_data["email"] = profile.email
+
             meta_update = {}
             if update_data.get("full_name"):
                 meta_update["full_name"] = update_data["full_name"]
-            if full_phone:
-                meta_update["phone"] = full_phone
-            if update_data.get("email"):
-                meta_update["email"] = update_data["email"]
-
+            
             if meta_update:
+                auth_update_data["user_metadata"] = meta_update
+
+            if auth_update_data:
                 supabase_admin.auth.admin.update_user_by_id(
                     user_id,
-                    {"user_metadata": meta_update}
+                    auth_update_data
                 )
-                print(f"[UserProfile] Synced to auth.users: {list(meta_update.keys())}")
+                print(f"[UserProfile] Synced to auth.users: {list(auth_update_data.keys())}")
         except Exception as auth_sync_err:
             print(f"[UserProfile] Warning — auth.users sync failed (non-fatal): {auth_sync_err}")
 
-        return response.data[0]
+        # Return the merged data including phone and email
+        res_data = response.data[0]
+        res_data["phone"] = full_phone
+        res_data["email"] = profile.email
+        return res_data
 
     except HTTPException:
         raise

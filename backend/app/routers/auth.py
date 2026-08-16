@@ -24,13 +24,13 @@ router = APIRouter()
 
 
 class SignupRequest(BaseModel):
-    email: Optional[str] = None
-    phone: Optional[str] = None
+    email: str
+    phone: str
     password: str
-    full_name: Optional[str] = None
-    city: Optional[str] = None
-    state: Optional[str] = None
-    pincode: Optional[str] = None
+    full_name: str
+    city: str
+    state: str
+    pincode: str
 
 
 class LoginRequest(BaseModel):
@@ -94,12 +94,10 @@ async def signup(body: SignupRequest):
         try:
             supabase_admin.table("user_profiles").upsert({
                 "id": result.user.id,
-                "full_name": body.full_name or "",
-                "phone": body.phone or "",
-                "email": body.email or "",
-                "city": body.city or "",
-                "state": body.state or "",
-                "pincode": body.pincode or "",
+                "full_name": body.full_name,
+                "city": body.city,
+                "state": body.state,
+                "pincode": body.pincode,
             }).execute()
         except Exception as profile_err:
             print(f"[Auth] Warning: Could not save user_profile: {profile_err}")

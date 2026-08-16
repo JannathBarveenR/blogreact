@@ -44,7 +44,11 @@ export default function AuthCallback() {
                 profileData.full_name &&
                 profileData.full_name.trim() !== "" &&
                 profileData.phone &&
-                profileData.phone.trim() !== "";
+                profileData.phone.trim() !== "" &&
+                profileData.pincode &&
+                profileData.pincode.trim() !== "" &&
+                profileData.city &&
+                profileData.city.trim() !== "";
 
               if (isComplete) {
                 setStatus("Sign in successful! Redirecting…");
